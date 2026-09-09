@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from flask import Flask, request
 
 TOKEN = "8845319540:AAHsIvOXzVeaKEBNWYWDIHVRPY9QX4YLSmA"
-WEBHOOK_URL = "https://dmytriy.pythonanywhere.com/tg_webhook"
+WEBHOOK_URL = "https://web-production-eadde.up.railway.app/tg_webhook"
 app = Flask(__name__)
 
 CHAT = "-1002026400906"
