@@ -213,11 +213,18 @@ def close_setup(sid, result):
 ⏱ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
 📊 Результат: {pnl_sign}{pnl_pct:.2f}%
 🛡 SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
+    
     if s.get("vip_msg"):
         try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
         except: pass
+        
+    # 👇 ЭТО НОВАЯ СТРОКА: Отправляем итог в VIP канал
+    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
+    
+    # А это остаётся для админов в личку
     for aid in ADMIN_IDS:
         tg("sendMessage", data={"chat_id": aid, "text": f"🎛 Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
+        
     save_stat(s, result, pnl_pct)
     bx_save()
 
