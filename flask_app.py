@@ -151,12 +151,50 @@ def new_pending(sym, tf, direction, level):
     return sid
 
 def get_price(sym):
-    pair = KRAKEN_PAIR.get(sym)
-    if not pair: return None
+    """Получаем цену с BingX (фьючерсы), fallback на Binance"""
+    
+    # 1. Пытаемся взять с BingX (perpetual futures)
     try:
-        r = requests.get("https://api.kraken.com/0/public/Ticker", params={"pair": pair}, timeout=10)
-        return float(list(r.json()["result"].values())[0]["c"][0])
-    except: return None
+        symbol = f"{sym.upper()}-USDT"
+        r = requests.get(
+            f"https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
+            params={"symbol": symbol},
+            timeout=10
+        )
+        if r.status_code == 200:
+            data = r.json()
+            if data.get('code') == 0 and data.get('data'):
+                return float(data['data']['lastPrice'])
+    except Exception as e:
+        print(f"BingX error: {e}")
+    
+    # 2. Фолбэк на Binance (цены почти идентичны BingX)
+    try:
+        r = requests.get(
+            "https://fapi.binance.com/fapi/v1/ticker/price",
+            params={"symbol": f"{sym}USDT"},
+            timeout=10
+        )
+        if r.status_code == 200:
+            return float(r.json()["price"])
+    except Exception as e:
+        print(f"Binance futures error: {e}")
+    
+    # 3. Последний фолбэк на Kraken
+    pair = KRAKEN_PAIR.get(sym)
+    if pair:
+        try:
+            r = requests.get(
+                "https://api.kraken.com/0/public/Ticker",
+                params={"pair": pair},
+                timeout=10
+            )
+            if r.status_code == 200:
+                return float(list(r.json()["result"].values())[0]["c"][0])
+        except:
+            pass
+    
+    return None
 
 def post_setup_to_vip(s, link, sl, tp, entry_price):
     prof = TF_PROFILE.get(s["tf"], TF_PROFILE["4H"])
