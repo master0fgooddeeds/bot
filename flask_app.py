@@ -130,6 +130,45 @@ def save_stat(setup, result, pnl):
     if len(stats["history"]) > 100: stats["history"] = stats["history"][-100:]
     with open(STATS_FILE, "w") as f: json.dump(stats, f, indent=2)
 
+# ============================================
+# 📚 РАЗБОРЫ СДЕЛОК (ANALYSES)
+# ============================================
+ANALYSES_FILE = "analyses.json"
+
+def load_analyses():
+    """Загружаем все разборы"""
+    try:
+        with open(ANALYSES_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_analysis(setup_id, data):
+    """Сохраняем разбор для сетапа"""
+    analyses = load_analyses()
+    analyses[setup_id] = data
+    with open(ANALYSES_FILE, "w") as f:
+        json.dump(analyses, f, indent=2)
+    print(f"✅ Разбор для сетапа {setup_id} сохранен")
+
+def get_analysis(setup_id):
+    """Получаем разбор по ID сетапа"""
+    return load_analyses().get(setup_id)
+
+def delete_analysis(setup_id):
+    """Удаляем разбор (только для админов)"""
+    analyses = load_analyses()
+    if setup_id in analyses:
+        del analyses[setup_id]
+        with open(ANALYSES_FILE, "w") as f:
+            json.dump(analyses, f, indent=2)
+        return True
+    return False
+
+def get_all_analyses():
+    """Получаем все разборы (для дашборда)"""
+    return load_analyses()
+
 def fetch_admins_from_group():
     global ADMIN_IDS
     try:
@@ -151,35 +190,38 @@ def new_pending(sym, tf, direction, level):
     bx_save()
     return sid
 
-def get_price(sym):
-    """Получаем цену с BingX (фьючерсы), fallback на Binance"""
+def get_price(sym, source="bingx"):
+    """
+    Получаем цену с биржи.
+    Приоритет: BingX → Binance Futures → Kraken
+    """
+    # 1. Пробуем BingX (основная биржа для торговли)
+    if source in ("bingx", "auto"):
+        try:
+            symbol = f"{sym.upper()}-USDT"
+            r = requests.get(
+                "https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
+                params={"symbol": symbol},
+                timeout=5
+            )
+            if r.status_code == 200:
+                data = r.json()
+                if data.get('code') == 0 and data.get('data'):
+                    return float(data['data']['lastPrice'])
+        except Exception as e:
+            print(f"BingX price error: {e}")
     
-    # 1. Пытаемся взять с BingX (perpetual futures)
-    try:
-        symbol = f"{sym.upper()}-USDT"
-        r = requests.get(
-            f"https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
-            params={"symbol": symbol},
-            timeout=10
-        )
-        if r.status_code == 200:
-            data = r.json()
-            if data.get('code') == 0 and data.get('data'):
-                return float(data['data']['lastPrice'])
-    except Exception as e:
-        print(f"BingX error: {e}")
-    
-    # 2. Фолбэк на Binance (цены почти идентичны BingX)
+    # 2. Фолбэк на Binance Futures (стабильнее, ликвиднее)
     try:
         r = requests.get(
             "https://fapi.binance.com/fapi/v1/ticker/price",
             params={"symbol": f"{sym}USDT"},
-            timeout=10
+            timeout=5
         )
         if r.status_code == 200:
             return float(r.json()["price"])
     except Exception as e:
-        print(f"Binance futures error: {e}")
+        print(f"Binance Futures price error: {e}")
     
     # 3. Последний фолбэк на Kraken
     pair = KRAKEN_PAIR.get(sym)
@@ -188,12 +230,12 @@ def get_price(sym):
             r = requests.get(
                 "https://api.kraken.com/0/public/Ticker",
                 params={"pair": pair},
-                timeout=10
+                timeout=5
             )
             if r.status_code == 200:
                 return float(list(r.json()["result"].values())[0]["c"][0])
-        except:
-            pass
+        except Exception as e:
+            print(f"Kraken price error: {e}")
     
     return None
 
@@ -715,6 +757,69 @@ if not globals().get("_ALL_STARTED"):
     print("✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ)!")
     print(f"👑 Админов: {len(ADMIN_IDS)}")
     print("="*50 + "\n")
+
+# ============================================
+# 📊 API ДЛЯ РАЗБОРОВ
+# ============================================
+
+@app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
+def api_analysis(setup_id):
+    """
+    GET — получить разбор
+    POST — создать/обновить разбор (только админы)
+    DELETE — удалить разбор (только админы)
+    """
+    if request.method == 'GET':
+        # VIP и админы могут смотреть разборы
+        analysis = get_analysis(setup_id)
+        if analysis:
+            # Увеличиваем счетчик просмотров (опционально)
+            analysis['views'] = analysis.get('views', 0) + 1
+            save_analysis(setup_id, analysis)
+            return jsonify(analysis)
+        return jsonify({"error": "Analysis not found"}), 404
+    
+    if request.method in ('POST', 'DELETE'):
+        # Проверяем, что запрос от админа
+        # (в будущем можно проверять Telegram initData)
+        data = request.json
+        admin_uid = data.get('admin_uid')
+        
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        if request.method == 'POST':
+            # Создаем или обновляем разбор
+            analysis_data = {
+                "setup_id": setup_id,
+                "symbol": data.get('symbol'),
+                "tf": data.get('tf'),
+                "direction": data.get('direction'),
+                "entry": data.get('entry'),
+                "exit": data.get('exit'),
+                "result": data.get('result'),  # 'tp', 'sl', 'manual'
+                "pnl": data.get('pnl'),
+                "analysis_text": data.get('analysis_text'),
+                "chart_image": data.get('chart_image'),  # base64 или URL
+                "created_by": int(admin_uid),
+                "created_at": _time.time(),
+                "views": 0
+            }
+            save_analysis(setup_id, analysis_data)
+            return jsonify({"ok": True, "setup_id": setup_id})
+        
+        elif request.method == 'DELETE':
+            # Удаляем разбор
+            if delete_analysis(setup_id):
+                return jsonify({"ok": True})
+            return jsonify({"error": "Not found"}), 404
+
+@app.route('/api/analyses', methods=['GET'])
+def api_all_analyses():
+    """Получаем все разборы (для дашборда)"""
+    analyses = get_all_analyses()
+    # Преобразуем в список
+    return jsonify(list(analyses.values()))
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
