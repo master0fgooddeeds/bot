@@ -727,10 +727,11 @@ def dashboard_page():
 
 @app.route('/api/stats')
 def api_stats():
-    # Здесь мы берем данные из твоего файла статистики
-    # (Предполагается, что у тебя есть функция load_stats() или словарь stats)
-    stats = load_stats() if 'load_stats' in globals() else {}
+    """Возвращает статистику + роль пользователя"""
+    stats = load_stats()
     
+    # В будущем здесь будет проверка роли через Telegram initData
+    # Сейчас просто возвращаем все данные
     total = stats.get("total", 0)
     wins = stats.get("wins", 0)
     losses = stats.get("losses", 0)
@@ -738,12 +739,17 @@ def api_stats():
     expired = stats.get("expired", 0)
     
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
-    pnl = round((wins * 2.0) - (losses * 1.0), 2) 
+    pnl = round((wins * 2.0) - (losses * 1.0), 2)
     
     return jsonify({
-        "total": total, "wins": wins, "losses": losses,
-        "skipped": skipped, "expired": expired,
-        "winrate": winrate, "pnl": pnl
+        "role": "admin",  # Пока все админы, потом сделаем проверку
+        "total": total,
+        "wins": wins,
+        "losses": losses,
+        "skipped": skipped,
+        "expired": expired,
+        "winrate": winrate,
+        "pnl": pnl
     })
 
         
