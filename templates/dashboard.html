@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTC Dashboard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -31,7 +31,6 @@
         .stat-value { font-weight: bold; }
         canvas { max-height: 250px; margin-bottom: 15px; }
         
-        /* КНОПКИ */
         .btn-container {
             display: flex;
             flex-direction: column;
@@ -48,13 +47,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
         }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
+        .btn:hover { opacity: 0.9; }
         .btn-secondary {
             background-color: var(--tg-theme-secondary-bg-color, #2c2c2e);
             border: 2px solid var(--tg-theme-button-color, #3390ec);
@@ -64,7 +58,6 @@
         }
         .hidden { display: none !important; }
         
-        /* Секретная зона */
         #secretZone {
             margin-top: 20px;
             padding: 15px;
@@ -72,12 +65,17 @@
             border-radius: 12px;
             text-align: center;
         }
+        
+        .error-msg {
+            color: #ff3b30;
+            text-align: center;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
     <h1 id="logo">📊 MTC Dashboard</h1>
     
-    <!-- Статистика -->
     <div class="card" id="statsCard">
         <div class="stat-row">
             <span class="stat-label">Всего сделок:</span>
@@ -93,49 +91,45 @@
         </div>
     </div>
 
-    <!-- График -->
     <div class="card" id="chartCard">
         <canvas id="myChart"></canvas>
     </div>
 
-    <!-- Разборы (для VIP и админов) -->
     <div class="card hidden" id="analysesCard">
         <h3 style="margin-top:0;">📚 Разборы сделок</h3>
         <div id="analysesList">Загрузка...</div>
     </div>
 
-    <!-- КНОПКИ -->
-<div class="btn-container">
-    <button class="btn" onclick="refreshData()">Обновить данные</button>
-    <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">Разборы сделок</button>
-    <button class="btn btn-secondary hidden" id="btnCreateAnalysis" onclick="showCreateForm()">Создать разбор</button>
-    <button class="btn btn-secondary" onclick="shareStats()">Поделиться статистикой</button>
-    <button class="btn btn-danger" onclick="closeApp()">Закрыть</button>
-</div>
+    <div class="btn-container">
+        <button class="btn" onclick="refreshData()">Обновить данные</button>
+        <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">Разборы сделок</button>
+        <button class="btn btn-secondary hidden" id="btnCreateAnalysis" onclick="showCreateForm()">Создать разбор</button>
+        <button class="btn btn-secondary" onclick="shareStats()">Поделиться статистикой</button>
+        <button class="btn btn-danger" onclick="closeApp()">Закрыть</button>
+    </div>
 
-    <!-- Секретная зона (пасхалка для админов) -->
     <div class="card hidden" id="secretZone">
-        <h3>🔥 SECRET ZONE</h3>
-        <p>Ты настоящий админ! </p>
+        <h3> SECRET ZONE</h3>
+        <p>Ты настоящий админ!</p>
         <p style="font-size:12px; opacity:0.8;">"To be a trader is to be a warrior"</p>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
+        var tg = window.Telegram.WebApp;
         tg.expand();
         
-        let userRole = 'guest';
-        let clickCount = 0;
-        let lastClickTime = 0;
+        var userRole = 'guest';
+        var clickCount = 0;
+        var lastClickTime = 0;
+        var chartInstance = null;
 
-        // Пасхалка: 5 быстрых кликов по логотипу
+        // Пасхалка
         document.getElementById('logo').addEventListener('click', function() {
-            const now = Date.now();
+            var now = Date.now();
             if (now - lastClickTime < 1000) {
                 clickCount++;
                 if (clickCount >= 5 && userRole === 'admin') {
                     document.getElementById('secretZone').classList.remove('hidden');
-                    tg.HapticFeedback.notificationOccurred('success');
                     clickCount = 0;
                 }
             } else {
@@ -144,9 +138,7 @@
             lastClickTime = now;
         });
 
-        // Загрузка данных
-                function refreshData() {
-            tg.HapticFeedback.impactOccurred('light');
+        function refreshData() {
             document.getElementById('total').innerText = 'Загрузка...';
             
             fetch('/api/stats')
@@ -166,28 +158,21 @@
                     
                     userRole = data.role || 'guest';
                     
-                    if (userRole === 'guest') {
-                        showGuestView();
-                        return;
-                    }
-                    
                     document.getElementById('total').innerText = data.total || 0;
                     document.getElementById('winrate').innerText = (data.winrate || 0) + '%';
                     document.getElementById('pnl').innerText = (data.pnl || 0) + '%';
 
-                                        // График
+                    // Рисуем график
                     var ctx = document.getElementById('myChart').getContext('2d');
                     var wins = data.wins || 0;
                     var losses = data.losses || 0;
                     var other = (data.skipped || 0) + (data.expired || 0);
                     
-                    // Сначала уничтожаем старый график если есть
-                    if (window.myChart) {
-                        window.myChart.data.datasets[0].data = [wins, losses, other];
-                        window.myChart.update();
+                    if (chartInstance) {
+                        chartInstance.data.datasets[0].data = [wins, losses, other];
+                        chartInstance.update();
                     } else {
-                        // Создаем новый
-                        window.myChart = new Chart(ctx, {
+                        chartInstance = new Chart(ctx, {
                             type: 'doughnut',
                             data: {
                                 labels: ['TP (Победы)', 'SL (Поражения)', 'Прочее'],
@@ -202,13 +187,14 @@
                                 plugins: {
                                     legend: {
                                         position: 'bottom',
-                                        labels: { color: tg.themeParams.text_color || '#ffffff' }
+                                        labels: { color: '#ffffff' }
                                     }
                                 }
                             }
                         });
                     }
                     
+                    // Показываем кнопки по ролям
                     if (userRole === 'vip' || userRole === 'admin') {
                         document.getElementById('btnAnalyses').classList.remove('hidden');
                     }
@@ -216,37 +202,19 @@
                         document.getElementById('btnCreateAnalysis').classList.remove('hidden');
                     }
                     
-                    tg.HapticFeedback.notificationOccurred('success');
+                    console.log('Success! Role:', userRole);
                 })
                 .catch(function(err) {
                     console.error('FULL ERROR:', err);
                     document.getElementById('total').innerText = 'Ошибка';
                     document.getElementById('winrate').innerText = '—';
                     document.getElementById('pnl').innerText = '—';
-                    tg.showPopup({
-                        title: 'Ошибка',
-                        message: 'Не удалось загрузить данные. Проверь консоль.',
-                        buttons: [{type: 'ok'}]
-                    });
-                    tg.HapticFeedback.notificationOccurred('error');
+                    alert('Ошибка загрузки: ' + err.message);
                 });
         }
 
-        function showGuestView() {
-            document.getElementById('statsCard').innerHTML = `
-                <div style="text-align:center; padding:20px;">
-                    <p>🔒 Доступ ограничен</p>
-                    <p style="font-size:14px; opacity:0.8;">Подпишись на канал, чтобы получить доступ к статистике</p>
-                    <button class="btn" onclick="tg.openTelegramLink('https://t.me/your_channel')" style="margin-top:10px;">
-                        📢 Подписаться
-                    </button>
-                </div>
-            `;
-            document.getElementById('chartCard').classList.add('hidden');
-        }
-
         function toggleAnalyses() {
-            const card = document.getElementById('analysesCard');
+            var card = document.getElementById('analysesCard');
             card.classList.toggle('hidden');
             if (!card.classList.contains('hidden')) {
                 loadAnalyses();
@@ -255,53 +223,50 @@
 
         function loadAnalyses() {
             fetch('/api/analyses')
-                .then(r => r.json())
-                .then(analyses => {
-                    const list = document.getElementById('analysesList');
+                .then(function(r) { return r.json(); })
+                .then(function(analyses) {
+                    var list = document.getElementById('analysesList');
                     if (analyses.length === 0) {
                         list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>';
                         return;
                     }
-                    list.innerHTML = analyses.map(a => `
-                        <div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
-                            <strong>${a.symbol} ${a.tf} ${a.direction.toUpperCase()}</strong><br>
-                            <small>${a.result} | PnL: ${a.pnl}</small><br>
-                            <small style="opacity:0.7;">👁 ${a.views || 0}</small>
-                        </div>
-                    `).join('');
+                    list.innerHTML = analyses.map(function(a) {
+                        return '<div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">' +
+                            '<strong>' + a.symbol + ' ' + a.tf + ' ' + a.direction.toUpperCase() + '</strong><br>' +
+                            '<small>' + a.result + ' | PnL: ' + a.pnl + '</small><br>' +
+                            '<small style="opacity:0.7;"> ' + (a.views || 0) + '</small>' +
+                            '</div>';
+                    }).join('');
+                })
+                .catch(function(err) {
+                    console.error('Analyses error:', err);
                 });
         }
 
         function showCreateForm() {
-            tg.showPopup({
-                title: 'Создать разбор',
-                message: 'Форма создания разбора будет здесь (нужен backend)',
-                buttons: [{type: 'ok'}]
-            });
+            alert('Форма создания разбора будет здесь');
         }
 
         function shareStats() {
-            tg.HapticFeedback.impactOccurred('medium');
-            const text = `📊 MTC Stats\n` +
-                        `Сделок: ${document.getElementById('total').innerText}\n` +
-                        `Винрейт: ${document.getElementById('winrate').innerText}\n` +
-                        `@mtcthunter_bot`;
+            var text = '📊 MTC Stats\n' +
+                'Сделок: ' + document.getElementById('total').innerText + '\n' +
+                'Винрейт: ' + document.getElementById('winrate').innerText + '\n' +
+                '@mtcthunter_bot';
             
-            navigator.clipboard.writeText(text).then(() => {
-                tg.showPopup({
-                    title: 'Готово!',
-                    message: 'Статистика скопирована',
-                    buttons: [{type: 'ok'}]
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() {
+                    alert('Статистика скопирована!');
                 });
-            });
+            } else {
+                alert(text);
+            }
         }
 
         function closeApp() {
-            tg.HapticFeedback.impactOccurred('light');
             tg.close();
         }
 
-        // Автозагрузка при открытии
+        // Автозагрузка
         refreshData();
     </script>
 </body>
