@@ -278,26 +278,32 @@
                 });
         }
 
-        function showCreateForm() {
-            alert('Форма создания разбора будет здесь');
+                function showCreateForm() {
+            tg.showPopup({
+                title: 'Создать разбор',
+                message: 'Форма создания разбора будет здесь (нужен backend)',
+                buttons: [{type: 'ok'}]
+            });
         }
 
         function shareStats() {
-            var text = '📊 MTC Stats\n' +
-                'Сделок: ' + document.getElementById('total').innerText + '\n' +
-                'Винрейт: ' + document.getElementById('winrate').innerText + '\n' +
-                '@mtcthunter_bot';
+            tg.HapticFeedback.impactOccurred('medium');
+            const text = `📊 MTC Stats\n` +
+                        `Сделок: ${document.getElementById('total').innerText}\n` +
+                        `Винрейт: ${document.getElementById('winrate').innerText}\n` +
+                        `@mtcthunter_bot`;
             
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(function() {
-                    alert('Статистика скопирована!');
+            navigator.clipboard.writeText(text).then(() => {
+                tg.showPopup({
+                    title: 'Готово!',
+                    message: 'Статистика скопирована',
+                    buttons: [{type: 'ok'}]
                 });
-            } else {
-                alert(text);
-            }
+            });
         }
 
         function closeApp() {
+            tg.HapticFeedback.impactOccurred('light');
             tg.close();
         }
 
