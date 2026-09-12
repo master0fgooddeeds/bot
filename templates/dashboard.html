@@ -175,15 +175,18 @@
                     document.getElementById('winrate').innerText = (data.winrate || 0) + '%';
                     document.getElementById('pnl').innerText = (data.pnl || 0) + '%';
 
+                                        // График
                     var ctx = document.getElementById('myChart').getContext('2d');
                     var wins = data.wins || 0;
                     var losses = data.losses || 0;
                     var other = (data.skipped || 0) + (data.expired || 0);
                     
+                    // Сначала уничтожаем старый график если есть
                     if (window.myChart) {
                         window.myChart.data.datasets[0].data = [wins, losses, other];
                         window.myChart.update();
                     } else {
+                        // Создаем новый
                         window.myChart = new Chart(ctx, {
                             type: 'doughnut',
                             data: {
