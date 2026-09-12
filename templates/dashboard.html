@@ -145,18 +145,26 @@
         });
 
         // Загрузка данных
-        function refreshData() {
+                function refreshData() {
             tg.HapticFeedback.impactOccurred('light');
             document.getElementById('total').innerText = 'Загрузка...';
             
             fetch('/api/stats')
-                .then(r => {
-                     console.log('Response status:', r.status);
-                     return r.json();
+                .then(function(response) {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error('HTTP error ' + response.status);
+                    }
+                    return response.json();
                 })
-                .then(data => {
-                     console.log('Received data:', data);  // ← ЭТА СТРОКА ВАЖНА!
-                     userRole = data.role || 'guest';
+                .then(function(data) {
+                    console.log('Received data:', data);
+                    
+                    if (!data || typeof data !== 'object') {
+                        throw new Error('Invalid data format');
+                    }
+                    
+                    userRole = data.role || 'guest';
                     
                     if (userRole === 'guest') {
                         showGuestView();
@@ -167,11 +175,10 @@
                     document.getElementById('winrate').innerText = (data.winrate || 0) + '%';
                     document.getElementById('pnl').innerText = (data.pnl || 0) + '%';
 
-                    // График
-                    const ctx = document.getElementById('myChart').getContext('2d');
-                    const wins = data.wins || 0;
-                    const losses = data.losses || 0;
-                    const other = (data.skipped || 0) + (data.expired || 0);
+                    var ctx = document.getElementById('myChart').getContext('2d');
+                    var wins = data.wins || 0;
+                    var losses = data.losses || 0;
+                    var other = (data.skipped || 0) + (data.expired || 0);
                     
                     if (window.myChart) {
                         window.myChart.data.datasets[0].data = [wins, losses, other];
@@ -199,7 +206,6 @@
                         });
                     }
                     
-                    // Показываем кнопки по ролям
                     if (userRole === 'vip' || userRole === 'admin') {
                         document.getElementById('btnAnalyses').classList.remove('hidden');
                     }
@@ -209,9 +215,16 @@
                     
                     tg.HapticFeedback.notificationOccurred('success');
                 })
-                .catch(err => {
-                    console.error('Ошибка:', err);
+                .catch(function(err) {
+                    console.error('FULL ERROR:', err);
                     document.getElementById('total').innerText = 'Ошибка';
+                    document.getElementById('winrate').innerText = '—';
+                    document.getElementById('pnl').innerText = '—';
+                    tg.showPopup({
+                        title: 'Ошибка',
+                        message: 'Не удалось загрузить данные. Проверь консоль.',
+                        buttons: [{type: 'ok'}]
+                    });
                     tg.HapticFeedback.notificationOccurred('error');
                 });
         }
