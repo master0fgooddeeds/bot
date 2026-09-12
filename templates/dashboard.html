@@ -150,9 +150,13 @@
             document.getElementById('total').innerText = 'Загрузка...';
             
             fetch('/api/stats')
-                .then(r => r.json())
+                .then(r => {
+                     console.log('Response status:', r.status);
+                     return r.json();
+                })
                 .then(data => {
-                    userRole = data.role || 'guest';
+                     console.log('Received data:', data);  // ← ЭТА СТРОКА ВАЖНА!
+                     userRole = data.role || 'guest';
                     
                     if (userRole === 'guest') {
                         showGuestView();
