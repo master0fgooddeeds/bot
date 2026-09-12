@@ -6,6 +6,7 @@ matplotlib.use("Agg")
 import mplfinance as mpf
 from datetime import datetime, timedelta
 from flask import Flask, request
+from flask import render_template, jsonify
 
 TOKEN = "8845319540:AAHsIvOXzVeaKEBNWYWDIHVRPY9QX4YLSmA"
 WEBHOOK_URL = "https://web-production-eadde.up.railway.app/tg_webhook"
@@ -342,13 +343,16 @@ def handle_update(up):
         uid = cb["from"]["id"]
         data = cb.get("data", "")
         if not is_admin(uid):
-            tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "Не твои кнопки 😼"}); return
+            tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "Не твои кнопки 😼"})
+            return
         tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "ok"})
+        
         if data.startswith("bx:"):
             BX["wait_link"][str(uid)] = data[3:]
             tg("sendMessage", data={"chat_id": uid, "text": "🔗 Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
         elif data.startswith("skip:"):
-            BX["pending"].pop(data[5:], None); bx_save()
+            BX["pending"].pop(data[5:], None)
+            bx_save()
             tg("sendMessage", data={"chat_id": uid, "text": "❌ Пропущено."})
         elif data.startswith("conf:"):
             sid = data[5:]
@@ -364,13 +368,36 @@ def handle_update(up):
             if s:
                 s["status"] = "closed"
                 s["close_result"] = "admin_cancel"
-                save_stat(s, "expired", 0.0); bx_save()
+                save_stat(s, "expired", 0.0)
+                bx_save()
                 cap = f"""❌ *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
 _Сетап признан неактуальным._"""
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
                 tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} закрыт админом"})
+        elif data == "gen_vip_post":
+            stats = load_stats()
+            total = stats.get("total", 0)
+            wins = stats.get("wins", 0)
+            losses = stats.get("losses", 0)
+            winrate = round((wins / total) * 100, 1) if total > 0 else 0
+            
+            vip_post = f"""📊 *MTC Trading Platform*
+
+📈 *Статистика:*
+• Сделок: {total}
+• Винрейт: {winrate}%
+• TP: {wins} | SL: {losses}
+
+🎯 *Стратегия:* CHoCH + FVG
+⚙️ *ТФ:* 4H → 15m, 1H → 5m
+
+👉 Жми кнопку ниже, чтобы открыть дашборд!"""
+            
+            kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+            tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
+            tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         return
 
     msg = up.get("message")
@@ -384,7 +411,27 @@ _Сетап признан неактуальным._"""
         if is_private or is_group_chat:
             if txt.strip() == "/start":
                 if is_admin(uid):
-                    tg("sendMessage", data={"chat_id": uid, "text": f"👑 Привет, Админ!\n\nДоступные команды:\n/stats - статистика\n/active - активные сетапы\n/grant @user TOPIC_ID [ДНИ] - выдать доступ\n/revoke @user TOPIC_ID - отозвать\n/list [TOPIC_ID] - список\n/myaccess - мои подписки\n/force_close ID - закрыть сетап вручную"})
+                    kb = {
+                        "inline_keyboard": [
+                            [{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                            [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]
+                        ]
+                    }
+                    welcome_text = """👑 *Привет, Админ!*
+
+Добро пожаловать в *MTC Trading Platform*!
+
+🎯 *Возможности платформы:*
+• Сигналы CHoCH + FVG в реальном времени
+• Автоматический анализ рынка
+• Статистика и аналитика сделок
+
+📊 *Используй кнопки ниже:*
+• "Открыть Дашборд" — твой личный кабинет
+• "Сгенерировать пост для VIP" — создай красивый пост для пересылки в канал
+
+_Платформа в разработке. Следим за прогрессом!_"""
+                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 else:
                     tg("sendMessage", data={"chat_id": uid, "text": "Привет! Я ассистент My Trading Club."})
                 return
@@ -420,8 +467,8 @@ _Сетап признан неактуальным._"""
                         lines.append(f"🔹 *#{sid}* · {s['sym']} {s['tf']} {s['dir'].upper()}")
                         lines.append(f"   Вход: `{s['entry_price']:,.2f}` | SL: `{s['sl']:,.2f}` | TP: `{s['tp']:,.2f}`")
                         lines.append(f"   Статус: `{s.get('status', '?')}`\n")
-                    msg = "📊 *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
-                    tg("sendMessage", data={"chat_id": uid, "text": msg, "parse_mode": "Markdown"})
+                    msg_text = "📊 *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
+                    tg("sendMessage", data={"chat_id": uid, "text": msg_text, "parse_mode": "Markdown"})
                 return
 
             if txt.startswith("/force_close ") and is_admin(uid):
@@ -432,7 +479,8 @@ _Сетап признан неактуальным._"""
                     if s:
                         s["status"] = "closed"
                         s["close_result"] = "admin_cancel"
-                        save_stat(s, "expired", 0.0); bx_save()
+                        save_stat(s, "expired", 0.0)
+                        bx_save()
                         cap = f"""❌ *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
 _Закрыто вручную._"""
                         if s.get("vip_msg"):
@@ -483,7 +531,6 @@ _Закрыто вручную._"""
                     s["id"] = sid
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
-
 def tg(method, **kw):
     for attempt in range(3):
         try:
@@ -644,3 +691,29 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+# --- РОУТЫ ДЛЯ МИНИ-АПП ДАШБОРДА ---
+
+@app.route('/dashboard')
+def dashboard_page():
+    return render_template('dashboard.html')
+
+@app.route('/api/stats')
+def api_stats():
+    # Здесь мы берем данные из твоего файла статистики
+    # (Предполагается, что у тебя есть функция load_stats() или словарь stats)
+    stats = load_stats() if 'load_stats' in globals() else {}
+    
+    total = stats.get("total", 0)
+    wins = stats.get("wins", 0)
+    losses = stats.get("losses", 0)
+    skipped = stats.get("skipped", 0)
+    expired = stats.get("expired", 0)
+    
+    winrate = round((wins / total) * 100, 1) if total > 0 else 0
+    pnl = round((wins * 2.0) - (losses * 1.0), 2) 
+    
+    return jsonify({
+        "total": total, "wins": wins, "losses": losses,
+        "skipped": skipped, "expired": expired,
+        "winrate": winrate, "pnl": pnl
+    })
