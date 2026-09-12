@@ -65,12 +65,6 @@
             border-radius: 12px;
             text-align: center;
         }
-        
-        .error-msg {
-            color: #ff3b30;
-            text-align: center;
-            padding: 10px;
-        }
     </style>
 </head>
 <body>
@@ -106,42 +100,41 @@
         <button class="btn btn-secondary hidden" id="btnCreateAnalysis" onclick="showCreateForm()">Создать разбор</button>
         <button class="btn btn-secondary" onclick="shareStats()">Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">Закрыть</button>
-        </div>
+    </div>
 
-<!-- МОДАЛКА СОЗДАНИЯ РАЗБОРА -->
-<div class="card hidden" id="createForm">
-    <h3 style="margin-top:0;">Создать разбор</h3>
-    
-    <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Выбери сетап:</label>
-        <select id="setupSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;">
-            <option value="">Загрузка...</option>
-        </select>
-    </div>
-    
-    <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Результат:</label>
-        <select id="resultSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;">
-            <option value="tp">TP (Take Profit)</option>
-            <option value="sl">SL (Stop Loss)</option>
-            <option value="manual">Закрыт вручную</option>
-        </select>
-    </div>
-    
-    <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Текст разбора:</label>
-        <textarea id="analysisText" rows="5" placeholder="Опиши ситуацию, уровни, логику входа..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; font-family:inherit; box-sizing:border-box;"></textarea>
-    </div>
-    
-    <div class="btn-container" style="margin-top:15px;">
-        <button class="btn" onclick="saveAnalysis()">Сохранить разбор</button>
-        <button class="btn btn-secondary" onclick="cancelCreateForm()">Отмена</button>
-    </div>
-</div>
+    <!-- МОДАЛКА СОЗДАНИЯ РАЗБОРА -->
+    <div class="card hidden" id="createForm">
+        <h3 style="margin-top:0;">Создать разбор</h3>
+        
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Выбери сетап:</label>
+            <select id="setupSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;">
+                <option value="">Загрузка...</option>
+            </select>
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Результат:</label>
+            <select id="resultSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;">
+                <option value="tp">TP (Take Profit)</option>
+                <option value="sl">SL (Stop Loss)</option>
+                <option value="manual">Закрыт вручную</option>
+            </select>
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Текст разбора:</label>
+            <textarea id="analysisText" rows="5" placeholder="Опиши ситуацию, уровни, логику входа..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; font-family:inherit; box-sizing:border-box;"></textarea>
+        </div>
+        
+        <div class="btn-container" style="margin-top:15px;">
+            <button class="btn" onclick="saveAnalysis()">Сохранить разбор</button>
+            <button class="btn btn-secondary" onclick="cancelCreateForm()">Отмена</button>
+        </div>
     </div>
 
     <div class="card hidden" id="secretZone">
-        <h3> SECRET ZONE</h3>
+        <h3>🔥 SECRET ZONE</h3>
         <p>Ты настоящий админ!</p>
         <p style="font-size:12px; opacity:0.8;">"To be a trader is to be a warrior"</p>
     </div>
@@ -175,26 +168,17 @@
             
             fetch('/api/stats')
                 .then(function(response) {
-                    console.log('Response status:', response.status);
-                    if (!response.ok) {
-                        throw new Error('HTTP error ' + response.status);
-                    }
+                    if (!response.ok) throw new Error('HTTP error ' + response.status);
                     return response.json();
                 })
                 .then(function(data) {
-                    console.log('Received data:', data);
-                    
-                    if (!data || typeof data !== 'object') {
-                        throw new Error('Invalid data format');
-                    }
+                    if (!data || typeof data !== 'object') throw new Error('Invalid data format');
                     
                     userRole = data.role || 'guest';
-                    
                     document.getElementById('total').innerText = data.total || 0;
                     document.getElementById('winrate').innerText = (data.winrate || 0) + '%';
                     document.getElementById('pnl').innerText = (data.pnl || 0) + '%';
 
-                                        // Рисуем график с небольшой задержкой
                     setTimeout(function() {
                         var ctx = document.getElementById('myChart').getContext('2d');
                         var wins = data.wins || 0;
@@ -218,32 +202,21 @@
                                 options: {
                                     responsive: true,
                                     maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: {
-                                            position: 'bottom',
-                                            labels: { color: '#ffffff' }
-                                        }
-                                    }
+                                    plugins: { legend: { position: 'bottom', labels: { color: '#ffffff' } } }
                                 }
                             });
                         }
                     }, 100);
                     
-                    // Показываем кнопки по ролям
                     if (userRole === 'vip' || userRole === 'admin') {
                         document.getElementById('btnAnalyses').classList.remove('hidden');
                     }
                     if (userRole === 'admin') {
                         document.getElementById('btnCreateAnalysis').classList.remove('hidden');
                     }
-                    
-                    console.log('Success! Role:', userRole);
                 })
                 .catch(function(err) {
-                    console.error('FULL ERROR:', err);
                     document.getElementById('total').innerText = 'Ошибка';
-                    document.getElementById('winrate').innerText = '—';
-                    document.getElementById('pnl').innerText = '—';
                     alert('Ошибка загрузки: ' + err.message);
                 });
         }
@@ -251,9 +224,7 @@
         function toggleAnalyses() {
             var card = document.getElementById('analysesCard');
             card.classList.toggle('hidden');
-            if (!card.classList.contains('hidden')) {
-                loadAnalyses();
-            }
+            if (!card.classList.contains('hidden')) loadAnalyses();
         }
 
         function loadAnalyses() {
@@ -269,45 +240,106 @@
                         return '<div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">' +
                             '<strong>' + a.symbol + ' ' + a.tf + ' ' + a.direction.toUpperCase() + '</strong><br>' +
                             '<small>' + a.result + ' | PnL: ' + a.pnl + '</small><br>' +
-                            '<small style="opacity:0.7;"> ' + (a.views || 0) + '</small>' +
+                            '<small style="opacity:0.7;">👁 ' + (a.views || 0) + '</small>' +
                             '</div>';
                     }).join('');
-                })
-                .catch(function(err) {
-                    console.error('Analyses error:', err);
                 });
         }
 
-                function showCreateForm() {
-            tg.showPopup({
-                title: 'Создать разбор',
-                message: 'Форма создания разбора будет здесь (нужен backend)',
-                buttons: [{type: 'ok'}]
+        function showCreateForm() {
+            document.getElementById('createForm').classList.remove('hidden');
+            document.getElementById('statsCard').classList.add('hidden');
+            document.getElementById('chartCard').classList.add('hidden');
+            document.getElementById('analysesCard').classList.add('hidden');
+            loadActiveSetups();
+        }
+
+        function cancelCreateForm() {
+            document.getElementById('createForm').classList.add('hidden');
+            document.getElementById('statsCard').classList.remove('hidden');
+            document.getElementById('chartCard').classList.remove('hidden');
+            document.getElementById('analysisText').value = '';
+        }
+
+        function loadActiveSetups() {
+            fetch('/api/active_setups')
+                .then(function(r) { return r.json(); })
+                .then(function(setups) {
+                    var select = document.getElementById('setupSelect');
+                    if (setups.length === 0) {
+                        select.innerHTML = '<option value="">Нет активных сетапов</option>';
+                        return;
+                    }
+                    select.innerHTML = setups.map(function(s) {
+                        return '<option value="' + s.id + '">' + s.sym + ' ' + s.tf + ' ' + s.dir.toUpperCase() + ' @ ' + s.entry_price + '</option>';
+                    }).join('');
+                })
+                .catch(function(err) {
+                    document.getElementById('setupSelect').innerHTML = '<option value="">Ошибка загрузки</option>';
+                });
+        }
+
+        function saveAnalysis() {
+            var setupId = document.getElementById('setupSelect').value;
+            var result = document.getElementById('resultSelect').value;
+            var text = document.getElementById('analysisText').value;
+            
+            if (!setupId) {
+                alert('Выбери сетап из списка!');
+                return;
+            }
+            
+            // АВТОМАТИЧЕСКИ БЕРЕМ UID ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM!
+            var currentUserId = tg.initDataUnsafe ? tg.initDataUnsafe.user.id : 0;
+            
+            var data = {
+                setup_id: setupId,
+                result: result,
+                analysis_text: text,
+                admin_uid: currentUserId
+            };
+            
+            fetch('/api/analysis/' + setupId, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    alert('Разбор успешно сохранен!');
+                    cancelCreateForm();
+                    refreshData();
+                } else {
+                    alert('Ошибка: ' + (res.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(function(err) {
+                alert('Ошибка сохранения: ' + err.message);
             });
         }
 
         function shareStats() {
-            tg.HapticFeedback.impactOccurred('medium');
-            const text = `📊 MTC Stats\n` +
-                        `Сделок: ${document.getElementById('total').innerText}\n` +
-                        `Винрейт: ${document.getElementById('winrate').innerText}\n` +
-                        `@mtcthunter_bot`;
+            var text = '📊 MTC Stats\n' +
+                'Сделок: ' + document.getElementById('total').innerText + '\n' +
+                'Винрейт: ' + document.getElementById('winrate').innerText + '\n' +
+                '@mtcthunter_bot';
             
-            navigator.clipboard.writeText(text).then(() => {
-                tg.showPopup({
-                    title: 'Готово!',
-                    message: 'Статистика скопирована',
-                    buttons: [{type: 'ok'}]
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() {
+                    alert('Статистика скопирована в буфер обмена!');
+                }).catch(function() {
+                    alert(text);
                 });
-            });
+            } else {
+                alert(text);
+            }
         }
 
         function closeApp() {
-            tg.HapticFeedback.impactOccurred('light');
             tg.close();
         }
 
-        // Автозагрузка
         refreshData();
     </script>
 </body>
