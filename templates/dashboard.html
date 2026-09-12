@@ -162,37 +162,40 @@
                     document.getElementById('winrate').innerText = (data.winrate || 0) + '%';
                     document.getElementById('pnl').innerText = (data.pnl || 0) + '%';
 
-                    // Рисуем график
-                    var ctx = document.getElementById('myChart').getContext('2d');
-                    var wins = data.wins || 0;
-                    var losses = data.losses || 0;
-                    var other = (data.skipped || 0) + (data.expired || 0);
-                    
-                    if (chartInstance) {
-                        chartInstance.data.datasets[0].data = [wins, losses, other];
-                        chartInstance.update();
-                    } else {
-                        chartInstance = new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                labels: ['TP (Победы)', 'SL (Поражения)', 'Прочее'],
-                                datasets: [{
-                                    data: [wins, losses, other],
-                                    backgroundColor: ['#00e676', '#ff003c', '#7a7a7a'],
-                                    borderWidth: 0
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: { color: '#ffffff' }
+                                        // Рисуем график с небольшой задержкой
+                    setTimeout(function() {
+                        var ctx = document.getElementById('myChart').getContext('2d');
+                        var wins = data.wins || 0;
+                        var losses = data.losses || 0;
+                        var other = (data.skipped || 0) + (data.expired || 0);
+                        
+                        if (chartInstance) {
+                            chartInstance.data.datasets[0].data = [wins, losses, other];
+                            chartInstance.update();
+                        } else {
+                            chartInstance = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['TP (Победы)', 'SL (Поражения)', 'Прочее'],
+                                    datasets: [{
+                                        data: [wins, losses, other],
+                                        backgroundColor: ['#00e676', '#ff003c', '#7a7a7a'],
+                                        borderWidth: 0
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            position: 'bottom',
+                                            labels: { color: '#ffffff' }
+                                        }
                                     }
                                 }
-                            }
-                        });
-                    }
+                            });
+                        }
+                    }, 100);
                     
                     // Показываем кнопки по ролям
                     if (userRole === 'vip' || userRole === 'admin') {
