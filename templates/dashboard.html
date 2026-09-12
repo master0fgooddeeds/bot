@@ -106,6 +106,38 @@
         <button class="btn btn-secondary hidden" id="btnCreateAnalysis" onclick="showCreateForm()">Создать разбор</button>
         <button class="btn btn-secondary" onclick="shareStats()">Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">Закрыть</button>
+        </div>
+
+<!-- МОДАЛКА СОЗДАНИЯ РАЗБОРА -->
+<div class="card hidden" id="createForm">
+    <h3 style="margin-top:0;">Создать разбор</h3>
+    
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Выбери сетап:</label>
+        <select id="setupSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;">
+            <option value="">Загрузка...</option>
+        </select>
+    </div>
+    
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Результат:</label>
+        <select id="resultSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;">
+            <option value="tp">TP (Take Profit)</option>
+            <option value="sl">SL (Stop Loss)</option>
+            <option value="manual">Закрыт вручную</option>
+        </select>
+    </div>
+    
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Текст разбора:</label>
+        <textarea id="analysisText" rows="5" placeholder="Опиши ситуацию, уровни, логику входа..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; font-family:inherit; box-sizing:border-box;"></textarea>
+    </div>
+    
+    <div class="btn-container" style="margin-top:15px;">
+        <button class="btn" onclick="saveAnalysis()">Сохранить разбор</button>
+        <button class="btn btn-secondary" onclick="cancelCreateForm()">Отмена</button>
+    </div>
+</div>
     </div>
 
     <div class="card hidden" id="secretZone">
