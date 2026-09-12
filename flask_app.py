@@ -677,21 +677,7 @@ def setup_webhook():
             print(f"⚠️ Ошибка webhook: {r}")
     except Exception as e:
         print(f"⚠️ Webhook error: {e}")
-
-if not globals().get("_ALL_STARTED"):
-    _ALL_STARTED = True
-    setup_webhook()
-    threading.Thread(target=bx_watch_loop, daemon=True).start()
-    threading.Thread(target=access_check_loop, daemon=True).start()
-    print("\n" + "="*50)
-    print("✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ)!")
-    print(f"👑 Админов: {len(ADMIN_IDS)}")
-    print("="*50 + "\n")
-if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-# --- РОУТЫ ДЛЯ МИНИ-АПП ДАШБОРДА ---
+ # --- РОУТЫ ДЛЯ МИНИ-АПП ДАШБОРДА ---
 
 @app.route('/dashboard')
 def dashboard_page():
@@ -717,3 +703,20 @@ def api_stats():
         "skipped": skipped, "expired": expired,
         "winrate": winrate, "pnl": pnl
     })
+
+        
+
+if not globals().get("_ALL_STARTED"):
+    _ALL_STARTED = True
+    setup_webhook()
+    threading.Thread(target=bx_watch_loop, daemon=True).start()
+    threading.Thread(target=access_check_loop, daemon=True).start()
+    print("\n" + "="*50)
+    print("✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ)!")
+    print(f"👑 Админов: {len(ADMIN_IDS)}")
+    print("="*50 + "\n")
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+   
