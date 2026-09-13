@@ -287,48 +287,47 @@
                 });
         }
 
-        function saveAnalysis() {
-    var setupId = document.getElementById('setupSelect').value;
-    var result = document.getElementById('resultSelect').value;
-    var text = document.getElementById('analysisText').value;
-    
-    if (!setupId) {
-        alert('Выбери сетап из списка!');
-        return;
-    }
-    
-    // Получаем UID безопасно
-    var currentUserId = 0;
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        currentUserId = tg.initDataUnsafe.user.id;
-    }
-    
-    var data = {
-        setup_id: setupId,
-        result: result,
-        analysis_text: text,
-        admin_uid: currentUserId
-    };
-
-        function shareStats() {
-            var text = '📊 MTC Stats\n' +
-                'Сделок: ' + document.getElementById('total').innerText + '\n' +
-                'Винрейт: ' + document.getElementById('winrate').innerText + '\n' +
-                '@mtcthunter_bot';
+                function saveAnalysis() {
+            var setupId = document.getElementById('setupSelect').value;
+            var result = document.getElementById('resultSelect').value;
+            var text = document.getElementById('analysisText').value;
             
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(function() {
-                    alert('Статистика скопирована в буфер обмена!');
-                }).catch(function() {
-                    alert(text);
-                });
-            } else {
-                alert(text);
+            if (!setupId) {
+                alert('Выбери сетап из списка!');
+                return;
             }
-        }
-
-        function closeApp() {
-            tg.close();
+            
+            // Получаем UID безопасно
+            var currentUserId = 0;
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                currentUserId = tg.initDataUnsafe.user.id;
+            }
+            
+            var data = {
+                setup_id: setupId,
+                result: result,
+                analysis_text: text,
+                admin_uid: currentUserId
+            };
+            
+            fetch('/api/analysis/' + setupId, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    alert('Разбор успешно сохранен!');
+                    cancelCreateForm();
+                    refreshData();
+                } else {
+                    alert('Ошибка: ' + (res.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(function(err) {
+                alert('Ошибка сохранения: ' + err.message);
+            });
         }
 
         refreshData();
