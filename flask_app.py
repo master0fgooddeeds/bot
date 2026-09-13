@@ -36,8 +36,8 @@ USER_ACCESS = load_access()
 TOPIC_NAMES = {
     2190: "💎 VIP Сигналы", 1039: "💬 Флудилка", 1: "📢 General",
     2583: "📣 Объявления", 11: "💰 Сделки", 29: "📚 Статьи",
-    2: "❓ Вопросы", 3233: "⚠️ Скам", 2581: "📖 Библиотека",
-    3112: "⛓️ Блокчейн", 2189: " Стримы", 2816: "🎤 Саммит",
+    2: " Вопросы", 3233: "️ Скам", 2581: "📖 Библиотека",
+    3112: "⛓️ Блокчейн", 2189: "🎥 Стримы", 2816: " Саммит",
     2795: "📢 Новости", 133: "🎯 Тейки", 1040: "🔒 Тестовый",
     2710: "Топик 2710", 2767: "Топик 2767", 52: "Топик 52",
     2711: "Топик 2711", 45: "Топик 45", 46: "Топик 46",
@@ -109,6 +109,7 @@ def bx_load():
             data = json.load(f)
             BX["pending"].update(data.get("pending", {}))
             BX["active"].update(data.get("active", {}))
+            BX["wait_link"] = data.get("wait_link", {})
             BX["seq"] = data.get("seq", 1)
     except: pass
 
@@ -166,7 +167,7 @@ def fetch_admins_from_group():
         r = requests.get(f"https://api.telegram.org/bot{TOKEN}/getChatAdministrators", params={"chat_id": CHAT})
         if r.json().get("ok"):
             ADMIN_IDS = [m["user"]["id"] for m in r.json()["result"] if m["status"] in ("creator", "administrator") and not m["user"].get("is_bot")]
-            print(f"👑 Загружено админов: {len(ADMIN_IDS)}")
+            print(f" Загружено админов: {len(ADMIN_IDS)}")
     except Exception as e: print("⚠️ Не подтянул админов:", e)
 
 bx_load()
@@ -209,7 +210,7 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
     valid_hours = prof.get("valid_hours", 24)
     s.update({"sl": sl, "tp": tp, "link": link, "entry_price": entry_price,
               "expires_entry": _time.time() + (valid_hours * 3600), "status": "pending"})
-    emo = "" if s["dir"] == "long" else ""
+    emo = "" if s["dir"] == "long" else "🔴"
     d_txt = "LONG" if s["dir"] == "long" else "SHORT"
     exp_str = datetime.fromtimestamp(s["expires_entry"]).strftime("%d.%m %H:%M")
     risk = abs(entry_price - sl)
@@ -220,7 +221,7 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
 🎯 *Вход:* `{entry_price:,.2f}`
 🛡 *SL:* `{sl:,.2f}`
 💰 *TP:* `{tp:,.2f}`
-📊 *R:R:* 1:{rr:.1f}
+ *R:R:* 1:{rr:.1f}
 
 👉 [Перейти на BingX]({link})
 
@@ -228,7 +229,7 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
 _Если цена не дойдет до входа — сетап будет аннулирован_
 
 ⚠️ _Не является финансовой рекомендацией. DYOR._"""
-    print(f" Текст готов. Отправляем в {CHAT}, топик {VIP_TOPIC}...")
+    print(f"📝 Текст готов. Отправляем в {CHAT}, топик {VIP_TOPIC}...")
     try:
         r = send_text_safe({"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "parse_mode": "Markdown"}, cap)
         print(f"✅ Результат: {r}")
@@ -238,10 +239,14 @@ _Если цена не дойдет до входа — сетап будет �
             print(f"✅ Сетап опубликован! Message ID: {s['vip_msg']}")
         else:
             print(f"❌ Ошибка: {r}")
+            for aid in ADMIN_IDS:
+                tg("sendMessage", data={"chat_id": aid, "text": f"❌ Ошибка публикации сетапа {s['id']} в VIP:\n{r}"})
     except Exception as e:
         print(f"❌ КРИТИЧЕСКАЯ ОШИБКА: {e}")
         import traceback
         traceback.print_exc()
+        for aid in ADMIN_IDS:
+            tg("sendMessage", data={"chat_id": aid, "text": f" Критическая ошибка при публикации сетапа {s['id']}:\n{str(e)}"})
     BX["active"][s["id"]] = s
     bx_save()
     print(f"✅ Сетап {s['id']} сохранен в active\n{'='*50}\n")
@@ -251,7 +256,7 @@ def close_setup(sid, result):
     if not s: return
     s["status"] = "closed"
     s["close_result"] = result
-    head = {"tp": "🎯 TP ВЗЯТ", "sl": "🛡 SL СРАБОТАЛ", "exp": " ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
+    head = {"tp": "🎯 TP ВЗЯТ", "sl": "🛡 SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
     entry = s.get("entry_price", 0)
     exit_price = s["tp"] if result == "tp" else s["sl"]
     pnl_pct = ((exit_price - entry) / entry * 100) if s["dir"] == "long" else ((entry - exit_price) / entry * 100)
@@ -259,7 +264,7 @@ def close_setup(sid, result):
     cap = f"""{head} · {s['sym']}USDT · {s['tf']}
 ⏱ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
 📊 Результат: {pnl_sign}{pnl_pct:.2f}%
-🛡 SL: {s['sl']:,.2f} |  TP: {s['tp']:,.2f}"""
+🛡 SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
     if s.get("vip_msg"):
         try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
         except: pass
@@ -288,7 +293,7 @@ def bx_watch_step():
             if skipped_tp:
                 cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
 
- *Причина:* Цена достигла TP, не задев вход.
+🚀 *Причина:* Цена достигла TP, не задев вход.
 🎯 *Ожидаемый вход:* `{entry:,.2f}`
 📍 *Текущая цена:* `{price:,.2f}`"""
                 if s.get("vip_msg"):
@@ -302,10 +307,10 @@ def bx_watch_step():
                     s["asked_extend"] = True
                     bx_save()
                     kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": "❌ Закрыть", "callback_data": f"cncl:{sid}"}]]}
-                    admin_msg = f" *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏱ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n Цена: `{price:,.2f}`\n\n_Что делаем?_"
+                    admin_msg = f"⏳ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏱ Время вышло.\n Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
                     for aid in ADMIN_IDS:
                         tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
-                    print(f"⏳ Сетап {sid} ждёт решения админа")
+                    print(f" Сетап {sid} ждёт решения админа")
                 continue
             if reached:
                 s["status"] = "active"
@@ -315,10 +320,10 @@ def bx_watch_step():
                 active_cap = f"""✅ *СЕТАП АКТИВИРОВАН* · {s['sym']}USDT · {s['tf']}
 
 🎯 Вход пройден! Цена: `{price:,.2f}`
-🛡 *STOP LOSS:* `{s['sl']:,.2f}`
+ *STOP LOSS:* `{s['sl']:,.2f}`
 💰 *TAKE PROFIT:* `{s['tp']:,.2f}`
 
-🛡 Бот следит за SL и TP до победного конца!"""
+ Бот следит за SL и TP до победного конца!"""
                 try: tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": active_cap, "parse_mode": "Markdown", "reply_to_message_id": s.get("vip_msg")})
                 except: pass
         elif s.get("status") == "active":
@@ -330,7 +335,7 @@ def bx_watch_step():
                 if price <= s["tp"] * (1 - buf_frac): result = "tp"
                 elif price >= s["sl"] * (1 + buf_frac): result = "sl"
             if result:
-                print(f" #{sid}: {result.upper()} @ {price:,.2f}")
+                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f}")
                 close_setup(sid, result)
 
 def bx_watch_loop():
@@ -384,7 +389,7 @@ _Сетап признан неактуальным._"""
             wins = stats.get("wins", 0)
             losses = stats.get("losses", 0)
             winrate = round((wins / total) * 100, 1) if total > 0 else 0
-            vip_post = f""" *MTC Trading Platform*
+            vip_post = f"""📊 *MTC Trading Platform*
 
 📈 *Статистика:*
 • Сделок: {total}
@@ -394,8 +399,8 @@ _Сетап признан неактуальным._"""
 🎯 *Стратегия:* CHoCH + FVG
 ⚙️ *ТФ:* 4H → 15m, 1H → 5m
 
- Жми кнопку ниже, чтобы открыть дашборд!"""
-            kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+👉 Жми кнопку ниже, чтобы открыть дашборд!"""
+            kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
             tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
             tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         return
@@ -411,12 +416,12 @@ _Сетап признан неактуальным._"""
         if is_private or is_group_chat:
             if txt.strip() == "/start":
                 if is_admin(uid):
-                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
+                    kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
                     welcome_text = """👑 *Привет, Админ!*
 
 Добро пожаловать в *MTC Trading Platform*!
 
- *Возможности платформы:*
+🎯 *Возможности платформы:*
 • Сигналы CHoCH + FVG в реальном времени
 • Автоматический анализ рынка
 • Статистика и аналитика сделок
@@ -442,10 +447,10 @@ _Платформа в разработке. Следим за прогресс�
                 report = f"""📊 *ОТЧЕТ MY TRADING CLUB*
 
 📈 *Всего:* {stats['total']}
-🟢 *TP:* {stats['wins']} ({win_rate:.1f}%)
+ *TP:* {stats['wins']} ({win_rate:.1f}%)
 🔴 *SL:* {stats['losses']}
 ⚪ *Пропуск:* {stats['skipped']}
-⏳ *Истекло:* {stats['expired']}
+ *Истекло:* {stats['expired']}
 
 🕒 *Последние 5:*
 {history_text}"""
@@ -455,14 +460,14 @@ _Платформа в разработке. Следим за прогресс�
             if txt.strip() == "/active" and is_admin(uid):
                 active = BX.get("active", {})
                 if not active:
-                    tg("sendMessage", data={"chat_id": uid, "text": "📭 Нет активных сетапов"})
+                    tg("sendMessage", data={"chat_id": uid, "text": " Нет активных сетапов"})
                 else:
                     lines = []
                     for sid, s in active.items():
                         lines.append(f"🔹 *#{sid}* · {s['sym']} {s['tf']} {s['dir'].upper()}")
                         lines.append(f"   Вход: `{s['entry_price']:,.2f}` | SL: `{s['sl']:,.2f}` | TP: `{s['tp']:,.2f}`")
                         lines.append(f"   Статус: `{s.get('status', '?')}`\n")
-                    msg_text = "📊 *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
+                    msg_text = " *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
                     tg("sendMessage", data={"chat_id": uid, "text": msg_text, "parse_mode": "Markdown"})
                 return
 
@@ -483,7 +488,7 @@ _Закрыто вручную._"""
                             except: pass
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
-                        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
+                        tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
                 return
 
             if txt.startswith("/grant ") and is_admin(uid):
@@ -511,6 +516,17 @@ _Закрыто вручную._"""
                 else:
                     topics_list = "\n".join([f"• {t['name']} — {t['days_left']} дн." for t in topics])
                     tg("sendMessage", data={"chat_id": uid, "text": f"📋 Ваши подписки:\n{topics_list}"})
+                return
+
+            if txt.startswith("/test_setup ") and is_admin(uid):
+                parts = txt.split()
+                if len(parts) >= 4:
+                    sym = parts[1].upper()
+                    tf = parts[2]
+                    direction = parts[3].lower()
+                    sid = new_pending(sym, tf, direction, None)
+                    kb = {"inline_keyboard": [[{"text": f"🚀 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
+                    tg("sendMessage", data={"chat_id": uid, "text": f"🧪 *ТЕСТОВЫЙ СЕТАП #{sid}*\n\n{sym} {tf} {direction}\n\nНажми 'Сетап готов' и отправь данные.", "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 return
 
         if is_admin(uid) and str(uid) in BX.get("wait_link", {}):
@@ -646,7 +662,7 @@ def tv():
             send_text_safe(tg_base, text)
             sid = new_pending(sym, tf, direction, level)
             kb = {"inline_keyboard": [[{"text": f"🚀 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
-            admin_msg = f" *НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
+            admin_msg = f"🔔 *НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
             for aid in ADMIN_IDS:
                 tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": json.dumps(kb)})
             print(f"✅ CHoCH #{sid} создан")
