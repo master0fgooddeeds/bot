@@ -386,9 +386,9 @@ def handle_update(up):
         tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "ok"})
         
         if data.startswith("bx:"):
-    BX["wait_link"][str(uid)] = data[3:]
-    bx_save()  # ← ЭТА СТРОКА СПАСЕТ ВСЁ!
-    tg("sendMessage", data={"chat_id": uid, "text": "🔗 Вставь ссылку BingX..."})
+            BX["wait_link"][str(uid)] = data[3:]
+            bx_save()  # ← ЭТА СТРОКА СПАСЕТ ВСЁ!
+            tg("sendMessage", data={"chat_id": uid, "text": "🔗 Вставь ссылку BingX..."})
         elif data.startswith("skip:"):
             BX["pending"].pop(data[5:], None)
             bx_save()
