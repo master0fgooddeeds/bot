@@ -110,8 +110,10 @@ def bx_load():
 
 def bx_save():
     try:
-        with open(SETUPS_FILE, "w") as f: json.dump(BX, f)
-    except Exception as e: print("BX SAVE FAIL:", e)
+        with open(SETUPS_FILE, "w") as f: 
+            json.dump(BX, f, indent=2)
+    except Exception as e: 
+        print("BX SAVE FAIL:", e)
 
 def load_stats():
     try:
