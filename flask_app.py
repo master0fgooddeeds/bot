@@ -37,7 +37,7 @@ TOPIC_NAMES = {
     2190: "💎 VIP Сигналы", 1039: "💬 Флудилка", 1: "📢 General",
     2583: "📣 Объявления", 11: "💰 Сделки", 29: "📚 Статьи",
     2: "❓ Вопросы", 3233: "⚠️ Скам", 2581: "📖 Библиотека",
-    3112: "⛓️ Блокчейн", 2189: "🎥 Стримы", 2816: "🎤 Саммит",
+    3112: "⛓️ Блокчейн", 2189: " Стримы", 2816: "🎤 Саммит",
     2795: "📢 Новости", 133: "🎯 Тейки", 1040: "🔒 Тестовый",
     2710: "Топик 2710", 2767: "Топик 2767", 52: "Топик 52",
     2711: "Топик 2711", 45: "Топик 45", 46: "Топик 46",
@@ -105,7 +105,11 @@ BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
     try:
-        with open(SETUPS_FILE) as f: BX.update(json.load(f))
+        with open(SETUPS_FILE) as f: 
+            data = json.load(f)
+            BX["pending"].update(data.get("pending", {}))
+            BX["active"].update(data.get("active", {}))
+            BX["seq"] = data.get("seq", 1)
     except: pass
 
 def bx_save():
@@ -132,39 +136,29 @@ def save_stat(setup, result, pnl):
     if len(stats["history"]) > 100: stats["history"] = stats["history"][-100:]
     with open(STATS_FILE, "w") as f: json.dump(stats, f, indent=2)
 
-# ============================================
-# 📚 РАЗБОРЫ СДЕЛОК (ANALYSES)
-# ============================================
 ANALYSES_FILE = "analyses.json"
 
 def load_analyses():
     try:
-        with open(ANALYSES_FILE, "r") as f:
-            return json.load(f)
-    except:
-        return {}
+        with open(ANALYSES_FILE, "r") as f: return json.load(f)
+    except: return {}
 
 def save_analysis(setup_id, data):
     analyses = load_analyses()
     analyses[setup_id] = data
-    with open(ANALYSES_FILE, "w") as f:
-        json.dump(analyses, f, indent=2)
-    print(f"✅ Разбор для сетапа {setup_id} сохранен")
+    with open(ANALYSES_FILE, "w") as f: json.dump(analyses, f, indent=2)
 
-def get_analysis(setup_id):
-    return load_analyses().get(setup_id)
+def get_analysis(setup_id): return load_analyses().get(setup_id)
 
 def delete_analysis(setup_id):
     analyses = load_analyses()
     if setup_id in analyses:
         del analyses[setup_id]
-        with open(ANALYSES_FILE, "w") as f:
-            json.dump(analyses, f, indent=2)
+        with open(ANALYSES_FILE, "w") as f: json.dump(analyses, f, indent=2)
         return True
     return False
 
-def get_all_analyses():
-    return load_analyses()
+def get_all_analyses(): return load_analyses()
 
 def fetch_admins_from_group():
     global ADMIN_IDS
@@ -196,46 +190,31 @@ def get_price(sym, source="bingx"):
                 data = r.json()
                 if data.get('code') == 0 and data.get('data'):
                     return float(data['data']['lastPrice'])
-        except Exception as e:
-            print(f"BingX price error: {e}")
-    
+        except Exception as e: print(f"BingX price error: {e}")
     try:
         r = requests.get("https://fapi.binance.com/fapi/v1/ticker/price", params={"symbol": f"{sym}USDT"}, timeout=5)
-        if r.status_code == 200:
-            return float(r.json()["price"])
-    except Exception as e:
-        print(f"Binance Futures price error: {e}")
-    
+        if r.status_code == 200: return float(r.json()["price"])
+    except Exception as e: print(f"Binance Futures price error: {e}")
     pair = KRAKEN_PAIR.get(sym)
     if pair:
         try:
             r = requests.get("https://api.kraken.com/0/public/Ticker", params={"pair": pair}, timeout=5)
-            if r.status_code == 200:
-                return float(list(r.json()["result"].values())[0]["c"][0])
-        except Exception as e:
-            print(f"Kraken price error: {e}")
+            if r.status_code == 200: return float(list(r.json()["result"].values())[0]["c"][0])
+        except Exception as e: print(f"Kraken price error: {e}")
     return None
 
 def post_setup_to_vip(s, link, sl, tp, entry_price):
-    print(f"\n{'='*50}")
-    print(f"📤 ПУБЛИКАЦИЯ СЕТАПА {s['id']} В VIP")
-    print(f"{'='*50}")
-    
+    print(f"\n{'='*50}\n📤 ПУБЛИКАЦИЯ СЕТАПА {s['id']} В VIP\n{'='*50}")
     prof = TF_PROFILE.get(s["tf"], TF_PROFILE["4H"])
-    ttl = prof["candle_min"] * prof["ttl_candles"] * 60
     valid_hours = prof.get("valid_hours", 24)
     s.update({"sl": sl, "tp": tp, "link": link, "entry_price": entry_price,
-              "expires": _time.time() + ttl,
-              "expires_entry": _time.time() + (valid_hours * 3600),
-              "status": "pending"})
-    
-    emo = "" if s["dir"] == "long" else "🔴"
+              "expires_entry": _time.time() + (valid_hours * 3600), "status": "pending"})
+    emo = "" if s["dir"] == "long" else ""
     d_txt = "LONG" if s["dir"] == "long" else "SHORT"
     exp_str = datetime.fromtimestamp(s["expires_entry"]).strftime("%d.%m %H:%M")
     risk = abs(entry_price - sl)
     reward = abs(tp - entry_price)
     rr = reward / risk if risk > 0 else 0
-    
     cap = f"""{emo} *СЕТАП {d_txt}* · {s['sym']}USDT · {s['tf']} · {prof['style']}
 
 🎯 *Вход:* `{entry_price:,.2f}`
@@ -249,41 +228,30 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
 _Если цена не дойдет до входа — сетап будет аннулирован_
 
 ⚠️ _Не является финансовой рекомендацией. DYOR._"""
-    
-    print(f"📝 Текст сообщения готов")
-    print(f"📍 Отправляем в чат: {CHAT}, топик: {VIP_TOPIC}")
-    
+    print(f" Текст готов. Отправляем в {CHAT}, топик {VIP_TOPIC}...")
     try:
-        print("📤 Отправляем текст...")
         r = send_text_safe({"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "parse_mode": "Markdown"}, cap)
-        print(f"✅ Результат отправки: {r}")
-        
+        print(f"✅ Результат: {r}")
         if r.get("ok"):
             s["vip_chat"] = r["result"]["message"]["chat"]["id"]
             s["vip_msg"] = r["result"]["message_id"]
             print(f"✅ Сетап опубликован! Message ID: {s['vip_msg']}")
         else:
-            print(f"❌ Ошибка отправки: {r}")
-            for aid in ADMIN_IDS:
-                tg("sendMessage", data={"chat_id": aid, "text": f" Ошибка публикации сетапа {s['id']} в VIP:\n{r}"})
+            print(f"❌ Ошибка: {r}")
     except Exception as e:
         print(f"❌ КРИТИЧЕСКАЯ ОШИБКА: {e}")
         import traceback
         traceback.print_exc()
-        for aid in ADMIN_IDS:
-            tg("sendMessage", data={"chat_id": aid, "text": f"❌ Критическая ошибка при публикации сетапа {s['id']}:\n{str(e)}"})
-    
     BX["active"][s["id"]] = s
     bx_save()
-    print(f"✅ Сетап {s['id']} сохранен в active")
-    print(f"{'='*50}\n")
+    print(f"✅ Сетап {s['id']} сохранен в active\n{'='*50}\n")
 
 def close_setup(sid, result):
     s = BX["active"].pop(sid, None)
     if not s: return
     s["status"] = "closed"
     s["close_result"] = result
-    head = {"tp": "🎯 TP ВЗЯТ", "sl": "🛡 SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
+    head = {"tp": "🎯 TP ВЗЯТ", "sl": "🛡 SL СРАБОТАЛ", "exp": " ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
     entry = s.get("entry_price", 0)
     exit_price = s["tp"] if result == "tp" else s["sl"]
     pnl_pct = ((exit_price - entry) / entry * 100) if s["dir"] == "long" else ((entry - exit_price) / entry * 100)
@@ -291,17 +259,13 @@ def close_setup(sid, result):
     cap = f"""{head} · {s['sym']}USDT · {s['tf']}
 ⏱ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
 📊 Результат: {pnl_sign}{pnl_pct:.2f}%
-🛡 SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
-    
+🛡 SL: {s['sl']:,.2f} |  TP: {s['tp']:,.2f}"""
     if s.get("vip_msg"):
         try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
         except: pass
-        
     tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
-    
     for aid in ADMIN_IDS:
         tg("sendMessage", data={"chat_id": aid, "text": f"🎛 Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
-        
     save_stat(s, result, pnl_pct)
     bx_save()
 
@@ -324,21 +288,21 @@ def bx_watch_step():
             if skipped_tp:
                 cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
 
-🚀 *Причина:* Цена достигла TP, не задев вход.
+ *Причина:* Цена достигла TP, не задев вход.
 🎯 *Ожидаемый вход:* `{entry:,.2f}`
 📍 *Текущая цена:* `{price:,.2f}`"""
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
                 BX["active"].pop(sid, None); save_stat(s, "skipped_tp", 0.0); bx_save()
-                print(f"⚠️ Сетап {sid} аннулирован: улетел на ТП")
+                print(f"️ Сетап {sid} аннулирован: улетел на ТП")
                 continue
             if now > s.get("expires_entry", 0):
                 if not s.get("asked_extend"):
                     s["asked_extend"] = True
                     bx_save()
                     kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": "❌ Закрыть", "callback_data": f"cncl:{sid}"}]]}
-                    admin_msg = f"⏳ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏱ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
+                    admin_msg = f" *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏱ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n Цена: `{price:,.2f}`\n\n_Что делаем?_"
                     for aid in ADMIN_IDS:
                         tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                     print(f"⏳ Сетап {sid} ждёт решения админа")
@@ -366,7 +330,7 @@ def bx_watch_step():
                 if price <= s["tp"] * (1 - buf_frac): result = "tp"
                 elif price >= s["sl"] * (1 + buf_frac): result = "sl"
             if result:
-                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f}")
+                print(f" #{sid}: {result.upper()} @ {price:,.2f}")
                 close_setup(sid, result)
 
 def bx_watch_loop():
@@ -384,11 +348,10 @@ def handle_update(up):
             tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "Не твои кнопки 😼"})
             return
         tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "ok"})
-        
         if data.startswith("bx:"):
             BX["wait_link"][str(uid)] = data[3:]
-            bx_save()  # ← ЭТА СТРОКА СПАСЕТ ВСЁ!
-            tg("sendMessage", data={"chat_id": uid, "text": "🔗 Вставь ссылку BingX..."})
+            bx_save()
+            tg("sendMessage", data={"chat_id": uid, "text": "🔗 Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
         elif data.startswith("skip:"):
             BX["pending"].pop(data[5:], None)
             bx_save()
@@ -421,8 +384,7 @@ _Сетап признан неактуальным._"""
             wins = stats.get("wins", 0)
             losses = stats.get("losses", 0)
             winrate = round((wins / total) * 100, 1) if total > 0 else 0
-            
-            vip_post = f"""📊 *MTC Trading Platform*
+            vip_post = f""" *MTC Trading Platform*
 
 📈 *Статистика:*
 • Сделок: {total}
@@ -432,8 +394,7 @@ _Сетап признан неактуальным._"""
 🎯 *Стратегия:* CHoCH + FVG
 ⚙️ *ТФ:* 4H → 15m, 1H → 5m
 
-👉 Жми кнопку ниже, чтобы открыть дашборд!"""
-            
+ Жми кнопку ниже, чтобы открыть дашборд!"""
             kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
             tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
             tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
@@ -450,17 +411,12 @@ _Сетап признан неактуальным._"""
         if is_private or is_group_chat:
             if txt.strip() == "/start":
                 if is_admin(uid):
-                    kb = {
-                        "inline_keyboard": [
-                            [{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
-                            [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]
-                        ]
-                    }
+                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
                     welcome_text = """👑 *Привет, Админ!*
 
 Добро пожаловать в *MTC Trading Platform*!
 
-🎯 *Возможности платформы:*
+ *Возможности платформы:*
 • Сигналы CHoCH + FVG в реальном времени
 • Автоматический анализ рынка
 • Статистика и аналитика сделок
@@ -680,7 +636,6 @@ def tv():
         if data.get("message_thread_id"): tg_base["message_thread_id"] = int(data.get("message_thread_id"))
     except: pass
     if chat == "-1002026400906" and "message_thread_id" not in tg_base: tg_base["message_thread_id"] = VIP_TOPIC
-
     try:
         if kind == "choch":
             sym = base_sym(data.get("symbol")) or "BTC"
@@ -691,14 +646,12 @@ def tv():
             send_text_safe(tg_base, text)
             sid = new_pending(sym, tf, direction, level)
             kb = {"inline_keyboard": [[{"text": f"🚀 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
-            admin_msg = f"🔔 *НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
+            admin_msg = f" *НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
             for aid in ADMIN_IDS:
                 tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": json.dumps(kb)})
             print(f"✅ CHoCH #{sid} создан")
             return "ok"
-    except Exception as e:
-        print(f"❌ CHoCH ERROR: {e}")
-
+    except Exception as e: print(f"❌ CHoCH ERROR: {e}")
     send_text_safe(tg_base, text)
     return "ok"
 
@@ -711,14 +664,9 @@ def access_check_loop():
 def setup_webhook():
     try:
         r = tg("setWebhook", data={"url": WEBHOOK_URL, "allowed_updates": ["message", "callback_query"], "max_connections": 40})
-        if r.get("ok"):
-            print("✅ Webhook установлен!")
-        else:
-            print(f"⚠️ Ошибка webhook: {r}")
-    except Exception as e:
-        print(f"⚠️ Webhook error: {e}")
-
-# --- РОУТЫ ДЛЯ МИНИ-АПП ДАШБОРДА ---
+        if r.get("ok"): print("✅ Webhook установлен!")
+        else: print(f"⚠️ Ошибка webhook: {r}")
+    except Exception as e: print(f"⚠️ Webhook error: {e}")
 
 @app.route('/dashboard')
 def dashboard_page():
@@ -732,36 +680,16 @@ def api_stats():
     losses = stats.get("losses", 0)
     skipped = stats.get("skipped", 0)
     expired = stats.get("expired", 0)
-    
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     pnl = round((wins * 2.0) - (losses * 1.0), 2)
-    
-    return jsonify({
-        "role": "admin",
-        "total": total,
-        "wins": wins,
-        "losses": losses,
-        "skipped": skipped,
-        "expired": expired,
-        "winrate": winrate,
-        "pnl": pnl,
-        "history": stats.get("history", []),
-        "active_setups_count": len(BX.get('active', {}))
-    })
+    return jsonify({"role": "admin", "total": total, "wins": wins, "losses": losses, "skipped": skipped, "expired": expired, "winrate": winrate, "pnl": pnl, "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))})
 
 if not globals().get("_ALL_STARTED"):
     _ALL_STARTED = True
     setup_webhook()
     threading.Thread(target=bx_watch_loop, daemon=True).start()
     threading.Thread(target=access_check_loop, daemon=True).start()
-    print("\n" + "="*50)
-    print("✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ)!")
-    print(f"👑 Админов: {len(ADMIN_IDS)}")
-    print("="*50 + "\n")
-
-# ============================================
-# 📊 API ДЛЯ РАЗБОРОВ
-# ============================================
+    print("\n" + "="*50 + "\n✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ)!\n" + "="*50 + "\n")
 
 @app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
 def api_analysis(setup_id):
@@ -772,50 +700,24 @@ def api_analysis(setup_id):
             save_analysis(setup_id, analysis)
             return jsonify(analysis)
         return jsonify({"error": "Analysis not found"}), 404
-    
     if request.method in ('POST', 'DELETE'):
         data = request.json
         admin_uid = data.get('admin_uid')
-        
         if not admin_uid or int(admin_uid) not in ADMIN_IDS:
             return jsonify({"error": "Unauthorized"}), 403
-        
         if request.method == 'POST':
-            analysis_data = {
-                "setup_id": setup_id,
-                "symbol": data.get('symbol'),
-                "tf": data.get('tf'),
-                "direction": data.get('direction'),
-                "entry": data.get('entry'),
-                "exit": data.get('exit'),
-                "result": data.get('result'),
-                "pnl": data.get('pnl'),
-                "analysis_text": data.get('analysis_text'),
-                "chart_image": data.get('chart_image'),
-                "created_by": int(admin_uid),
-                "created_at": _time.time(),
-                "views": 0
-            }
+            analysis_data = {"setup_id": setup_id, "symbol": data.get('symbol'), "tf": data.get('tf'), "direction": data.get('direction'), "entry": data.get('entry'), "exit": data.get('exit'), "result": data.get('result'), "pnl": data.get('pnl'), "analysis_text": data.get('analysis_text'), "chart_image": data.get('chart_image'), "created_by": int(admin_uid), "created_at": _time.time(), "views": 0}
             save_analysis(setup_id, analysis_data)
             return jsonify({"ok": True, "setup_id": setup_id})
-        
         elif request.method == 'DELETE':
-            if delete_analysis(setup_id):
-                return jsonify({"ok": True})
+            if delete_analysis(setup_id): return jsonify({"ok": True})
             return jsonify({"error": "Not found"}), 404
 
 @app.route('/api/active_setups', methods=['GET'])
 def api_active_setups():
     setups = []
     for sid, s in BX.get('active', {}).items():
-        setups.append({
-            'id': sid,
-            'sym': s.get('sym'),
-            'tf': s.get('tf'),
-            'dir': s.get('dir'),
-            'entry_price': s.get('entry_price'),
-            'status': s.get('status')
-        })
+        setups.append({'id': sid, 'sym': s.get('sym'), 'tf': s.get('tf'), 'dir': s.get('dir'), 'entry_price': s.get('entry_price'), 'status': s.get('status')})
     return jsonify(setups)
 
 @app.route('/api/analyses', methods=['GET'])
