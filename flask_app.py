@@ -240,6 +240,10 @@ def get_price(sym, source="bingx"):
     return None
 
 def post_setup_to_vip(s, link, sl, tp, entry_price):
+    print(f"\n{'='*50}")
+    print(f"📤 ПУБЛИКАЦИЯ СЕТАПА {s['id']} В VIP")
+    print(f"{'='*50}")
+    
     prof = TF_PROFILE.get(s["tf"], TF_PROFILE["4H"])
     ttl = prof["candle_min"] * prof["ttl_candles"] * 60
     valid_hours = prof.get("valid_hours", 24)
@@ -247,13 +251,14 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
               "expires": _time.time() + ttl,
               "expires_entry": _time.time() + (valid_hours * 3600),
               "status": "pending"})
-    entry = get_price(s["sym"])
-    emo = "🟢" if s["dir"] == "long" else "🔴"
+    
+    emo = "" if s["dir"] == "long" else "🔴"
     d_txt = "LONG" if s["dir"] == "long" else "SHORT"
     exp_str = datetime.fromtimestamp(s["expires_entry"]).strftime("%d.%m %H:%M")
     risk = abs(entry_price - sl)
     reward = abs(tp - entry_price)
     rr = reward / risk if risk > 0 else 0
+    
     cap = f"""{emo} *СЕТАП {d_txt}* · {s['sym']}USDT · {s['tf']} · {prof['style']}
 
 🎯 *Вход:* `{entry_price:,.2f}`
@@ -267,18 +272,36 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
 _Если цена не дойдет до входа — сетап будет аннулирован_
 
 ⚠️ _Не является финансовой рекомендацией. DYOR._"""
+    
+    print(f"📝 Текст сообщения готов")
+    print(f"📍 Отправляем в чат: {CHAT}, топик: {VIP_TOPIC}")
+    
+    # Пробуем отправить БЕЗ графика (просто текст)
     try:
-        buf = make_chart(fetch_df(s["sym"], s["tf"]), title=f"{s['sym']}/USD {s['tf']}", level=entry_price)
-        r = send_photo({"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "parse_mode": "Markdown"}, cap, buf)
-    except:
+        print("📤 Отправляем текст...")
         r = send_text_safe({"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "parse_mode": "Markdown"}, cap)
-    try:
-        s["vip_chat"] = r["result"]["message"]["chat"]["id"]
-        s["vip_msg"] = r["result"]["message_id"]
-    except: pass
+        print(f"✅ Результат отправки: {r}")
+        
+        if r.get("ok"):
+            s["vip_chat"] = r["result"]["message"]["chat"]["id"]
+            s["vip_msg"] = r["result"]["message_id"]
+            print(f"✅ Сетап опубликован! Message ID: {s['vip_msg']}")
+        else:
+            print(f"❌ Ошибка отправки: {r}")
+            # Пробуем отправить админу в личку для диагностики
+            for aid in ADMIN_IDS:
+                tg("sendMessage", data={"chat_id": aid, "text": f" Ошибка публикации сетапа {s['id']} в VIP:\n{r}"})
+    except Exception as e:
+        print(f"❌ КРИТИЧЕСКАЯ ОШИБКА: {e}")
+        import traceback
+        traceback.print_exc()
+        for aid in ADMIN_IDS:
+            tg("sendMessage", data={"chat_id": aid, "text": f"❌ Критическая ошибка при публикации сетапа {s['id']}:\n{str(e)}"})
+    
     BX["active"][s["id"]] = s
     bx_save()
-    print(f"✅ Сетап {s['id']} опубликован в VIP")
+    print(f"✅ Сетап {s['id']} сохранен в active")
+    print(f"{'='*50}\n")
 
 def close_setup(sid, result):
     s = BX["active"].pop(sid, None)
