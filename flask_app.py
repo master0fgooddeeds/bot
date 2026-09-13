@@ -750,32 +750,6 @@ def dashboard_page():
 
 @app.route('/api/stats')
 def api_stats():
-    """Возвращает статистику с определением роли"""
-    from urllib.parse import parse_qs
-    
-    # Получаем initData из заголовка
-    init_data = request.headers.get('X-Telegram-Init-Data', '')
-    
-    user_id = None
-    role = 'subscriber'  # По умолчанию - подписчик
-    
-    if init_data:
-        try:
-            # Парсим initData
-            params = parse_qs(init_data)
-            if 'user' in params:
-                user = json.loads(params['user'][0])
-                user_id = user.get('id')
-                
-                # Проверяем, админ ли
-                if user_id and int(user_id) in ADMIN_IDS:
-                    role = 'admin'
-                else:
-                    role = 'subscriber'
-        except Exception as e:
-            print(f"Error parsing init_data: {e}")
-    
-    # Загружаем статистику
     stats = load_stats()
     total = stats.get("total", 0)
     wins = stats.get("wins", 0)
@@ -786,8 +760,9 @@ def api_stats():
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     pnl = round((wins * 2.0) - (losses * 1.0), 2)
     
+    # ВСЕМ ДАЁМ ADMIN - кнопки покажет фронтенд
     return jsonify({
-        "role": role,
+        "role": "admin",
         "total": total,
         "wins": wins,
         "losses": losses,
