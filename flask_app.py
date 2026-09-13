@@ -863,6 +863,18 @@ def api_all_analyses():
     analyses = get_all_analyses()
     # Преобразуем в список
     return jsonify(list(analyses.values()))
+
+if txt.strip() == "/test_vip" and is_admin(uid):
+    test_msg = f"🧪 *ТЕСТОВОЕ СООБЩЕНИЕ*\n\nВремя: {datetime.now().strftime('%H:%M:%S')}\nПроверка связи с VIP каналом..."
+    try:
+        r = tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": test_msg, "parse_mode": "Markdown"})
+        if r.get("ok"):
+            tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сообщение отправлено в VIP!"})
+        else:
+            tg("sendMessage", data={"chat_id": uid, "text": f"❌ Ошибка: {r}"})
+    except Exception as e:
+        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Исключение: {e}"})
+    return
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
