@@ -234,7 +234,7 @@ _Если цена не дойдет до входа — сетап будет �
         r = send_text_safe({"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "parse_mode": "Markdown"}, cap)
         print(f"✅ Результат: {r}")
         if r.get("ok"):
-            s["vip_chat"] = r["result"]["message"]["chat"]["id"]
+            s["vip_chat"] = r["result"]["chat"]["id"]
             s["vip_msg"] = r["result"]["message_id"]
             print(f"✅ Сетап опубликован! Message ID: {s['vip_msg']}")
         else:
