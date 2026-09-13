@@ -819,7 +819,20 @@ def api_analysis(setup_id):
             if delete_analysis(setup_id):
                 return jsonify({"ok": True})
             return jsonify({"error": "Not found"}), 404
-
+@app.route('/api/active_setups', methods=['GET'])
+def api_active_setups():
+    """Получаем все активные сетапы (для формы разбора)"""
+    setups = []
+    for sid, s in BX.get('active', {}).items():
+        setups.append({
+            'id': sid,
+            'sym': s.get('sym'),
+            'tf': s.get('tf'),
+            'dir': s.get('dir'),
+            'entry_price': s.get('entry_price'),
+            'status': s.get('status')
+        })
+    return jsonify(setups)
 @app.route('/api/analyses', methods=['GET'])
 def api_all_analyses():
     """Получаем все разборы (для дашборда)"""
