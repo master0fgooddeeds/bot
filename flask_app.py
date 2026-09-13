@@ -728,10 +728,57 @@ def dashboard_page():
 @app.route('/api/stats')
 def api_stats():
     """Возвращает статистику + роль пользователя"""
-    stats = load_stats()
     
-    # В будущем здесь будет проверка роли через Telegram initData
-    # Сейчас просто возвращаем все данные
+    # Получаем данные пользователя из Telegram WebApp
+    init_data = request.args.get('tgWebAppData') or request.headers.get('X-Telegram-Web-App-Data')
+    user_id = None
+    username = None
+    
+    # Парсим данные Telegram (упрощенно)
+    # В продакшене нужно проверять hash!
+    if init_data:
+        from urllib.parse import parse_qs
+        data = parse_qs(init_data)
+        if 'user' in data:
+            import json
+            user = json.loads(data['user'][0])
+            user_id = user.get('id')
+            username = user.get('username', '').lower()
+    
+    # Определяем роль
+    role = 'guest'
+    
+    # 1. Проверяем, админ ли
+    if user_id and int(user_id) in ADMIN_IDS:
+        role = 'admin'
+    # 2. Проверяем VIP-доступ
+    elif username and username in USER_ACCESS:
+        if 2190 in USER_ACCESS[username].get('topics', []):
+            # Проверяем не истек ли доступ
+            exp = USER_ACCESS[username]['expires'].get('2190', 0)
+            if _time.time() < exp:
+                role = 'vip'
+            else:
+                role = 'subscriber'
+        else:
+            role = 'subscriber'
+    # 3. Проверяем подписку на канал
+    elif user_id:
+        try:
+            r = requests.get(
+                f"https://api.telegram.org/bot{TOKEN}/getChatMember",
+                params={"chat_id": CHAT, "user_id": user_id},
+                timeout=5
+            )
+            if r.json().get('ok'):
+                status = r.json()['result']['status']
+                if status in ('member', 'administrator', 'creator'):
+                    role = 'subscriber'
+        except:
+            pass
+    
+    # Загружаем статистику
+    stats = load_stats()
     total = stats.get("total", 0)
     wins = stats.get("wins", 0)
     losses = stats.get("losses", 0)
@@ -741,16 +788,51 @@ def api_stats():
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     pnl = round((wins * 2.0) - (losses * 1.0), 2)
     
-    return jsonify({
-        "role": "admin",  # Пока все админы, потом сделаем проверку
-        "total": total,
-        "wins": wins,
-        "losses": losses,
-        "skipped": skipped,
-        "expired": expired,
-        "winrate": winrate,
-        "pnl": pnl
-    })
+    # Возвращаем разные данные для разных ролей
+    if role == 'guest':
+        return jsonify({"role": "guest", "message": "Подпишись на канал"})
+    
+    elif role == 'subscriber':
+        # Общая статистика платформы (анонимная)
+        return jsonify({
+            "role": "subscriber",
+            "total": total,
+            "wins": wins,
+            "losses": losses,
+            "skipped": skipped,
+            "expired": expired,
+            "winrate": winrate,
+            "pnl": pnl
+        })
+    
+    elif role == 'vip':
+        # Личная статистика + общая
+        return jsonify({
+            "role": "vip",
+            "total": total,
+            "wins": wins,
+            "losses": losses,
+            "skipped": skipped,
+            "expired": expired,
+            "winrate": winrate,
+            "pnl": pnl,
+            "history": stats.get("history", [])[-10:]  # Последние 10 сделок
+        })
+    
+    elif role == 'admin':
+        # Полный доступ
+        return jsonify({
+            "role": "admin",
+            "total": total,
+            "wins": wins,
+            "losses": losses,
+            "skipped": skipped,
+            "expired": expired,
+            "winrate": winrate,
+            "pnl": pnl,
+            "history": stats.get("history", []),
+            "active_setups_count": len(BX.get('active', {}))
+        })
 
         
 
