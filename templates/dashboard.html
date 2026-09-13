@@ -236,23 +236,33 @@
         }
 
         function loadAnalyses() {
-            fetch('/api/analyses')
-                .then(function(r) { return r.json(); })
-                .then(function(analyses) {
-                    var list = document.getElementById('analysesList');
-                    if (analyses.length === 0) {
-                        list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>';
-                        return;
-                    }
-                    list.innerHTML = analyses.map(function(a) {
-                        return '<div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">' +
-                            '<strong>' + a.symbol + ' ' + a.tf + ' ' + a.direction.toUpperCase() + '</strong><br>' +
-                            '<small>' + a.result + ' | PnL: ' + a.pnl + '</small><br>' +
-                            '<small style="opacity:0.7;">👁 ' + (a.views || 0) + '</small>' +
-                            '</div>';
-                    }).join('');
-                });
-        }
+    fetch('/api/analyses')
+        .then(function(r) { return r.json(); })
+        .then(function(analyses) {
+            var list = document.getElementById('analysesList');
+            if (!analyses || analyses.length === 0) {
+                list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>';
+                return;
+            }
+            list.innerHTML = analyses.map(function(a) {
+                if (!a) return '';
+                var symbol = a.symbol || 'N/A';
+                var tf = a.tf || 'N/A';
+                var direction = a.direction ? a.direction.toUpperCase() : 'N/A';
+                var result = a.result || 'N/A';
+                var pnl = a.pnl || '0';
+                var views = a.views || 0;
+                return '<div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">' +
+                    '<strong>' + symbol + ' ' + tf + ' ' + direction + '</strong><br>' +
+                    '<small>' + result + ' | PnL: ' + pnl + '</small><br>' +
+                    '<small style="opacity:0.7;">👁 ' + views + '</small>' +
+                    '</div>';
+            }).join('');
+        })
+        .catch(function(err) {
+            document.getElementById('analysesList').innerHTML = '<p style="opacity:0.6;">Ошибка загрузки: ' + err.message + '</p>';
+        });
+}
 
         function showCreateForm() {
             document.getElementById('createForm').classList.remove('hidden');
