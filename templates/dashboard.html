@@ -339,7 +339,32 @@
                 alert('Ошибка сохранения: ' + err.message);
             });
         }
+        function shareStats() {
+            var text = '📊 MTC Stats\n' +
+                'Сделок: ' + document.getElementById('total').innerText + '\n' +
+                'Винрейт: ' + document.getElementById('winrate').innerText + '\n' +
+                '@mtcthunter_bot';
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function() {
+                    alert('Статистика скопирована в буфер обмена!');
+                }).catch(function() {
+                    alert(text);
+                });
+            } else {
+                alert(text);
+            }
+        }
 
+        function closeApp() {
+            if (tg.close) {
+                tg.close();
+            } else {
+                window.close();
+            }
+        }
+
+        
         refreshData();
     </script>
 </body>
