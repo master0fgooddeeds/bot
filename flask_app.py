@@ -320,7 +320,8 @@ def check_youtube_feed():
         if r.status_code == 200:
             xml_text = r.text
             vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', xml_text)
-            title_match = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>', xml_text)
+            # Гибкая регулярка: ловит и с CDATA, и без
+            title_match = re.search(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', xml_text)
             link_match = re.search(r'<link rel="alternate" href="(.*?)"/>', xml_text)
             
             if vid_match and title_match and link_match:
@@ -339,11 +340,13 @@ def check_youtube_feed():
 
 📌 *{title}*
 
-👉 [Смотреть на YouTube]({link})
+ [Смотреть на YouTube]({link})
 
 @MyTradingClub"""
                     tg("sendMessage", data={"chat_id": CHAT, "text": msg, "parse_mode": "Markdown", "disable_web_page_preview": False})
                     print(f"✅ YouTube видео отправлено: {new_vid}")
+    except Exception as e:
+        print(f"⚠️ YouTube check error: {e}")
     except Exception as e:
         print(f"⚠️ YouTube check error: {e}")
 
