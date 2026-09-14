@@ -432,8 +432,8 @@ _Сетап признан неактуальным._"""
         if is_private or is_group_chat:
             if txt.strip() == "/start":
                 if is_admin(uid):
-                    kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
-                    welcome_text = """ *Привет, Админ!*
+                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
+                    welcome_text = """*Привет, Админ!*
 
 Добро пожаловать в *MTC Trading Platform*!
 
@@ -449,7 +449,18 @@ _Сетап признан неактуальным._"""
 _Платформа в разработке. Следим за прогрессом!_"""
                     tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 else:
-                    tg("sendMessage", data={"chat_id": uid, "text": "Привет! Я ассистент My Trading Club."})
+                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+                    welcome_text = """*Привет!*
+
+Добро пожаловать в *MTC Trading Platform*!
+
+Здесь ты найдёшь:
+• Актуальную статистику сделок
+• Разборы сигналов
+• Аналитику рынка
+
+Жми кнопку ниже, чтобы открыть дашборд!"""
+                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 return
 
             if txt.strip() == "/stats" and is_admin(uid):
@@ -503,7 +514,6 @@ _Платформа в разработке. Следим за прогресс�
                                 tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                             except:
                                 pass
-                        # ОТПРАВЛЯЕМ УВЕДОМЛЕНИЕ В VIP
                         tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
