@@ -116,6 +116,9 @@ def bx_load():
 
 def bx_save():
     try:
+        # Создаем папку если нет
+        import os
+        os.makedirs(DATA_DIR, exist_ok=True)
         with open(SETUPS_FILE, "w") as f: 
             json.dump(BX, f, indent=2)
     except Exception as e: 
