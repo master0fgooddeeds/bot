@@ -18,8 +18,7 @@ VIP_TOPIC = 2190
 LAST = {"text": None, "ts": 0.0}
 ADMIN_IDS = []
 
-DATA_DIR = "/app/data"
-ACCESS_FILE = DATA_DIR + "/user_access.json"
+ACCESS_FILE = "user_access.json"
 
 def load_access():
     try:
@@ -100,35 +99,23 @@ TF_PROFILE = {
     "D": {"candle_min": 1440, "ttl_candles": 6, "style": "позиция", "valid_hours": 168},
 }
 
-SETUPS_FILE = DATA_DIR + "/bingx_setups.json"
-STATS_FILE = DATA_DIR + "/trading_stats.json"
+SETUPS_FILE = "bingx_setups.json"
+STATS_FILE = "trading_stats.json"
+ANALYSES_FILE = "analyses.json"  # ← ПЕРЕНЕСИ СЮДА!
 BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
     try:
-        import os
-        os.makedirs(DATA_DIR, exist_ok=True)
-        
-        # Создаем файлы если нет
-        if not os.path.exists(SETUPS_FILE):
-            with open(SETUPS_FILE, "w") as f:
-                json.dump({"pending": {}, "active": {}, "wait_link": {}, "seq": 1}, f)
-        
         with open(SETUPS_FILE) as f: 
             data = json.load(f)
             BX["pending"].update(data.get("pending", {}))
             BX["active"].update(data.get("active", {}))
             BX["wait_link"] = data.get("wait_link", {})
             BX["seq"] = data.get("seq", 1)
-        print(f"✅ Загружено сетапов: {len(BX['active'])} активных")
-    except Exception as e:
-        print(f"⚠️ Ошибка загрузки: {e}")
+    except: pass
 
 def bx_save():
     try:
-        # Создаем папку если нет
-        import os
-        os.makedirs(DATA_DIR, exist_ok=True)
         with open(SETUPS_FILE, "w") as f: 
             json.dump(BX, f, indent=2)
     except Exception as e: 
@@ -136,12 +123,13 @@ def bx_save():
 
 def load_stats():
     try:
-        import os
-        if not os.path.exists(STATS_FILE):
-            with open(STATS_FILE, "w") as f:
-                json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}, f)
         with open(STATS_FILE, "r") as f: return json.load(f)
     except: return {"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}
+
+def load_analyses():
+    try:
+        with open(ANALYSES_FILE, "r") as f: return json.load(f)
+    except: return {}
 
 def save_stat(setup, result, pnl):
     stats = load_stats()
@@ -155,16 +143,8 @@ def save_stat(setup, result, pnl):
     if len(stats["history"]) > 100: stats["history"] = stats["history"][-100:]
     with open(STATS_FILE, "w") as f: json.dump(stats, f, indent=2)
 
-ANALYSES_FILE = DATA_DIR + "/analyses.json"
 
-def load_analyses():
-    try:
-        import os
-        if not os.path.exists(ANALYSES_FILE):
-            with open(ANALYSES_FILE, "w") as f:
-                json.dump({}, f)
-        with open(ANALYSES_FILE, "r") as f: return json.load(f)
-    except: return {}
+
 
 def save_analysis(setup_id, data):
     analyses = load_analyses()
@@ -763,26 +743,8 @@ def api_all_analyses():
     analyses = get_all_analyses()
     return jsonify(list(analyses.values()))
 
-# Принудительно загружаем данные при старте
-def force_load_data():
-    import os
-    # Создаем файлы если нет
-    if not os.path.exists(SETUPS_FILE):
-        with open(SETUPS_FILE, "w") as f:
-            json.dump({"pending": {}, "active": {}, "wait_link": {}, "seq": 1}, f)
-    if not os.path.exists(STATS_FILE):
-        with open(STATS_FILE, "w") as f:
-            json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}, f)
-    if not os.path.exists(ANALYSES_FILE):
-        with open(ANALYSES_FILE, "w") as f:
-            json.dump({}, f)
-    
-    # Загружаем данные
-    bx_load()
-    print(f"✅ Загружено: {len(BX['active'])} активных сетапов")
 
-# Вызываем перед стартом
-force_load_data()
+
 
 if __name__ == "__main__":
     import os
