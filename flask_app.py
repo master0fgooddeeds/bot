@@ -108,7 +108,6 @@ BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 def bx_load():
     import os
     try:
-        # Создаем файл если нет
         if not os.path.exists(SETUPS_FILE):
             with open(SETUPS_FILE, "w") as f:
                 json.dump({"pending": {}, "active": {}, "wait_link": {}, "seq": 1}, f)
@@ -130,6 +129,7 @@ def bx_save():
             json.dump(BX, f, indent=2)
     except Exception as e: 
         print("BX SAVE FAIL:", e)
+
 def load_stats():
     import os
     try:
@@ -138,6 +138,7 @@ def load_stats():
                 json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}, f)
         with open(STATS_FILE, "r") as f: return json.load(f)
     except: return {"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}
+
 def load_analyses():
     import os
     try:
@@ -158,9 +159,6 @@ def save_stat(setup, result, pnl):
     stats["history"].append({"date": datetime.now().strftime("%d.%m.%Y"), "sym": setup["sym"], "tf": setup["tf"], "dir": setup["dir"], "result": status_text, "pnl": round(pnl, 2)})
     if len(stats["history"]) > 100: stats["history"] = stats["history"][-100:]
     with open(STATS_FILE, "w") as f: json.dump(stats, f, indent=2)
-
-
-
 
 def save_analysis(setup_id, data):
     analyses = load_analyses()
@@ -490,26 +488,27 @@ _Платформа в разработке. Следим за прогресс�
                 return
 
             if txt.startswith("/force_close ") and is_admin(uid):
-    parts = txt.split()
-    if len(parts) >= 2:
-        sid = parts[1]
-        s = BX["active"].pop(sid, None)
-        if s:
-            s["status"] = "closed"
-            s["close_result"] = "admin_cancel"
-            save_stat(s, "expired", 0.0)
-            bx_save()
-            cap = f""" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
-_Закрыто вручную._"""
-            if s.get("vip_msg"):
-                try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
-                except: pass
-            # ОТПРАВЛЯЕМ УВЕДОМЛЕНИЕ В VIP
-            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
-            tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
-        else:
-            tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
-    return
+                parts = txt.split()
+                if len(parts) >= 2:
+                    sid = parts[1]
+                    s = BX["active"].pop(sid, None)
+                    if s:
+                        s["status"] = "closed"
+                        s["close_result"] = "admin_cancel"
+                        save_stat(s, "expired", 0.0)
+                        bx_save()
+                        cap = f"❌ *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
+                        if s.get("vip_msg"):
+                            try:
+                                tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
+                            except:
+                                pass
+                        # ОТПРАВЛЯЕМ УВЕДОМЛЕНИЕ В VIP
+                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
+                        tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
+                    else:
+                        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
+                return
 
             if txt.startswith("/grant ") and is_admin(uid):
                 parts = txt.split()
@@ -760,9 +759,6 @@ def api_active_setups():
 def api_all_analyses():
     analyses = get_all_analyses()
     return jsonify(list(analyses.values()))
-
-
-
 
 if __name__ == "__main__":
     import os
