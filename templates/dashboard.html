@@ -288,9 +288,11 @@ function viewAnalysis(index) {
         detailDiv.classList.remove('hidden');
         
         // Показать админские кнопки если админ
-        if (userRole === 'admin') {
-            var adminDiv = document.getElementById('admin-controls-' + index);
-            if (adminDiv) adminDiv.classList.remove('hidden');
+        console.log('userRole:', userRole, 'isAdmin:', userRole === 'admin');
+        var adminDiv = document.getElementById('admin-controls-' + index);
+        if (adminDiv && userRole === 'admin') {
+            adminDiv.classList.remove('hidden');
+            console.log('Admin controls shown!');
         }
     } else {
         detailDiv.classList.add('hidden');
