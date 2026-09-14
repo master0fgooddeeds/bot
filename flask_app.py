@@ -692,41 +692,9 @@ def api_stats():
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     return jsonify({"role": "admin", "total": total, "wins": wins, "losses": losses, "skipped": skipped, "expired": expired, "winrate": winrate, "pnl": pnl, "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))})
 
-# API ДЛЯ YOUTUBE СЕТКИ В МИНИ-АППЕ
-@app.route('/api/youtube', methods=['GET'])
-def api_youtube():
-    try:
-        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
-        r = requests.get(rss_url, timeout=10)
-        if r.status_code == 200:
-            xml_text = r.text
-            videos = []
-            entries = re.findall(r'<entry>(.*?)</entry>', xml_text, re.DOTALL)
-            for entry in entries[:12]:
-                vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', entry)
-                title_match = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>', entry)
-                link_match = re.search(r'<link rel="alternate" href="(.*?)"/>', entry)
-                
-                if vid_match and title_match and link_match:
-                    videos.append({
-                        "id": vid_match.group(1),
-                        "title": title_match.group(1),
-                        "link": link_match.group(1),
-                        "thumbnail": f"https://img.youtube.com/vi/{vid_match.group(1)}/mqdefault.jpg"
-                    })
-            return jsonify(videos)
-        return jsonify([])
-    except Exception as e:
-        print(f"YouTube API error: {e}")
-        return jsonify([])
 
-if not globals().get("_ALL_STARTED"):
-    _ALL_STARTED = True
-    setup_webhook()
-    threading.Thread(target=bx_watch_loop, daemon=True).start()
-    threading.Thread(target=yt_watch_loop, daemon=True).start() # ЗАПУСК YOUTUBE ПАРСЕРА
-    print("\n" + "="*50 + "\n✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ + YOUTUBE)!\n" + "="*50 + "\n")
 
+# API ДЛЯ YOUTUBE СЕТКИ В МИНИ-АППЕ (ЕДИНСТВЕННАЯ ПРАВИЛЬНАЯ ВЕРСИЯ)
 @app.route('/api/youtube', methods=['GET'])
 def api_youtube():
     try:
