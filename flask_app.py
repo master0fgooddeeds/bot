@@ -1,4 +1,4 @@
-import io, re, time as _time, threading, hashlib, calendar, requests, json
+import os, io, re, time as _time, threading, hashlib, calendar, requests, json
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
@@ -727,27 +727,33 @@ if not globals().get("_ALL_STARTED"):
     threading.Thread(target=yt_watch_loop, daemon=True).start() # ЗАПУСК YOUTUBE ПАРСЕРА
     print("\n" + "="*50 + "\n✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ + YOUTUBE)!\n" + "="*50 + "\n")
 
-@app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
-def api_analysis(setup_id):
-    if request.method == 'GET':
-        analysis = get_analysis(setup_id)
-        if analysis:
-            analysis['views'] = analysis.get('views', 0) + 1
-            save_analysis(setup_id, analysis)
-            return jsonify(analysis)
-        return jsonify({"error": "Analysis not found"}), 404
-    if request.method in ('POST', 'DELETE'):
-        data = request.json
-        admin_uid = data.get('admin_uid')
-        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
-            return jsonify({"error": "Unauthorized"}), 403
-        if request.method == 'POST':
-            analysis_data = {"setup_id": setup_id, "symbol": data.get('symbol'), "tf": data.get('tf'), "direction": data.get('direction'), "entry": data.get('entry'), "exit": data.get('exit'), "result": data.get('result'), "pnl": data.get('pnl'), "analysis_text": data.get('analysis_text'), "chart_image": data.get('chart_image'), "created_by": int(admin_uid), "created_at": _time.time(), "views": 0}
-            save_analysis(setup_id, analysis_data)
-            return jsonify({"ok": True, "setup_id": setup_id})
-        elif request.method == 'DELETE':
-            if delete_analysis(setup_id): return jsonify({"ok": True})
-            return jsonify({"error": "Not found"}), 404
+@app.route('/api/youtube', methods=['GET'])
+def api_youtube():
+    try:
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
+        r = requests.get(rss_url, timeout=10)
+        if r.status_code == 200:
+            xml_text = r.text
+            videos = []
+            entries = re.findall(r'<entry>(.*?)</entry>', xml_text, re.DOTALL)
+            for entry in entries[:12]:
+                vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', entry)
+                # Гибкая регулярка: ловит и с CDATA, и без
+                title_match = re.search(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', entry)
+                link_match = re.search(r'<link rel="alternate" href="(.*?)"', entry)
+                
+                if vid_match and title_match and link_match:
+                    videos.append({
+                        "id": vid_match.group(1),
+                        "title": title_match.group(1),
+                        "link": link_match.group(1),
+                        "thumbnail": f"https://img.youtube.com/vi/{vid_match.group(1)}/mqdefault.jpg"
+                    })
+            return jsonify(videos)
+        return jsonify([])
+    except Exception as e:
+        print(f"YouTube API error: {e}")
+        return jsonify([])
 
 @app.route('/api/active_setups', methods=['GET'])
 def api_active_setups():
