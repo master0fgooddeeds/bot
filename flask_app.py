@@ -693,30 +693,36 @@ def api_stats():
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     return jsonify({"role": "admin", "total": total, "wins": wins, "losses": losses, "skipped": skipped, "expired": expired, "winrate": winrate, "pnl": pnl, "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))})
 
-# API ДЛЯ YOUTUBE СЕТКИ В МИНИ-АППЕ (ЕДИНСТВЕННАЯ ПРАВИЛЬНАЯ ВЕРСИЯ)
 @app.route('/api/youtube', methods=['GET'])
 def api_youtube():
     try:
-        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
-        r = requests.get(rss_url, timeout=10)
+        # Парсим HTML страницы канала вместо RSS
+        url = f"https://www.youtube.com/@mytradingclub.p/videos"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        r = requests.get(url, headers=headers, timeout=10)
+        
         if r.status_code == 200:
-            xml_text = r.text
             videos = []
-            entries = re.findall(r'<entry>(.*?)</entry>', xml_text, re.DOTALL)
-            for entry in entries[:12]:
-                vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', entry)
-                # Гибкая регулярка: ловит и с CDATA, и без
-                title_match = re.search(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', entry)
-                link_match = re.search(r'<link rel="alternate" href="(.*?)"', entry)
-                
-                if vid_match and title_match and link_match:
+            # Ищем все видео на странице
+            video_urls = re.findall(r'/watch\?v=([a-zA-Z0-9_-]{11})', r.text)
+            titles = re.findall(r'"title":{"simpleText":"([^"]+)"', r.text)
+            
+            # Берем первые 12 уникальных видео
+            seen = set()
+            for vid_id in video_urls[:12]:
+                if vid_id not in seen and len(vid_id) == 11:
+                    seen.add(vid_id)
                     videos.append({
-                        "id": vid_match.group(1),
-                        "title": title_match.group(1),
-                        "link": link_match.group(1),
-                        "thumbnail": f"https://img.youtube.com/vi/{vid_match.group(1)}/mqdefault.jpg"
+                        "id": vid_id,
+                        "title": f"Видео {vid_id}",  # Заглушка, если не нашли заголовок
+                        "link": f"https://www.youtube.com/watch?v={vid_id}",
+                        "thumbnail": f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg"
                     })
-            return jsonify(videos)
+            
+            return jsonify(videos[:12])
+        
         return jsonify([])
     except Exception as e:
         print(f"YouTube API error: {e}")
