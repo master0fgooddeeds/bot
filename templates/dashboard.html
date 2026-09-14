@@ -134,10 +134,26 @@
     </div>
 
     <div class="card hidden" id="secretZone">
-        <h3>🔥 SECRET ZONE</h3>
-        <p>Ты настоящий админ!</p>
-        <p style="font-size:12px; opacity:0.8;">"To be a trader is to be a warrior"</p>
+    <h3>🔥 SECRET ZONE</h3>
+    <p>Ты настоящий админ!</p>
+    <p style="font-size:12px; opacity:0.8;">"To be a trader is to be a warrior"</p>
+    
+    <div class="btn-container" style="margin-top:15px;">
+        <button class="btn" onclick="showCreateForm()">➕ Создать разбор</button>
+        <button class="btn btn-secondary" onclick="enableEditMode()">✏️ Редактировать разбор</button>
+        <button class="btn btn-danger" onclick="enableDeleteMode()">🗑 Удалить разбор</button>
     </div>
+    
+    <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;">
+        <p style="margin:0 0 10px 0; font-size:14px;">Выбери разбор для редактирования:</p>
+        <div id="editList"></div>
+    </div>
+    
+    <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;">
+        <p style="margin:0 0 10px 0; font-size:14px;">Выбери разбор для удаления:</p>
+        <div id="deleteList"></div>
+    </div>
+</div>
 
     <script>
         var tg = window.Telegram.WebApp;
