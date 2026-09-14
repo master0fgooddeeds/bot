@@ -18,87 +18,6 @@ VIP_TOPIC = 2190
 LAST = {"text": None, "ts": 0.0}
 ADMIN_IDS = []
 
-ACCESS_FILE = "user_access.json"
-
-def load_access():
-    try:
-        with open(ACCESS_FILE, "r") as f: return json.load(f)
-    except: return {}
-
-def save_access():
-    global USER_ACCESS
-    try:
-        with open(ACCESS_FILE, "w") as f: json.dump(USER_ACCESS, f, indent=2)
-    except Exception as e: print("ACCESS SAVE FAIL:", e)
-
-USER_ACCESS = load_access()
-
-TOPIC_NAMES = {
-    2190: " VIP Сигналы", 1039: "💬 Флудилка", 1: "📢 General",
-    2583: "📣 Объявления", 11: "💰 Сделки", 29: "📚 Статьи",
-    2: "❓ Вопросы", 3233: "⚠️ Скам", 2581: "📖 Библиотека",
-    3112: "⛓️ Блокчейн", 2189: "🎥 Стримы", 2816: "🎤 Саммит",
-    2795: "📢 Новости", 133: "🎯 Тейки", 1040: "🔒 Тестовый",
-    2710: "Топик 2710", 2767: "Топик 2767", 52: "Топик 52",
-    2711: "Топик 2711", 45: "Топик 45", 46: "Топик 46",
-    3: "Топик 3", 9: "Топик 9", 43: "Топик 43"
-}
-
-def can_access_topic_by_username(username, topic_id):
-    username = username.lstrip("@").lower()
-    if username in [str(uid) for uid in ADMIN_IDS]: return True
-    return topic_id in USER_ACCESS.get(username, {}).get("topics", [])
-
-def grant_access_by_username(username, topic_id, days=30):
-    username = username.lstrip("@").lower()
-    if username not in USER_ACCESS: USER_ACCESS[username] = {"topics": [], "expires": {}}
-    if topic_id not in USER_ACCESS[username]["topics"]: USER_ACCESS[username]["topics"].append(topic_id)
-    USER_ACCESS[username]["expires"][str(topic_id)] = _time.time() + (days * 86400)
-    save_access()
-
-def revoke_access_by_username(username, topic_id):
-    username = username.lstrip("@").lower()
-    if username in USER_ACCESS:
-        if topic_id in USER_ACCESS[username]["topics"]: USER_ACCESS[username]["topics"].remove(topic_id)
-        if str(topic_id) in USER_ACCESS[username]["expires"]: del USER_ACCESS[username]["expires"][str(topic_id)]
-        save_access()
-
-def get_user_access_info(username):
-    username = username.lstrip("@").lower()
-    if username not in USER_ACCESS: return None
-    topics = []
-    for topic_id in USER_ACCESS[username].get("topics", []):
-        exp = USER_ACCESS[username]["expires"].get(str(topic_id), 0)
-        days_left = max(0, int((exp - _time.time()) / 86400))
-        topics.append({"id": topic_id, "name": TOPIC_NAMES.get(topic_id, f"Топик {topic_id}"), "days_left": days_left})
-    return topics
-
-def check_expired_access():
-    global USER_ACCESS
-    now = _time.time()
-    changed = False
-    for username, data in list(USER_ACCESS.items()):
-        for topic_str, exp_time in list(data.get("expires", {}).items()):
-            if now > exp_time:
-                topic_id = int(topic_str)
-                if topic_id in data.get("topics", []):
-                    data["topics"].remove(topic_id)
-                    del data["expires"][topic_str]
-                    changed = True
-    if changed: save_access()
-
-KRAKEN_INT = {"D": 1440, "4H": 240, "1H": 60, "15m": 15}
-COIN_GRAN = {"D": 86400, "1H": 3600, "15m": 900}
-KRAKEN_PAIR = {"BTC": "XBTUSD", "ETH": "ETHUSD", "SOL": "SOLUSD", "XRP": "XRPUSD", "DOGE": "DOGEUSD"}
-COIN_PAIR = {"BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD", "XRP": "XRP-USD", "DOGE": "DOGE-USD"}
-
-TF_PROFILE = {
-    "15m": {"candle_min": 15, "ttl_candles": 8, "style": "скальпинг", "valid_hours": 8},
-    "1H": {"candle_min": 60, "ttl_candles": 8, "style": "интрадей", "valid_hours": 24},
-    "4H": {"candle_min": 240, "ttl_candles": 8, "style": "свинг", "valid_hours": 72},
-    "D": {"candle_min": 1440, "ttl_candles": 6, "style": "позиция", "valid_hours": 168},
-}
-
 DATA_DIR = "/app/data"
 SETUPS_FILE = DATA_DIR + "/bingx_setups.json"
 STATS_FILE = DATA_DIR + "/trading_stats.json"
@@ -112,7 +31,6 @@ def bx_load():
             with open(SETUPS_FILE, "w") as f:
                 json.dump({"pending": {}, "active": {}, "wait_link": {}, "seq": 1}, f)
             print("✅ Создан bingx_setups.json")
-        
         with open(SETUPS_FILE) as f: 
             data = json.load(f)
             BX["pending"].update(data.get("pending", {}))
@@ -135,9 +53,9 @@ def load_stats():
     try:
         if not os.path.exists(STATS_FILE):
             with open(STATS_FILE, "w") as f:
-                json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}, f)
+                json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "pnl": 0.0, "history": []}, f)
         with open(STATS_FILE, "r") as f: return json.load(f)
-    except: return {"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}
+    except: return {"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "pnl": 0.0, "history": []}
 
 def load_analyses():
     import os
@@ -156,8 +74,16 @@ def save_stat(setup, result, pnl):
     elif result == "sl": stats["losses"] += 1
     elif result == "skipped_tp": stats["skipped"] += 1
     elif result in ["expired", "admin_cancel"]: stats["expired"] += 1
+    
+    # Накопительный PnL
+    stats["pnl"] = round(stats["pnl"] + pnl, 2)
+    
     stats["history"].append({"date": datetime.now().strftime("%d.%m.%Y"), "sym": setup["sym"], "tf": setup["tf"], "dir": setup["dir"], "result": status_text, "pnl": round(pnl, 2)})
-    if len(stats["history"]) > 100: stats["history"] = stats["history"][-100:]
+    
+    # УМНАЯ ОЧИСТКА: храним только последние 1000 сделок
+    if len(stats["history"]) > 1000:
+        stats["history"] = stats["history"][-1000:]
+    
     with open(STATS_FILE, "w") as f: json.dump(stats, f, indent=2)
 
 def save_analysis(setup_id, data):
@@ -220,6 +146,16 @@ def get_price(sym, source="bingx"):
         except Exception as e: print(f"Kraken price error: {e}")
     return None
 
+KRAKEN_INT = {"D": 1440, "4H": 240, "1H": 60, "15m": 15}
+KRAKEN_PAIR = {"BTC": "XBTUSD", "ETH": "ETHUSD", "SOL": "SOLUSD", "XRP": "XRPUSD", "DOGE": "DOGEUSD"}
+
+TF_PROFILE = {
+    "15m": {"candle_min": 15, "ttl_candles": 8, "style": "скальпинг", "valid_hours": 8},
+    "1H": {"candle_min": 60, "ttl_candles": 8, "style": "интрадей", "valid_hours": 24},
+    "4H": {"candle_min": 240, "ttl_candles": 8, "style": "свинг", "valid_hours": 72},
+    "D": {"candle_min": 1440, "ttl_candles": 6, "style": "позиция", "valid_hours": 168},
+}
+
 def post_setup_to_vip(s, link, sl, tp, entry_price):
     print(f"\n{'='*50}\n📤 ПУБЛИКАЦИЯ СЕТАПА {s['id']} В VIP\n{'='*50}")
     prof = TF_PROFILE.get(s["tf"], TF_PROFILE["4H"])
@@ -237,7 +173,7 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
 🎯 *Вход:* `{entry_price:,.2f}`
 🛡 *SL:* `{sl:,.2f}`
  *TP:* `{tp:,.2f}`
-📊 *R:R:* 1:{rr:.1f}
+ *R:R:* 1:{rr:.1f}
 
 👉 [Перейти на BingX]({link})
 
@@ -278,7 +214,7 @@ def close_setup(sid, result):
     pnl_pct = ((exit_price - entry) / entry * 100) if s["dir"] == "long" else ((entry - exit_price) / entry * 100)
     pnl_sign = "+" if pnl_pct > 0 else ""
     cap = f"""{head} · {s['sym']}USDT · {s['tf']}
-⏱ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
+ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
 📊 Результат: {pnl_sign}{pnl_pct:.2f}%
  SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
     if s.get("vip_msg"):
@@ -286,7 +222,7 @@ def close_setup(sid, result):
         except: pass
     tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
     for aid in ADMIN_IDS:
-        tg("sendMessage", data={"chat_id": aid, "text": f"🎛 Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
+        tg("sendMessage", data={"chat_id": aid, "text": f" Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
     save_stat(s, result, pnl_pct)
     bx_save()
 
@@ -310,7 +246,7 @@ def bx_watch_step():
                 cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
 
 🚀 *Причина:* Цена достигла TP, не задев вход.
-🎯 *Ожидаемый вход:* `{entry:,.2f}`
+ *Ожидаемый вход:* `{entry:,.2f}`
 📍 *Текущая цена:* `{price:,.2f}`"""
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
@@ -407,7 +343,7 @@ _Сетап признан неактуальным._"""
             winrate = round((wins / total) * 100, 1) if total > 0 else 0
             vip_post = f"""📊 *MTC Trading Platform*
 
-📈 *Статистика:*
+ *Статистика:*
 • Сделок: {total}
 • Винрейт: {winrate}%
 • TP: {wins} | SL: {losses}
@@ -415,8 +351,8 @@ _Сетап признан неактуальным._"""
 🎯 *Стратегия:* CHoCH + FVG
 ⚙️ *ТФ:* 4H → 15m, 1H → 5m
 
-👉 Жми кнопку ниже, чтобы открыть дашборд!"""
-            kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+ Жми кнопку ниже, чтобы открыть дашборд!"""
+            kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
             tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
             tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         return
@@ -449,7 +385,7 @@ _Сетап признан неактуальным._"""
 _Платформа в разработке. Следим за прогрессом!_"""
                     tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 else:
-                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+                    kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
                     welcome_text = """*Привет!*
 
 Добро пожаловать в *MTC Trading Platform*!
@@ -478,8 +414,9 @@ _Платформа в разработке. Следим за прогресс�
  *SL:* {stats['losses']}
  *Пропуск:* {stats['skipped']}
 ⏳ *Истекло:* {stats['expired']}
+ *Общий PnL:* {stats.get('pnl', 0)}%
 
-🕒 *Последние 5:*
+ *Последние 5:*
 {history_text}"""
                 tg("sendMessage", data={"chat_id": uid, "text": report, "parse_mode": "Markdown"})
                 return
@@ -494,7 +431,7 @@ _Платформа в разработке. Следим за прогресс�
                         lines.append(f"🔹 *#{sid}* · {s['sym']} {s['tf']} {s['dir'].upper()}")
                         lines.append(f"   Вход: `{s['entry_price']:,.2f}` | SL: `{s['sl']:,.2f}` | TP: `{s['tp']:,.2f}`")
                         lines.append(f"   Статус: `{s.get('status', '?')}`\n")
-                    msg_text = "📊 *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
+                    msg_text = " *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
                     tg("sendMessage", data={"chat_id": uid, "text": msg_text, "parse_mode": "Markdown"})
                 return
 
@@ -518,33 +455,6 @@ _Платформа в разработке. Следим за прогресс�
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
                         tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
-                return
-
-            if txt.startswith("/grant ") and is_admin(uid):
-                parts = txt.split()
-                if len(parts) >= 3:
-                    grant_access_by_username(parts[1].lstrip("@").lower(), int(parts[2]), int(parts[3]) if len(parts) > 3 else 30)
-                    tg("sendMessage", data={"chat_id": uid, "text": f"✅ Доступ выдан {parts[1]}"})
-                return
-
-            if txt.startswith("/revoke ") and is_admin(uid):
-                parts = txt.split()
-                if len(parts) >= 3:
-                    revoke_access_by_username(parts[1].lstrip("@").lower(), int(parts[2]))
-                    tg("sendMessage", data={"chat_id": uid, "text": f"🚫 Доступ отозван {parts[1]}"})
-                return
-
-            if txt.strip() == "/myaccess":
-                username = msg["from"].get("username")
-                if not username:
-                    tg("sendMessage", data={"chat_id": uid, "text": "❌ У вас нет @username"})
-                    return
-                topics = get_user_access_info(username)
-                if not topics:
-                    tg("sendMessage", data={"chat_id": uid, "text": " Нет активных подписок"})
-                else:
-                    topics_list = "\n".join([f"• {t['name']} — {t['days_left']} дн." for t in topics])
-                    tg("sendMessage", data={"chat_id": uid, "text": f"📋 Ваши подписки:\n{topics_list}"})
                 return
 
             if txt.startswith("/test_setup ") and is_admin(uid):
@@ -691,7 +601,7 @@ def tv():
             send_text_safe(tg_base, text)
             sid = new_pending(sym, tf, direction, level)
             kb = {"inline_keyboard": [[{"text": f" BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
-            admin_msg = f"🔔 *НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
+            admin_msg = f" *НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
             for aid in ADMIN_IDS:
                 tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": json.dumps(kb)})
             print(f"✅ CHoCH #{sid} создан")
@@ -699,12 +609,6 @@ def tv():
     except Exception as e: print(f"❌ CHoCH ERROR: {e}")
     send_text_safe(tg_base, text)
     return "ok"
-
-def access_check_loop():
-    while True:
-        try: check_expired_access()
-        except: pass
-        _time.sleep(3600)
 
 def setup_webhook():
     try:
@@ -725,15 +629,14 @@ def api_stats():
     losses = stats.get("losses", 0)
     skipped = stats.get("skipped", 0)
     expired = stats.get("expired", 0)
+    pnl = stats.get("pnl", 0.0)
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
-    pnl = round((wins * 2.0) - (losses * 1.0), 2)
     return jsonify({"role": "admin", "total": total, "wins": wins, "losses": losses, "skipped": skipped, "expired": expired, "winrate": winrate, "pnl": pnl, "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))})
 
 if not globals().get("_ALL_STARTED"):
     _ALL_STARTED = True
     setup_webhook()
     threading.Thread(target=bx_watch_loop, daemon=True).start()
-    threading.Thread(target=access_check_loop, daemon=True).start()
     print("\n" + "="*50 + "\n✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ)!\n" + "="*50 + "\n")
 
 @app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
