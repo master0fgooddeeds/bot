@@ -18,6 +18,11 @@ VIP_TOPIC = 2190
 LAST = {"text": None, "ts": 0.0}
 ADMIN_IDS = []
 
+# --- YOUTUBE НАСТРОЙКИ ---
+# ВСТАВЬ СЮДА СВОЙ CHANNEL ID (начинается с UC)
+YT_CHANNEL_ID = "ВСТАВЬ_СЮДА_СВОЙ_UC_ID" 
+YT_LAST_FILE = "/app/data/yt_last.json"
+
 DATA_DIR = "/app/data"
 SETUPS_FILE = DATA_DIR + "/bingx_setups.json"
 STATS_FILE = DATA_DIR + "/trading_stats.json"
@@ -75,12 +80,9 @@ def save_stat(setup, result, pnl):
     elif result == "skipped_tp": stats["skipped"] += 1
     elif result in ["expired", "admin_cancel"]: stats["expired"] += 1
     
-    # Накопительный PnL
     stats["pnl"] = round(stats["pnl"] + pnl, 2)
-    
     stats["history"].append({"date": datetime.now().strftime("%d.%m.%Y"), "sym": setup["sym"], "tf": setup["tf"], "dir": setup["dir"], "result": status_text, "pnl": round(pnl, 2)})
     
-    # УМНАЯ ОЧИСТКА: храним только последние 1000 сделок
     if len(stats["history"]) > 1000:
         stats["history"] = stats["history"][-1000:]
     
@@ -110,7 +112,7 @@ def fetch_admins_from_group():
         if r.json().get("ok"):
             ADMIN_IDS = [m["user"]["id"] for m in r.json()["result"] if m["status"] in ("creator", "administrator") and not m["user"].get("is_bot")]
             print(f"👑 Загружено админов: {len(ADMIN_IDS)}")
-    except Exception as e: print("⚠️ Не подтянул админов:", e)
+    except Exception as e: print("️ Не подтянул админов:", e)
 
 bx_load()
 fetch_admins_from_group()
@@ -220,7 +222,7 @@ def close_setup(sid, result):
     if s.get("vip_msg"):
         try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
         except: pass
-    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
+    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
     for aid in ADMIN_IDS:
         tg("sendMessage", data={"chat_id": aid, "text": f" Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
     save_stat(s, result, pnl_pct)
@@ -243,7 +245,7 @@ def bx_watch_step():
                 if price <= s["tp"] * (1 - buf_frac): skipped_tp = True
                 elif price >= entry * (1 - buf_frac): reached = True
             if skipped_tp:
-                cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
+                cap = f"""️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
 
 🚀 *Причина:* Цена достигла TP, не задев вход.
  *Ожидаемый вход:* `{entry:,.2f}`
@@ -296,6 +298,63 @@ def bx_watch_loop():
         except Exception as e: print("WATCH LOOP:", e)
         _time.sleep(60)
 
+# --- YOUTUBE AUTOPOSTER ---
+def get_last_yt_video():
+    try:
+        if os.path.exists(YT_LAST_FILE):
+            with open(YT_LAST_FILE, "r") as f: return json.load(f).get("last_id", "")
+    except: pass
+    return ""
+
+def save_last_yt_video(vid):
+    try:
+        with open(YT_LAST_FILE, "w") as f: json.dump({"last_id": vid}, f)
+    except Exception as e: print("YT SAVE FAIL:", e)
+
+def check_youtube_feed():
+    if YT_CHANNEL_ID == "ВСТАВЬ_СЮДА_СВОЙ_UC_ID" or not YT_CHANNEL_ID.startswith("UC"):
+        return # Не запускаем, если ID не вставлен
+    try:
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
+        r = requests.get(rss_url, timeout=10)
+        if r.status_code == 200:
+            xml_text = r.text
+            vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', xml_text)
+            title_match = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>', xml_text)
+            link_match = re.search(r'<link rel="alternate" href="(.*?)"/>', xml_text)
+            
+            if vid_match and title_match and link_match:
+                new_vid = vid_match.group(1)
+                title = title_match.group(1)
+                link = link_match.group(1)
+                
+                last_vid = get_last_yt_video()
+                if not last_vid:
+                    save_last_yt_video(new_vid) # Первый запуск, просто запоминаем
+                    return
+                
+                if new_vid != last_vid:
+                    save_last_yt_video(new_vid)
+                    msg = f"""🎥 *НОВОЕ ВИДЕО НА КАНАЛЕ!*
+
+📌 *{title}*
+
+👉 [Смотреть на YouTube]({link})
+
+@MyTradingClub"""
+                    tg("sendMessage", data={"chat_id": CHAT, "text": msg, "parse_mode": "Markdown", "disable_web_page_preview": False})
+                    print(f"✅ YouTube видео отправлено: {new_vid}")
+    except Exception as e:
+        print(f"⚠️ YouTube check error: {e}")
+
+def yt_watch_loop():
+    while True:
+        try:
+            check_youtube_feed()
+        except Exception as e:
+            print("YT WATCH LOOP:", e)
+        _time.sleep(900) # Проверка каждые 15 минут
+
 def handle_update(up):
     cb = up.get("callback_query")
     if cb:
@@ -329,7 +388,7 @@ def handle_update(up):
                 s["close_result"] = "admin_cancel"
                 save_stat(s, "expired", 0.0)
                 bx_save()
-                cap = f"""❌ *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
+                cap = f""" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
 _Сетап признан неактуальным._"""
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
@@ -413,7 +472,7 @@ _Платформа в разработке. Следим за прогресс�
 🟢 *TP:* {stats['wins']} ({win_rate:.1f}%)
  *SL:* {stats['losses']}
  *Пропуск:* {stats['skipped']}
-⏳ *Истекло:* {stats['expired']}
+ *Истекло:* {stats['expired']}
  *Общий PnL:* {stats.get('pnl', 0)}%
 
  *Последние 5:*
@@ -445,7 +504,7 @@ _Платформа в разработке. Следим за прогресс�
                         s["close_result"] = "admin_cancel"
                         save_stat(s, "expired", 0.0)
                         bx_save()
-                        cap = f"❌ *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
+                        cap = f" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
                         if s.get("vip_msg"):
                             try:
                                 tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
@@ -454,7 +513,7 @@ _Платформа в разработке. Следим за прогресс�
                         tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
-                        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
+                        tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
                 return
 
             if txt.startswith("/test_setup ") and is_admin(uid):
@@ -465,7 +524,7 @@ _Платформа в разработке. Следим за прогресс�
                     direction = parts[3].lower()
                     sid = new_pending(sym, tf, direction, None)
                     kb = {"inline_keyboard": [[{"text": f" BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
-                    tg("sendMessage", data={"chat_id": uid, "text": f"🧪 *ТЕСТОВЫЙ СЕТАП #{sid}*\n\n{sym} {tf} {direction}\n\nНажми 'Сетап готов' и отправь данные.", "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
+                    tg("sendMessage", data={"chat_id": uid, "text": f" *ТЕСТОВЫЙ СЕТАП #{sid}*\n\n{sym} {tf} {direction}\n\nНажми 'Сетап готов' и отправь данные.", "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 return
 
         if is_admin(uid) and str(uid) in BX.get("wait_link", {}):
@@ -606,7 +665,7 @@ def tv():
                 tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": json.dumps(kb)})
             print(f"✅ CHoCH #{sid} создан")
             return "ok"
-    except Exception as e: print(f"❌ CHoCH ERROR: {e}")
+    except Exception as e: print(f" CHoCH ERROR: {e}")
     send_text_safe(tg_base, text)
     return "ok"
 
@@ -615,7 +674,7 @@ def setup_webhook():
         r = tg("setWebhook", data={"url": WEBHOOK_URL, "allowed_updates": ["message", "callback_query"], "max_connections": 40})
         if r.get("ok"): print("✅ Webhook установлен!")
         else: print(f"⚠️ Ошибка webhook: {r}")
-    except Exception as e: print(f"⚠️ Webhook error: {e}")
+    except Exception as e: print(f"️ Webhook error: {e}")
 
 @app.route('/dashboard')
 def dashboard_page():
@@ -633,11 +692,40 @@ def api_stats():
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     return jsonify({"role": "admin", "total": total, "wins": wins, "losses": losses, "skipped": skipped, "expired": expired, "winrate": winrate, "pnl": pnl, "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))})
 
+# API ДЛЯ YOUTUBE СЕТКИ В МИНИ-АППЕ
+@app.route('/api/youtube', methods=['GET'])
+def api_youtube():
+    try:
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
+        r = requests.get(rss_url, timeout=10)
+        if r.status_code == 200:
+            xml_text = r.text
+            videos = []
+            entries = re.findall(r'<entry>(.*?)</entry>', xml_text, re.DOTALL)
+            for entry in entries[:12]:
+                vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', entry)
+                title_match = re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>', entry)
+                link_match = re.search(r'<link rel="alternate" href="(.*?)"/>', entry)
+                
+                if vid_match and title_match and link_match:
+                    videos.append({
+                        "id": vid_match.group(1),
+                        "title": title_match.group(1),
+                        "link": link_match.group(1),
+                        "thumbnail": f"https://img.youtube.com/vi/{vid_match.group(1)}/mqdefault.jpg"
+                    })
+            return jsonify(videos)
+        return jsonify([])
+    except Exception as e:
+        print(f"YouTube API error: {e}")
+        return jsonify([])
+
 if not globals().get("_ALL_STARTED"):
     _ALL_STARTED = True
     setup_webhook()
     threading.Thread(target=bx_watch_loop, daemon=True).start()
-    print("\n" + "="*50 + "\n✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ)!\n" + "="*50 + "\n")
+    threading.Thread(target=yt_watch_loop, daemon=True).start() # ЗАПУСК YOUTUBE ПАРСЕРА
+    print("\n" + "="*50 + "\n✅ БОТ ЗАПУЩЕН (ЧИСТАЯ ВЕРСИЯ + YOUTUBE)!\n" + "="*50 + "\n")
 
 @app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
 def api_analysis(setup_id):
