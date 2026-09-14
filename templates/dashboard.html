@@ -380,7 +380,99 @@
             }
         }
 
-        
+        // Режим редактирования и удаления
+var editMode = false;
+var deleteMode = false;
+
+function enableEditMode() {
+    editMode = true;
+    deleteMode = false;
+    document.getElementById('editControls').classList.remove('hidden');
+    document.getElementById('deleteControls').classList.add('hidden');
+    loadAnalysesForEdit();
+}
+
+function enableDeleteMode() {
+    deleteMode = true;
+    editMode = false;
+    document.getElementById('deleteControls').classList.remove('hidden');
+    document.getElementById('editControls').classList.add('hidden');
+    loadAnalysesForDelete();
+}
+
+function loadAnalysesForEdit() {
+    fetch('/api/analyses')
+        .then(function(r) { return r.json(); })
+        .then(function(analyses) {
+            var list = document.getElementById('editList');
+            if (!analyses || analyses.length === 0) {
+                list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>';
+                return;
+            }
+            list.innerHTML = analyses.map(function(a) {
+                return '<div style="padding:8px; margin:5px 0; background:rgba(255,255,255,0.05); border-radius:5px; display:flex; justify-content:space-between; align-items:center;">' +
+                    '<div><strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br><small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small></div>' +
+                    '<button class="btn" style="padding:5px 10px; font-size:12px;" onclick="editExistingAnalysis(\'' + a.setup_id + '\')">✏️</button>' +
+                '</div>';
+            }).join('');
+        });
+}
+
+function loadAnalysesForDelete() {
+    fetch('/api/analyses')
+        .then(function(r) { return r.json(); })
+        .then(function(analyses) {
+            var list = document.getElementById('deleteList');
+            if (!analyses || analyses.length === 0) {
+                list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>';
+                return;
+            }
+            list.innerHTML = analyses.map(function(a) {
+                return '<div style="padding:8px; margin:5px 0; background:rgba(255,0,0,0.1); border-radius:5px; display:flex; justify-content:space-between; align-items:center;">' +
+                    '<div><strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br><small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small></div>' +
+                    '<button class="btn btn-danger" style="padding:5px 10px; font-size:12px;" onclick="deleteExistingAnalysis(\'' + a.setup_id + '\')">🗑</button>' +
+                '</div>';
+            }).join('');
+        });
+}
+
+function editExistingAnalysis(setupId) {
+    fetch('/api/analysis/' + setupId)
+        .then(function(r) { return r.json(); })
+        .then(function(analysis) {
+            document.getElementById('setupSelect').value = setupId;
+            document.getElementById('resultSelect').value = analysis.result || 'manual';
+            document.getElementById('analysisText').value = analysis.analysis_text || '';
+            document.getElementById('createForm').classList.remove('hidden');
+            document.getElementById('statsCard').classList.add('hidden');
+            document.getElementById('chartCard').classList.add('hidden');
+            document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('editControls').classList.add('hidden');
+        });
+}
+
+function deleteExistingAnalysis(setupId) {
+    if (!confirm('Удалить этот разбор?')) return;
+    
+    fetch('/api/analysis/' + setupId, {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.ok) {
+            alert('Разбор удален');
+            loadAnalysesForDelete();
+            refreshData();
+        } else {
+            alert('Ошибка: ' + (res.error || 'Не удалось удалить'));
+        }
+    })
+    .catch(function(err) {
+        alert('Ошибка удаления: ' + err.message);
+    });
+}
         refreshData();
     </script>
 </body>
