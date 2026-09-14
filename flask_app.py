@@ -312,7 +312,7 @@ def save_last_yt_video(vid):
     except Exception as e: print("YT SAVE FAIL:", e)
 
 def check_youtube_feed():
-    if YT_CHANNEL_ID == "ВСТАВЬ_СЮДА_СВОЙ_UC_ID" or not YT_CHANNEL_ID.startswith("UC"):
+    if YT_CHANNEL_ID == "UCC71uNPC5AA9wFGvlPL1Iig" or not YT_CHANNEL_ID.startswith("UC"):
         return # Не запускаем, если ID не вставлен
     try:
         rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
