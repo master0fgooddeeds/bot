@@ -292,20 +292,54 @@
 
         // АДМИНСКИЕ ФУНКЦИИ
         function enableEditMode() {
-            document.getElementById('editControls').classList.remove('hidden');
-            document.getElementById('deleteControls').classList.add('hidden');
-            document.getElementById('editList').innerHTML = allAnalyses.map(function(a, i) {
-                return '<div class="analysis-item" onclick="editExistingAnalysis(\'' + a.setup_id + '\')"><strong>' + (a.symbol || '') + ' ' + (a.tf || '') + '</strong><br><small>' + (a.result || '') + '</small></div>';
-            }).join('') || '<p>Нет разборов</p>';
-        }
+    document.getElementById('editControls').classList.remove('hidden');
+    document.getElementById('deleteControls').classList.add('hidden');
+    document.getElementById('editList').innerHTML = 'Загрузка...';
+    
+    fetch('/api/analyses')
+        .then(function(r) { return r.json(); })
+        .then(function(analyses) {
+            allAnalyses = analyses;
+            if (!analyses || analyses.length === 0) {
+                document.getElementById('editList').innerHTML = '<p>Нет разборов</p>';
+                return;
+            }
+            document.getElementById('editList').innerHTML = analyses.map(function(a) {
+                return '<div class="analysis-item" onclick="editExistingAnalysis(\'' + a.setup_id + '\')">' +
+                    '<strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br>' +
+                    '<small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small>' +
+                    '</div>';
+            }).join('');
+        })
+        .catch(function(err) {
+            document.getElementById('editList').innerHTML = '<p>Ошибка загрузки</p>';
+        });
+}
 
-        function enableDeleteMode() {
-            document.getElementById('deleteControls').classList.remove('hidden');
-            document.getElementById('editControls').classList.add('hidden');
-            document.getElementById('deleteList').innerHTML = allAnalyses.map(function(a, i) {
-                return '<div class="analysis-item" style="background:rgba(255,0,0,0.1);" onclick="deleteExistingAnalysis(\'' + a.setup_id + '\')"><strong>' + (a.symbol || '') + ' ' + (a.tf || '') + '</strong><br><small>' + (a.result || '') + '</small></div>';
-            }).join('') || '<p>Нет разборов</p>';
-        }
+function enableDeleteMode() {
+    document.getElementById('deleteControls').classList.remove('hidden');
+    document.getElementById('editControls').classList.add('hidden');
+    document.getElementById('deleteList').innerHTML = 'Загрузка...';
+    
+    fetch('/api/analyses')
+        .then(function(r) { return r.json(); })
+        .then(function(analyses) {
+            allAnalyses = analyses;
+            if (!analyses || analyses.length === 0) {
+                document.getElementById('deleteList').innerHTML = '<p>Нет разборов</p>';
+                return;
+            }
+            document.getElementById('deleteList').innerHTML = analyses.map(function(a) {
+                return '<div class="analysis-item" style="background:rgba(255,0,0,0.1);" onclick="deleteExistingAnalysis(\'' + a.setup_id + '\')">' +
+                    '<strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br>' +
+                    '<small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small>' +
+                    '</div>';
+            }).join('');
+        })
+        .catch(function(err) {
+            document.getElementById('deleteList').innerHTML = '<p>Ошибка загрузки</p>';
+        });
+}
 
         function editExistingAnalysis(setupId) {
             fetch('/api/analysis/' + setupId).then(function(r) { return r.json(); }).then(function(a) {
