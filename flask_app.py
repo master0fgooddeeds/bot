@@ -763,6 +763,27 @@ def api_all_analyses():
     analyses = get_all_analyses()
     return jsonify(list(analyses.values()))
 
+# Принудительно загружаем данные при старте
+def force_load_data():
+    import os
+    # Создаем файлы если нет
+    if not os.path.exists(SETUPS_FILE):
+        with open(SETUPS_FILE, "w") as f:
+            json.dump({"pending": {}, "active": {}, "wait_link": {}, "seq": 1}, f)
+    if not os.path.exists(STATS_FILE):
+        with open(STATS_FILE, "w") as f:
+            json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}, f)
+    if not os.path.exists(ANALYSES_FILE):
+        with open(ANALYSES_FILE, "w") as f:
+            json.dump({}, f)
+    
+    # Загружаем данные
+    bx_load()
+    print(f"✅ Загружено: {len(BX['active'])} активных сетапов")
+
+# Вызываем перед стартом
+force_load_data()
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
