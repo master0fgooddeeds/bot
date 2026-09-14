@@ -106,13 +106,23 @@ BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
     try:
+        import os
+        os.makedirs(DATA_DIR, exist_ok=True)
+        
+        # Создаем файлы если нет
+        if not os.path.exists(SETUPS_FILE):
+            with open(SETUPS_FILE, "w") as f:
+                json.dump({"pending": {}, "active": {}, "wait_link": {}, "seq": 1}, f)
+        
         with open(SETUPS_FILE) as f: 
             data = json.load(f)
             BX["pending"].update(data.get("pending", {}))
             BX["active"].update(data.get("active", {}))
             BX["wait_link"] = data.get("wait_link", {})
             BX["seq"] = data.get("seq", 1)
-    except: pass
+        print(f"✅ Загружено сетапов: {len(BX['active'])} активных")
+    except Exception as e:
+        print(f"⚠️ Ошибка загрузки: {e}")
 
 def bx_save():
     try:
