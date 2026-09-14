@@ -340,13 +340,11 @@ def check_youtube_feed():
 
 📌 *{title}*
 
- [Смотреть на YouTube]({link})
+👉 [Смотреть на YouTube]({link})
 
 @MyTradingClub"""
                     tg("sendMessage", data={"chat_id": CHAT, "text": msg, "parse_mode": "Markdown", "disable_web_page_preview": False})
                     print(f"✅ YouTube видео отправлено: {new_vid}")
-    except Exception as e:
-        print(f"⚠️ YouTube check error: {e}")
     except Exception as e:
         print(f"⚠️ YouTube check error: {e}")
 
