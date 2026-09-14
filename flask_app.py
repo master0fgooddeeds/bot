@@ -136,6 +136,10 @@ def bx_save():
 
 def load_stats():
     try:
+        import os
+        if not os.path.exists(STATS_FILE):
+            with open(STATS_FILE, "w") as f:
+                json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}, f)
         with open(STATS_FILE, "r") as f: return json.load(f)
     except: return {"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "history": []}
 
@@ -155,6 +159,10 @@ ANALYSES_FILE = DATA_DIR + "/analyses.json"
 
 def load_analyses():
     try:
+        import os
+        if not os.path.exists(ANALYSES_FILE):
+            with open(ANALYSES_FILE, "w") as f:
+                json.dump({}, f)
         with open(ANALYSES_FILE, "r") as f: return json.load(f)
     except: return {}
 
