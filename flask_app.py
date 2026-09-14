@@ -18,7 +18,8 @@ VIP_TOPIC = 2190
 LAST = {"text": None, "ts": 0.0}
 ADMIN_IDS = []
 
-ACCESS_FILE = "user_access.json"
+DATA_DIR = "/app/data"
+ACCESS_FILE = DATA_DIR + "/user_access.json"
 
 def load_access():
     try:
@@ -99,8 +100,8 @@ TF_PROFILE = {
     "D": {"candle_min": 1440, "ttl_candles": 6, "style": "позиция", "valid_hours": 168},
 }
 
-SETUPS_FILE = "bingx_setups.json"
-STATS_FILE = "trading_stats.json"
+SETUPS_FILE = DATA_DIR + "/bingx_setups.json"
+STATS_FILE = DATA_DIR + "/trading_stats.json"
 BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
@@ -137,7 +138,7 @@ def save_stat(setup, result, pnl):
     if len(stats["history"]) > 100: stats["history"] = stats["history"][-100:]
     with open(STATS_FILE, "w") as f: json.dump(stats, f, indent=2)
 
-ANALYSES_FILE = "analyses.json"
+ANALYSES_FILE = DATA_DIR + "/analyses.json"
 
 def load_analyses():
     try:
