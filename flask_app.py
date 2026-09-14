@@ -99,9 +99,10 @@ TF_PROFILE = {
     "D": {"candle_min": 1440, "ttl_candles": 6, "style": "позиция", "valid_hours": 168},
 }
 
-SETUPS_FILE = "bingx_setups.json"
-STATS_FILE = "trading_stats.json"
-ANALYSES_FILE = "analyses.json"  # ← ПЕРЕНЕСИ СЮДА!
+DATA_DIR = "/app/data"
+SETUPS_FILE = DATA_DIR + "/bingx_setups.json"
+STATS_FILE = DATA_DIR + "/trading_stats.json"
+ANALYSES_FILE = DATA_DIR + "/analyses.json"
 BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
