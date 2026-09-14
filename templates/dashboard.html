@@ -15,73 +15,43 @@
         .stat-value { font-weight: bold; }
         canvas { max-height: 250px; margin-bottom: 15px; }
         .btn-container { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-        .btn { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; display: block; }
         .btn:hover { opacity: 0.9; }
         .btn-secondary { background-color: var(--tg-theme-secondary-bg-color, #2c2c2e); border: 2px solid var(--tg-theme-button-color, #3390ec); }
         .btn-danger { background-color: #ff3b30; }
         .hidden { display: none !important; }
         #secretZone { margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; text-align: center; }
         
-        /* Стили для списка разборов */
-        .analysis-item {
-            padding: 12px;
-            margin: 8px 0;
-            background: rgba(51, 144, 236, 0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid rgba(51, 144, 236, 0.3);
-        }
-        .analysis-item:hover {
-            background: rgba(51, 144, 236, 0.2);
-            transform: translateX(5px);
-        }
-        .analysis-item.has-image {
-            border-left: 4px solid #3390ec;
-        }
+        .analysis-item { padding: 12px; margin: 8px 0; background: rgba(51, 144, 236, 0.1); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(51, 144, 236, 0.3); }
+        .analysis-item:hover { background: rgba(51, 144, 236, 0.2); transform: translateX(5px); }
+        .analysis-item.has-image { border-left: 4px solid #3390ec; }
         
-        /* Модальное окно */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: var(--tg-theme-secondary-bg-color, #2c2c2e); border-radius: 12px; padding: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-image { width: 100%; border-radius: 8px; margin: 15px 0; max-height: 400px; object-fit: contain; }
+        .modal-text { white-space: pre-wrap; line-height: 1.6; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+
+        /* СЕТКА ДЛЯ ВИДЕО */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
         }
-        .modal-content {
-            background: var(--tg-theme-secondary-bg-color, #2c2c2e);
-            border-radius: 12px;
-            padding: 20px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .modal-image {
-            width: 100%;
-            border-radius: 8px;
-            margin: 15px 0;
-            max-height: 400px;
-            object-fit: contain;
-        }
-        .modal-text {
-            white-space: pre-wrap;
-            line-height: 1.6;
-            margin: 15px 0;
-            padding: 15px;
+        .video-card {
             background: rgba(255,255,255,0.05);
-            border-radius: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
+        .video-card:hover { transform: scale(1.03); }
+        .video-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #000; }
+        .video-title { padding: 8px; font-size: 13px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     </style>
 </head>
 <body>
-    <h1 id="logo"> MTC Dashboard</h1>
+    <h1 id="logo">📊 MTC Dashboard</h1>
     
     <div class="card" id="statsCard">
         <div class="stat-row"><span class="stat-label">Всего сделок:</span><span class="stat-value" id="total">Загрузка...</span></div>
@@ -96,15 +66,19 @@
         <div id="analysesList">Нажми "Обновить данные" для загрузки...</div>
     </div>
 
-    <!-- КНОПКИ ДЛЯ ВСЕХ -->
+    <div class="card hidden" id="youtubeCard">
+        <h3 style="margin-top:0;">🎥 Видео с канала</h3>
+        <div id="youtubeList" class="video-grid">Загрузка...</div>
+    </div>
+
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
         <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
+        <button class="btn btn-secondary" onclick="toggleYoutube()">🎥 Видео</button>
         <button class="btn btn-secondary" onclick="shareStats()">📤 Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
     </div>
 
-    <!-- МОДАЛКА СОЗДАНИЯ / РЕДАКТИРОВАНИЯ -->
     <div class="card hidden" id="createForm">
         <h3 style="margin-top:0;">Разбор сделки</h3>
         <div style="margin-bottom:15px;">
@@ -133,20 +107,18 @@
         </div>
     </div>
 
-    <!-- SECRET ZONE -->
     <div class="card hidden" id="secretZone">
         <h3>🔥 SECRET ZONE</h3>
         <p>Ты настоящий админ!</p>
         <div class="btn-container" style="margin-top:15px;">
             <button class="btn" onclick="showCreateForm()">➕ Создать разбор</button>
             <button class="btn btn-secondary" onclick="enableEditMode()">✏️ Редактировать</button>
-            <button class="btn btn-danger" onclick="enableDeleteMode()"> Удалить</button>
+            <button class="btn btn-danger" onclick="enableDeleteMode()">🗑 Удалить</button>
         </div>
         <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
         <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ПРОСМОТРА -->
     <div id="viewModal" class="modal-overlay hidden" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h2 id="modalTitle" style="margin-top:0;">📊 Разбор сделки</h2>
@@ -193,7 +165,32 @@
         function toggleAnalyses() {
             var card = document.getElementById('analysesCard');
             card.classList.toggle('hidden');
+            document.getElementById('youtubeCard').classList.add('hidden');
             if (!card.classList.contains('hidden')) loadAnalyses();
+        }
+
+        function toggleYoutube() {
+            var card = document.getElementById('youtubeCard');
+            var isHidden = card.classList.contains('hidden');
+            document.getElementById('analysesCard').classList.add('hidden');
+            card.classList.toggle('hidden');
+            if (isHidden) loadYoutube();
+        }
+
+        function loadYoutube() {
+            var list = document.getElementById('youtubeList');
+            list.innerHTML = 'Загрузка...';
+            fetch('/api/youtube')
+                .then(function(r) { return r.json(); })
+                .then(function(videos) {
+                    if (!videos || videos.length === 0) { list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Видео не найдены</p>'; return; }
+                    list.innerHTML = videos.map(function(v) {
+                        return '<div class="video-card" onclick="window.open(\'' + v.link + '\', \'_blank\')">' +
+                            '<img class="video-thumb" src="' + v.thumbnail + '" alt="Video">' +
+                            '<div class="video-title">' + v.title + '</div>' +
+                        '</div>';
+                    }).join('');
+                }).catch(function(err) { list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Ошибка загрузки</p>'; });
         }
 
         function loadAnalyses() {
@@ -206,7 +203,7 @@
                     if (!analyses || analyses.length === 0) { list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>'; return; }
                     list.innerHTML = analyses.map(function(a, idx) {
                         var hasImg = a.chart_image ? 'has-image' : '';
-                        var imgIcon = a.chart_image ? ' ️' : '';
+                        var imgIcon = a.chart_image ? ' 🖼️' : '';
                         return '<div class="analysis-item ' + hasImg + '" onclick="viewAnalysis(' + idx + ')">' +
                             '<strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + ' ' + (a.direction ? a.direction.toUpperCase() : '') + '</strong><br>' +
                             '<small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small>' + imgIcon +
@@ -218,11 +215,9 @@
         function viewAnalysis(idx) {
             var a = allAnalyses[idx];
             if (!a) return;
-            
             document.getElementById('modalTitle').innerText = (a.symbol || 'N/A') + ' ' + (a.tf || '') + ' ' + (a.direction ? a.direction.toUpperCase() : '');
             document.getElementById('modalMeta').innerHTML = '<strong>Результат:</strong> ' + (a.result || 'N/A') + '<br><strong>PnL:</strong> ' + (a.pnl || '0') + '%<br><strong>Просмотров:</strong> ' + (a.views || 0);
             document.getElementById('modalText').innerText = a.analysis_text || 'Нет описания';
-            
             if (a.chart_image) {
                 document.getElementById('modalImage').src = a.chart_image;
                 document.getElementById('modalLink').href = a.chart_image;
@@ -230,14 +225,11 @@
             } else {
                 document.getElementById('modalImageContainer').classList.add('hidden');
             }
-            
             document.getElementById('viewModal').classList.remove('hidden');
         }
 
         function closeModal(e) {
-            if (!e || e.target.id === 'viewModal') {
-                document.getElementById('viewModal').classList.add('hidden');
-            }
+            if (!e || e.target.id === 'viewModal') { document.getElementById('viewModal').classList.add('hidden'); }
         }
 
         function showCreateForm() {
@@ -245,6 +237,7 @@
             document.getElementById('statsCard').classList.add('hidden');
             document.getElementById('chartCard').classList.add('hidden');
             document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('youtubeCard').classList.add('hidden');
             document.getElementById('editControls').classList.add('hidden');
             document.getElementById('deleteControls').classList.add('hidden');
             loadActiveSetups();
@@ -271,11 +264,8 @@
             var result = document.getElementById('resultSelect').value;
             var text = document.getElementById('analysisText').value;
             var imageUrl = document.getElementById('imageUrl').value;
-            
             if (!setupId) { alert('Выбери сетап!'); return; }
-            
             var data = { setup_id: setupId, result: result, analysis_text: text, chart_image: imageUrl, admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0 };
-            
             fetch('/api/analysis/' + setupId, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) })
             .then(function(r) { return r.json(); })
             .then(function(res) { if (res.ok) { alert('Сохранено!'); cancelCreateForm(); refreshData(); } else { alert('Ошибка: ' + (res.error || '')); } })
@@ -283,63 +273,38 @@
         }
 
         function shareStats() {
-            var text = ' MTC Stats\nСделок: ' + document.getElementById('total').innerText + '\nВинрейт: ' + document.getElementById('winrate').innerText + '\n@mtcthunter_bot';
+            var text = '📊 MTC Stats\nСделок: ' + document.getElementById('total').innerText + '\nВинрейт: ' + document.getElementById('winrate').innerText + '\n@mtcthunter_bot';
             if (navigator.clipboard) { navigator.clipboard.writeText(text).then(function() { alert('Скопировано!'); }).catch(function() { alert(text); }); }
             else { alert(text); }
         }
 
         function closeApp() { if (tg.close) { tg.close(); } else { window.close(); } }
 
-        // АДМИНСКИЕ ФУНКЦИИ
         function enableEditMode() {
-    document.getElementById('editControls').classList.remove('hidden');
-    document.getElementById('deleteControls').classList.add('hidden');
-    document.getElementById('editList').innerHTML = 'Загрузка...';
-    
-    fetch('/api/analyses')
-        .then(function(r) { return r.json(); })
-        .then(function(analyses) {
-            allAnalyses = analyses;
-            if (!analyses || analyses.length === 0) {
-                document.getElementById('editList').innerHTML = '<p>Нет разборов</p>';
-                return;
-            }
-            document.getElementById('editList').innerHTML = analyses.map(function(a) {
-                return '<div class="analysis-item" onclick="editExistingAnalysis(\'' + a.setup_id + '\')">' +
-                    '<strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br>' +
-                    '<small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small>' +
-                    '</div>';
-            }).join('');
-        })
-        .catch(function(err) {
-            document.getElementById('editList').innerHTML = '<p>Ошибка загрузки</p>';
-        });
-}
+            document.getElementById('editControls').classList.remove('hidden');
+            document.getElementById('deleteControls').classList.add('hidden');
+            document.getElementById('editList').innerHTML = 'Загрузка...';
+            fetch('/api/analyses').then(function(r) { return r.json(); }).then(function(analyses) {
+                allAnalyses = analyses;
+                if (!analyses || analyses.length === 0) { document.getElementById('editList').innerHTML = '<p>Нет разборов</p>'; return; }
+                document.getElementById('editList').innerHTML = analyses.map(function(a) {
+                    return '<div class="analysis-item" onclick="editExistingAnalysis(\'' + a.setup_id + '\')"><strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br><small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small></div>';
+                }).join('');
+            });
+        }
 
-function enableDeleteMode() {
-    document.getElementById('deleteControls').classList.remove('hidden');
-    document.getElementById('editControls').classList.add('hidden');
-    document.getElementById('deleteList').innerHTML = 'Загрузка...';
-    
-    fetch('/api/analyses')
-        .then(function(r) { return r.json(); })
-        .then(function(analyses) {
-            allAnalyses = analyses;
-            if (!analyses || analyses.length === 0) {
-                document.getElementById('deleteList').innerHTML = '<p>Нет разборов</p>';
-                return;
-            }
-            document.getElementById('deleteList').innerHTML = analyses.map(function(a) {
-                return '<div class="analysis-item" style="background:rgba(255,0,0,0.1);" onclick="deleteExistingAnalysis(\'' + a.setup_id + '\')">' +
-                    '<strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br>' +
-                    '<small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small>' +
-                    '</div>';
-            }).join('');
-        })
-        .catch(function(err) {
-            document.getElementById('deleteList').innerHTML = '<p>Ошибка загрузки</p>';
-        });
-}
+        function enableDeleteMode() {
+            document.getElementById('deleteControls').classList.remove('hidden');
+            document.getElementById('editControls').classList.add('hidden');
+            document.getElementById('deleteList').innerHTML = 'Загрузка...';
+            fetch('/api/analyses').then(function(r) { return r.json(); }).then(function(analyses) {
+                allAnalyses = analyses;
+                if (!analyses || analyses.length === 0) { document.getElementById('deleteList').innerHTML = '<p>Нет разборов</p>'; return; }
+                document.getElementById('deleteList').innerHTML = analyses.map(function(a) {
+                    return '<div class="analysis-item" style="background:rgba(255,0,0,0.1);" onclick="deleteExistingAnalysis(\'' + a.setup_id + '\')"><strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + '</strong><br><small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small></div>';
+                }).join('');
+            });
+        }
 
         function editExistingAnalysis(setupId) {
             fetch('/api/analysis/' + setupId).then(function(r) { return r.json(); }).then(function(a) {
