@@ -692,8 +692,6 @@ def api_stats():
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     return jsonify({"role": "admin", "total": total, "wins": wins, "losses": losses, "skipped": skipped, "expired": expired, "winrate": winrate, "pnl": pnl, "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))})
 
-
-
 # API ДЛЯ YOUTUBE СЕТКИ В МИНИ-АППЕ (ЕДИНСТВЕННАЯ ПРАВИЛЬНАЯ ВЕРСИЯ)
 @app.route('/api/youtube', methods=['GET'])
 def api_youtube():
@@ -739,3 +737,4 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
