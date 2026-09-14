@@ -244,7 +244,7 @@
                 list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>';
                 return;
             }
-            list.innerHTML = analyses.map(function(a) {
+            list.innerHTML = analyses.map(function(a, index) {
                 if (!a) return '';
                 var symbol = a.symbol || 'N/A';
                 var tf = a.tf || 'N/A';
@@ -252,16 +252,90 @@
                 var result = a.result || 'N/A';
                 var pnl = a.pnl || '0';
                 var views = a.views || 0;
-                return '<div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">' +
+                var text = a.analysis_text || '';
+                var setupId = a.setup_id || '';
+                
+                return '<div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:pointer;" onclick="viewAnalysis(' + index + ')">' +
                     '<strong>' + symbol + ' ' + tf + ' ' + direction + '</strong><br>' +
-                    '<small>' + result + ' | PnL: ' + pnl + '</small><br>' +
-                    '<small style="opacity:0.7;">👁 ' + views + '</small>' +
-                    '</div>';
+                    '<small>' + result + ' | PnL: ' + pnl + '%</small><br>' +
+                    '<small style="opacity:0.7;"> ' + views + ' просмотров</small>' +
+                    '<div id="analysis-' + index + '" class="hidden" style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px;">' +
+                        '<p style="white-space:pre-wrap;">' + text + '</p>' +
+                        '<div id="admin-controls-' + index + '" class="hidden" style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">' +
+                            '<button class="btn" style="padding:8px 15px; font-size:14px; margin-right:10px;" onclick="editAnalysis(\'' + setupId + '\', event)">️ Редактировать</button>' +
+                            '<button class="btn btn-danger" style="padding:8px 15px; font-size:14px;" onclick="deleteAnalysis(\'' + setupId + '\', event)">🗑 Удалить</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
             }).join('');
+            
+            // Сохраняем анализы в глобальной переменной для доступа
+            window.analysesData = analyses;
         })
         .catch(function(err) {
             document.getElementById('analysesList').innerHTML = '<p style="opacity:0.6;">Ошибка загрузки: ' + err.message + '</p>';
         });
+}
+
+// Просмотр разбора
+function viewAnalysis(index) {
+    var detailDiv = document.getElementById('analysis-' + index);
+    if (detailDiv.classList.contains('hidden')) {
+        // Скрыть все остальные
+        document.querySelectorAll('[id^="analysis-"]').forEach(function(div) {
+            div.classList.add('hidden');
+        });
+        detailDiv.classList.remove('hidden');
+        
+        // Показать админские кнопки если админ
+        if (userRole === 'admin') {
+            var adminDiv = document.getElementById('admin-controls-' + index);
+            if (adminDiv) adminDiv.classList.remove('hidden');
+        }
+    } else {
+        detailDiv.classList.add('hidden');
+    }
+}
+
+// Редактирование разбора
+function editAnalysis(setupId, event) {
+    event.stopPropagation();
+    var analysis = window.analysesData.find(function(a) { return a.setup_id === setupId; });
+    if (!analysis) return;
+    
+    document.getElementById('setupSelect').value = setupId;
+    document.getElementById('resultSelect').value = analysis.result || 'manual';
+    document.getElementById('analysisText').value = analysis.analysis_text || '';
+    
+    document.getElementById('createForm').classList.remove('hidden');
+    document.getElementById('statsCard').classList.add('hidden');
+    document.getElementById('chartCard').classList.add('hidden');
+    document.getElementById('analysesCard').classList.add('hidden');
+}
+
+// Удаление разбора
+function deleteAnalysis(setupId, event) {
+    event.stopPropagation();
+    if (!confirm('Удалить этот разбор?')) return;
+    
+    fetch('/api/analysis/' + setupId, {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.ok) {
+            alert('Разбор удален');
+            loadAnalyses();
+            refreshData();
+        } else {
+            alert('Ошибка: ' + (res.error || 'Не удалось удалить'));
+        }
+    })
+    .catch(function(err) {
+        alert('Ошибка удаления: ' + err.message);
+    });
 }
 
         function showCreateForm() {
