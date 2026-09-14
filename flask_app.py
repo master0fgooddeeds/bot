@@ -490,24 +490,26 @@ _Платформа в разработке. Следим за прогресс�
                 return
 
             if txt.startswith("/force_close ") and is_admin(uid):
-                parts = txt.split()
-                if len(parts) >= 2:
-                    sid = parts[1]
-                    s = BX["active"].pop(sid, None)
-                    if s:
-                        s["status"] = "closed"
-                        s["close_result"] = "admin_cancel"
-                        save_stat(s, "expired", 0.0)
-                        bx_save()
-                        cap = f"""❌ *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
+    parts = txt.split()
+    if len(parts) >= 2:
+        sid = parts[1]
+        s = BX["active"].pop(sid, None)
+        if s:
+            s["status"] = "closed"
+            s["close_result"] = "admin_cancel"
+            save_stat(s, "expired", 0.0)
+            bx_save()
+            cap = f""" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
 _Закрыто вручную._"""
-                        if s.get("vip_msg"):
-                            try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
-                            except: pass
-                        tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
-                    else:
-                        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
-                return
+            if s.get("vip_msg"):
+                try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
+                except: pass
+            # ОТПРАВЛЯЕМ УВЕДОМЛЕНИЕ В VIP
+            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
+            tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
+        else:
+            tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
+    return
 
             if txt.startswith("/grant ") and is_admin(uid):
                 parts = txt.split()
