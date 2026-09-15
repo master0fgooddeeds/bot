@@ -105,7 +105,8 @@ def delete_analysis(setup_id):
     return False
 
 def get_all_analyses(): return load_analyses()
-    def load_coin_analyses():
+
+def load_coin_analyses():
     import os
     try:
         if not os.path.exists(COIN_ANALYSIS_FILE):
@@ -118,14 +119,12 @@ def get_all_analyses(): return load_analyses()
 
 def save_coin_analysis(analysis_id, data):
     analyses = load_coin_analyses()
-    # Ищем существующий или создаём новый
     for i, item in enumerate(analyses):
         if item.get("id") == analysis_id:
             analyses[i] = data
             with open(COIN_ANALYSIS_FILE, "w") as f:
                 json.dump(analyses, f, indent=2)
             return True
-    # Новый разбор
     analyses.append(data)
     with open(COIN_ANALYSIS_FILE, "w") as f:
         json.dump(analyses, f, indent=2)
