@@ -301,8 +301,9 @@
                 content += '<a href="' + a.bingx_link + '" target="_blank" class="btn" style="display:block; text-align:center; margin:15px 0; text-decoration:none;"> Открыть на BingX</a>';
             }
             
-            // 🔥 ПРОВЕРКА: кнопки только если SECRET ZONE активирован (clickCount >= 5)
-            if (clickCount >= 5) {
+            // 🔥 ПРОВЕРКА: кнопки только если SECRET ZONE видна
+               var secretZone = document.getElementById('secretZone');
+               if (secretZone && !secretZone.classList.contains('hidden')) {
                 content += '<div class="btn-container" style="margin-top:15px;">';
                 content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
                 content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
