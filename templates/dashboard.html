@@ -71,11 +71,17 @@
         <div id="youtubeList" class="video-grid">Загрузка...</div>
     </div>
 
+    <div class="card hidden" id="coinAnalysisCard">
+        <h3 style="margin-top:0;">🪙 Разборы монет</h3>
+        <div id="coinAnalysisList">Загрузка...</div>
+    </div>
+
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
         <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
         <button class="btn btn-secondary" onclick="toggleYoutube()">🎥 Видео</button>
-        <button class="btn btn-secondary" onclick="shareStats()">📤 Поделиться статистикой</button>
+        <button class="btn btn-secondary" onclick="toggleCoinAnalysis()">🪙 Разборы монет</button>
+        <button class="btn btn-secondary" onclick="shareStats()"> Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
     </div>
 
@@ -104,6 +110,42 @@
         <div class="btn-container" style="margin-top:15px;">
             <button class="btn" onclick="saveAnalysis()">💾 Сохранить</button>
             <button class="btn btn-secondary" onclick="cancelCreateForm()">Отмена</button>
+        </div>
+    </div>
+
+    <div class="card hidden" id="coinAnalysisForm">
+        <h3 style="margin-top:0;">🪙 Разбор монеты</h3>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Монета (символ):</label>
+            <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px; box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">TradingView 1 (5m):</label>
+            <input type="text" id="tf1Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">TradingView 2 (1H):</label>
+            <input type="text" id="tf2Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">TradingView 3 (4H/D):</label>
+            <input type="text" id="tf3Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Ссылка на график (картинка):</label>
+            <input type="text" id="chartImage" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Текстовый разбор:</label>
+            <textarea id="coinDescription" rows="6" placeholder="Опиши ситуацию, уровни, сценарии..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;"></textarea>
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Ссылка на BingX:</label>
+            <input type="text" id="bingxLink" placeholder="https://bingx.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+        </div>
+        <div class="btn-container" style="margin-top:15px;">
+            <button class="btn" onclick="saveCoinAnalysis()">💾 Сохранить</button>
+            <button class="btn btn-secondary" onclick="cancelCoinAnalysis()">Отмена</button>
         </div>
     </div>
 
@@ -166,6 +208,7 @@
             var card = document.getElementById('analysesCard');
             card.classList.toggle('hidden');
             document.getElementById('youtubeCard').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
             if (!card.classList.contains('hidden')) loadAnalyses();
         }
 
@@ -173,8 +216,19 @@
             var card = document.getElementById('youtubeCard');
             var isHidden = card.classList.contains('hidden');
             document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
             card.classList.toggle('hidden');
             if (isHidden) loadYoutube();
+        }
+
+        function toggleCoinAnalysis() {
+            var card = document.getElementById('coinAnalysisCard');
+            var isHidden = card.classList.contains('hidden');
+            document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('youtubeCard').classList.add('hidden');
+            document.getElementById('coinAnalysisForm').classList.add('hidden');
+            card.classList.toggle('hidden');
+            if (isHidden) loadCoinAnalyses();
         }
 
         function loadYoutube() {
@@ -191,6 +245,77 @@
                         '</div>';
                     }).join('');
                 }).catch(function(err) { list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Ошибка загрузки</p>'; });
+        }
+
+        function loadCoinAnalyses() {
+            var list = document.getElementById('coinAnalysisList');
+            list.innerHTML = 'Загрузка...';
+            fetch('/api/coin_analysis')
+                .then(function(r) { return r.json(); })
+                .then(function(analyses) {
+                    if (!analyses || analyses.length === 0) {
+                        list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>';
+                        return;
+                    }
+                    list.innerHTML = analyses.map(function(a) {
+                        var date = new Date(a.created_at * 1000).toLocaleDateString('ru-RU');
+                        return '<div class="analysis-item" onclick="viewCoinAnalysis(\'' + a.id + '\')">' +
+                            '<strong>🪙 ' + (a.symbol || 'N/A') + '</strong><br>' +
+                            '<small>📅 ' + date + '</small>' +
+                            '</div>';
+                    }).join('');
+                }).catch(function(err) {
+                    list.innerHTML = '<p style="opacity:0.6;">Ошибка: ' + err.message + '</p>';
+                });
+        }
+
+        function viewCoinAnalysis(id) {
+            fetch('/api/coin_analysis')
+                .then(function(r) { return r.json(); })
+                .then(function(analyses) {
+                    var a = analyses.find(function(x) { return x.id === id; });
+                    if (!a) return;
+                    
+                    var content = '<div style="padding:15px;">';
+                    content += '<h3>🪙 ' + (a.symbol || 'N/A') + '</h3>';
+                    
+                    if (a.chart_image) {
+                        content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0;">';
+                    }
+                    
+                    if (a.tf1_link || a.tf2_link || a.tf3_link) {
+                        content += '<div style="margin:15px 0;">';
+                        content += '<strong>📊 Графики TradingView:</strong><br>';
+                        if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 1</a><br>';
+                        if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);"> Таймфрейм 2</a><br>';
+                        if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 3</a>';
+                        content += '</div>';
+                    }
+                    
+                    if (a.description) {
+                        content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
+                    }
+                    
+                    if (a.bingx_link) {
+                        content += '<a href="' + a.bingx_link + '" target="_blank" class="btn" style="display:block; text-align:center; margin:15px 0; text-decoration:none;">🔗 Открыть на BingX</a>';
+                    }
+                    
+                    if (userRole === 'admin') {
+                        content += '<div class="btn-container" style="margin-top:15px;">';
+                        content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
+                        content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
+                        content += '</div>';
+                    }
+                    
+                    content += '<button class="btn btn-secondary" onclick="document.getElementById(\'coinAnalysisCard\').classList.remove(\'hidden\'); document.querySelector(\'.modal-overlay\').remove();" style="margin-top:15px; width:100%;">Закрыть</button>';
+                    content += '</div>';
+                    
+                    var modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.onclick = function() { modal.remove(); };
+                    modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
+                    document.body.appendChild(modal);
+                });
         }
 
         function loadAnalyses() {
@@ -238,6 +363,7 @@
             document.getElementById('chartCard').classList.add('hidden');
             document.getElementById('analysesCard').classList.add('hidden');
             document.getElementById('youtubeCard').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
             document.getElementById('editControls').classList.add('hidden');
             document.getElementById('deleteControls').classList.add('hidden');
             loadActiveSetups();
@@ -249,6 +375,109 @@
             document.getElementById('chartCard').classList.remove('hidden');
             document.getElementById('analysisText').value = '';
             document.getElementById('imageUrl').value = '';
+        }
+
+        function showCoinAnalysisForm(editId) {
+            document.getElementById('coinAnalysisForm').classList.remove('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
+            document.getElementById('statsCard').classList.add('hidden');
+            document.getElementById('chartCard').classList.add('hidden');
+            
+            if (editId) {
+                fetch('/api/coin_analysis')
+                    .then(function(r) { return r.json(); })
+                    .then(function(analyses) {
+                        var a = analyses.find(function(x) { return x.id === editId; });
+                        if (a) {
+                            document.getElementById('coinSymbol').value = a.symbol || '';
+                            document.getElementById('tf1Link').value = a.tf1_link || '';
+                            document.getElementById('tf2Link').value = a.tf2_link || '';
+                            document.getElementById('tf3Link').value = a.tf3_link || '';
+                            document.getElementById('chartImage').value = a.chart_image || '';
+                            document.getElementById('coinDescription').value = a.description || '';
+                            document.getElementById('bingxLink').value = a.bingx_link || '';
+                            document.getElementById('coinAnalysisForm').dataset.editId = editId;
+                        }
+                    });
+            } else {
+                document.getElementById('coinAnalysisForm').dataset.editId = '';
+                document.getElementById('coinSymbol').value = '';
+                document.getElementById('tf1Link').value = '';
+                document.getElementById('tf2Link').value = '';
+                document.getElementById('tf3Link').value = '';
+                document.getElementById('chartImage').value = '';
+                document.getElementById('coinDescription').value = '';
+                document.getElementById('bingxLink').value = '';
+            }
+        }
+
+        function saveCoinAnalysis() {
+            var editId = document.getElementById('coinAnalysisForm').dataset.editId || '';
+            var data = {
+                id: editId || null,
+                symbol: document.getElementById('coinSymbol').value,
+                tf1_link: document.getElementById('tf1Link').value,
+                tf2_link: document.getElementById('tf2Link').value,
+                tf3_link: document.getElementById('tf3Link').value,
+                chart_image: document.getElementById('chartImage').value,
+                description: document.getElementById('coinDescription').value,
+                bingx_link: document.getElementById('bingxLink').value,
+                admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
+            };
+            
+            fetch('/api/coin_analysis', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    alert('Сохранено!');
+                    cancelCoinAnalysis();
+                    loadCoinAnalyses();
+                } else {
+                    alert('Ошибка: ' + (res.error || ''));
+                }
+            })
+            .catch(function(err) {
+                alert('Ошибка: ' + err.message);
+            });
+        }
+
+        function editCoinAnalysis(id) {
+            showCoinAnalysisForm(id);
+        }
+
+        function deleteCoinAnalysis(id) {
+            if (!confirm('Удалить разбор?')) return;
+            
+            fetch('/api/coin_analysis/' + id, {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    alert('Удалено');
+                    loadCoinAnalyses();
+                } else {
+                    alert('Ошибка: ' + (res.error || ''));
+                }
+            })
+            .catch(function(err) {
+                alert('Ошибка: ' + err.message);
+            });
+        }
+
+        function cancelCoinAnalysis() {
+            document.getElementById('coinAnalysisForm').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.remove('hidden');
+            document.getElementById('statsCard').classList.remove('hidden');
+            document.getElementById('chartCard').classList.remove('hidden');
         }
 
         function loadActiveSetups() {
