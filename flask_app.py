@@ -818,6 +818,7 @@ def api_active_setups():
 def api_all_analyses():
     analyses = get_all_analyses()
     return jsonify(list(analyses.values()))
+
 @app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
 def api_analysis(setup_id):
     if request.method == 'GET':
@@ -835,9 +836,7 @@ def api_analysis(setup_id):
             return jsonify({"error": "Unauthorized"}), 403
         
         if request.method == 'POST':
-            # Получаем данные сетапа для заполнения полей
             setup = BX.get('active', {}).get(setup_id) or BX.get('pending', {}).get(setup_id)
-            
             analysis_data = {
                 "setup_id": setup_id,
                 "symbol": setup.get('sym') if setup else data.get('symbol'),
@@ -860,34 +859,6 @@ def api_analysis(setup_id):
             if delete_analysis(setup_id):
                 return jsonify({"ok": True})
             return jsonify({"error": "Not found"}), 404
-
-@app.route('/api/coin_analysis', methods=['GET', 'POST'])
-def api_coin_analysis():
-    if request.method == 'GET':
-        return jsonify(load_coin_analyses())
-    
-    if request.method == 'POST':
-        data = request.json
-        admin_uid = data.get('admin_uid')
-        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
-            return jsonify({"error": "Unauthorized"}), 403
-        
-        analysis_id = data.get('id') or str(_time.time())
-        analysis_data = {
-            "id": analysis_id,
-            "symbol": data.get('symbol', ''),
-            "tf1_link": data.get('tf1_link', ''),
-            "tf2_link": data.get('tf2_link', ''),
-            "tf3_link': data.get('tf3_link', ''),
-            "chart_image": data.get('chart_image', ''),
-            "description": data.get('description', ''),
-            "bingx_link": data.get('bingx_link', ''),
-            "created_by": int(admin_uid),
-            "created_at": _time.time(),
-            "updated_at": _time.time()
-        }
-        save_coin_analysis(analysis_id, analysis_data)
-        return jsonify({"ok": True, "id": analysis_id})
 
 @app.route('/api/coin_analysis', methods=['GET', 'POST'])
 def api_coin_analysis():
