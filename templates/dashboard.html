@@ -918,7 +918,7 @@ function loadFeed() {
             list.innerHTML = feed.map(function(item) {
                 var color = item.dir === 'long' ? '#00e676' : '#ff003c';
                 var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
-                var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px;">' : '';
+                var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="openLightbox(\'' + item.chart + '\')">' : '';
                 
                 return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
                     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
@@ -931,6 +931,10 @@ function loadFeed() {
                         '💰 TP: <b>' + item.tp + '</b>' +
                     '</div>' +
                     chartHtml +
+                    '<div style="margin-top:10px;">' +
+                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Сетап ' + item.sym + ' ' + dirText + ': Вход ' + item.entry + ', SL ' + item.sl + ', TP ' + item.tp) + '" target="_blank" class="btn" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none; margin-right:5px;">💬 Обсудить</a>' +
+                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Моё мнение по сетапу ' + item.sym + ': ') + '" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
+                    '</div>' +
                     '</div>';
             }).join('');
         })
