@@ -292,54 +292,91 @@
 
     <div class="card hidden" id="coinAnalysisForm">
     <h3 style="margin-top:0; color:#ff6b35;">🪙 Разбор монеты</h3>
+    
+    <!-- Символ монеты -->
     <div style="margin-bottom:15px;">
         <label style="display:block; margin-bottom:5px; color:#8e8e93;">Монета (символ):</label>
-        <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px; box-sizing:border-box;">
-    </div>
-    <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 1 (5m):</label>
-        <input type="text" id="tf1Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
-    </div>
-    <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 2 (1H):</label>
-        <input type="text" id="tf2Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
-    </div>
-    <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 3 (4H):</label>
-        <input type="text" id="tf3Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
-    </div>
-    <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 4 (D):</label>
-        <input type="text" id="tf4Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+        <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px; box-sizing:border-box;" oninput="autoGenerateBingXLink()">
+        <small style="color:#8e8e93; display:block; margin-top:5px;">💡 Ссылка на BingX сгенерируется автоматически</small>
     </div>
     
-    <div style="margin-bottom:20px; padding:15px; background:rgba(255,107,53,0.1); border-radius:8px; border-left:4px solid #ff6b35;">
-        <h4 style="margin:0 0 15px 0; color:#ff6b35;">📸 Скриншоты с рисунками</h4>
-        
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 1 (5m):</label>
-            <input type="text" id="tf1Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
-            <textarea id="tf1Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
-        </div>
-        
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 2 (1H):</label>
-            <input type="text" id="tf2Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
-            <textarea id="tf2Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
-        </div>
-        
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 3 (4H):</label>
-            <input type="text" id="tf3Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
-            <textarea id="tf3Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
-        </div>
-        
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 4 (D):</label>
-            <input type="text" id="tf4Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
-            <textarea id="tf4Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
+    <!-- Автоматическая ссылка на BingX -->
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;"> Ссылка на BingX:</label>
+        <input type="text" id="bingxLink" placeholder="https://bingx.com/ru/perpetual/BTC-USDT" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    
+    <!-- TradingView ссылки (компактно) -->
+    <div style="margin-bottom:15px; padding:15px; background:rgba(0,212,255,0.05); border-radius:8px; border:1px solid rgba(0,212,255,0.2);">
+        <label style="display:block; margin-bottom:10px; color:#00d4ff; font-weight:600;">📊 TradingView ссылки:</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div>
+                <small style="color:#8e8e93;">5m:</small>
+                <input type="text" id="tf1Link" placeholder="https://..." style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div>
+                <small style="color:#8e8e93;">1H:</small>
+                <input type="text" id="tf2Link" placeholder="https://..." style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div>
+                <small style="color:#8e8e93;">4H:</small>
+                <input type="text" id="tf3Link" placeholder="https://..." style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div>
+                <small style="color:#8e8e93;">D:</small>
+                <input type="text" id="tf4Link" placeholder="https://..." style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:12px; box-sizing:border-box;">
+            </div>
         </div>
     </div>
+    
+    <!-- Скриншоты с переключением -->
+    <div style="margin-bottom:15px; padding:15px; background:rgba(255,107,53,0.05); border-radius:8px; border:1px solid rgba(255,107,53,0.2);">
+        <label style="display:block; margin-bottom:10px; color:#ff6b35; font-weight:600;">📸 Скриншоты с комментариями:</label>
+        
+        <!-- Переключатель ТФ -->
+        <div style="display:flex; gap:5px; margin-bottom:10px;">
+            <button onclick="switchFormScreenshot('tf1')" id="form-btn-tf1" style="flex:1; padding:8px; background:#ff6b35; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">5m</button>
+            <button onclick="switchFormScreenshot('tf2')" id="form-btn-tf2" style="flex:1; padding:8px; background:rgba(255,107,53,0.3); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">1H</button>
+            <button onclick="switchFormScreenshot('tf3')" id="form-btn-tf3" style="flex:1; padding:8px; background:rgba(255,107,53,0.3); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">4H</button>
+            <button onclick="switchFormScreenshot('tf4')" id="form-btn-tf4" style="flex:1; padding:8px; background:rgba(255,107,53,0.3); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">D</button>
+        </div>
+        
+        <!-- Поля для скриншота -->
+        <div id="form-screenshot-tf1" class="form-screenshot-field">
+            <input type="text" id="tf1Screenshot" placeholder=" Ссылка на скриншот (URL картинки)" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+            <textarea id="tf1Comment" rows="3" placeholder="💬 Комментарий к этому ТФ..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
+        </div>
+        <div id="form-screenshot-tf2" class="form-screenshot-field" style="display:none;">
+            <input type="text" id="tf2Screenshot" placeholder="📎 Ссылка на скриншот (URL картинки)" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+            <textarea id="tf2Comment" rows="3" placeholder="💬 Комментарий к этому ТФ..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
+        </div>
+        <div id="form-screenshot-tf3" class="form-screenshot-field" style="display:none;">
+            <input type="text" id="tf3Screenshot" placeholder=" Ссылка на скриншот (URL картинки)" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+            <textarea id="tf3Comment" rows="3" placeholder="💬 Комментарий к этому ТФ..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
+        </div>
+        <div id="form-screenshot-tf4" class="form-screenshot-field" style="display:none;">
+            <input type="text" id="tf4Screenshot" placeholder="📎 Ссылка на скриншот (URL картинки)" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+            <textarea id="tf4Comment" rows="3" placeholder="💬 Комментарий к этому ТФ..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
+        </div>
+    </div>
+    
+    <!-- Общий график (картинка) -->
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;"> Ссылка на общий график (картинка):</label>
+        <input type="text" id="chartImage" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    
+    <!-- Текстовый разбор -->
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;"> Текстовый разбор:</label>
+        <textarea id="coinDescription" rows="6" placeholder="Опиши ситуацию, уровни, сценарии..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
+    </div>
+    
+    <div class="btn-container" style="margin-top:15px;">
+        <button class="btn btn-success" onclick="saveCoinAnalysis()">💾 Сохранить</button>
+        <button class="btn btn-secondary" onclick="cancelCoinAnalysis()">Отмена</button>
+    </div>
+</div>
     
     <div style="margin-bottom:15px;">
         <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на график (картинка):</label>
@@ -905,41 +942,7 @@ function loadFeed() {
         .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
 }
 
-function loadFeed() {
-    var list = document.getElementById('feedList');
-    list.innerHTML = 'Загрузка...';
-    fetch('/api/miniapp_feed')
-        .then(function(r) { return r.json(); })
-        .then(function(feed) {
-            if (!feed || feed.length === 0) {
-                list.innerHTML = '<p style="opacity:0.6;">Пока нет активных сетапов</p>';
-                return;
-            }
-            list.innerHTML = feed.map(function(item) {
-                var color = item.dir === 'long' ? '#00e676' : '#ff003c';
-                var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
-                var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="openLightbox(\'' + item.chart + '\')">' : '';
-                
-                return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
-                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-                        '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
-                        '<span style="background:' + color + '; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">' + dirText + '</span>' +
-                    '</div>' +
-                    '<div style="margin-top:10px; font-size:14px; line-height:1.6;">' +
-                        '🎯 Вход: <b>' + item.entry + '</b><br>' +
-                        '🛡 SL: <b>' + item.sl + '</b><br>' +
-                        '💰 TP: <b>' + item.tp + '</b>' +
-                    '</div>' +
-                    chartHtml +
-                    '<div style="margin-top:10px;">' +
-                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Сетап ' + item.sym + ' ' + dirText + ': Вход ' + item.entry + ', SL ' + item.sl + ', TP ' + item.tp) + '" target="_blank" class="btn" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none; margin-right:5px;">💬 Обсудить</a>' +
-                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Моё мнение по сетапу ' + item.sym + ': ') + '" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
-                    '</div>' +
-                    '</div>';
-            }).join('');
-        })
-        .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
-}
+
 
 function switchScreenshot(tfId) {
     // Скрываем все скриншоты
@@ -975,6 +978,33 @@ function openLightbox(imgUrl) {
     document.body.appendChild(lightbox);
 }
         
+// Автогенерация ссылки на BingX
+function autoGenerateBingXLink() {
+    var symbol = document.getElementById('coinSymbol').value.toUpperCase().trim();
+    if (symbol && symbol.length >= 3) {
+        var bingxLink = 'https://bingx.com/ru/perpetual/' + symbol + '-USDT';
+        document.getElementById('bingxLink').value = bingxLink;
+    }
+}
+
+// Переключение скриншотов в форме
+function switchFormScreenshot(tf) {
+    // Скрываем все поля
+    document.querySelectorAll('.form-screenshot-field').forEach(el => el.style.display = 'none');
+    // Сбрасываем кнопки
+    ['tf1', 'tf2', 'tf3', 'tf4'].forEach(function(t) {
+        var btn = document.getElementById('form-btn-' + t);
+        if (btn) btn.style.background = 'rgba(255,107,53,0.3)';
+    });
+    
+    // Показываем нужное
+    var field = document.getElementById('form-screenshot-' + tf);
+    if (field) field.style.display = 'block';
+    
+    // Делаем кнопку активной
+    var activeBtn = document.getElementById('form-btn-' + tf);
+    if (activeBtn) activeBtn.style.background = '#ff6b35';
+}
         
         refreshData();
     </script>
