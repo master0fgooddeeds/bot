@@ -921,7 +921,35 @@ def api_coin_analysis_item(analysis_id):
         })
         save_coin_analysis(analysis_id, existing)
         return jsonify({"ok": True})
+def parse_upscale_news():
+    """Парсим анонсы с канала Upscale News"""
+    try:
+        url = "https://t.me/s/upscale_news_ru"
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(r.text, 'html.parser')
+            announcements = []
+            for msg in soup.find_all('div', class_='tgme_widget_message_text')[:10]:
+                text = msg.get_text().strip()
+                if text and len(text) > 20:
+                    announcements.append({
+                        "source": "Upscale News",
+                        "title": text[:300],
+                        "url": "https://t.me/upscale_news_ru",
+                        "time": _time.time()
+                    })
+            return announcements
+    except Exception as e:
+        print(f" Ошибка парсинга Upscale News: {e}")
+    return []
 
+@app.route('/api/upscale_news')
+def api_upscale_news():
+    """API для получения анонсов Upscale"""
+    announcements = parse_upscale_news()
+    return jsonify(announcements)
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
