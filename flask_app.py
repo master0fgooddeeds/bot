@@ -983,5 +983,11 @@ def api_miniapp_feed():
     return jsonify([])
 if __name__ == "__main__":
     import os
+    import threading
+    
+    # 🚀 ЗАПУСКАЕМ ЦИКЛ СЛЕЖКИ ЗА ЦЕНАМИ В ОТДЕЛЬНОМ ПОТОКЕ!
+    threading.Thread(target=bx_watch_loop, daemon=True).start()
+    print("✅ Цикл слежки за сетапами запущен! Бот следит за TP/SL.")
+    
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
