@@ -247,6 +247,28 @@ _Если цена не дойдет до входа — сетап будет �
     bx_save()
     print(f"✅ Сетап {s['id']} сохранен в active\n{'='*50}\n")
 
+    # --- СОХРАНЯЕМ В ЛЕНТУ МИНИ-АППА ---
+    feed_file = DATA_DIR + "/miniapp_feed.json"
+    try:
+        if os.path.exists(feed_file):
+            with open(feed_file, "r") as f: feed = json.load(f)
+        else: feed = []
+        
+        feed.insert(0, {
+            "id": s["id"],
+            "sym": s["sym"],
+            "dir": s["dir"],
+            "entry": s["entry_price"],
+            "sl": s["sl"],
+            "tp": s["tp"],
+            "chart": s.get("chart_image", ""),
+            "time": _time.time()
+        })
+        
+        with open(feed_file, "w") as f: json.dump(feed[:30], f, indent=2)
+    except Exception as e: 
+        print("⚠️ Ошибка сохранения в ленту:", e)
+
 def close_setup(sid, result):
     s = BX["active"].pop(sid, None)
     if not s: return
@@ -950,6 +972,15 @@ def api_upscale_news():
     """API для получения анонсов Upscale"""
     announcements = parse_upscale_news()
     return jsonify(announcements)
+
+@app.route('/api/miniapp_feed')
+def api_miniapp_feed():
+    feed_file = DATA_DIR + "/miniapp_feed.json"
+    try:
+        if os.path.exists(feed_file):
+            with open(feed_file, "r") as f: return jsonify(json.load(f))
+    except: pass
+    return jsonify([])
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
