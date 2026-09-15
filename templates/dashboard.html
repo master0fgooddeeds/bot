@@ -705,38 +705,47 @@
 }
 
         function saveCoinAnalysis() {
-            var editId = document.getElementById('coinAnalysisForm').dataset.editId || '';
-            var data = {
-                id: editId || null,
-                symbol: document.getElementById('coinSymbol').value,
-                tf1_link: document.getElementById('tf1Link').value,
-                tf2_link: document.getElementById('tf2Link').value,
-                tf3_link: document.getElementById('tf3Link').value,
-                chart_image: document.getElementById('chartImage').value,
-                description: document.getElementById('coinDescription').value,
-                bingx_link: document.getElementById('bingxLink').value,
-                admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
-            };
-            
-            fetch('/api/coin_analysis', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.ok) {
-                    alert('Сохранено!');
-                    cancelCoinAnalysis();
-                    loadCoinAnalyses();
-                } else {
-                    alert('Ошибка: ' + (res.error || ''));
-                }
-            })
-            .catch(function(err) {
-                alert('Ошибка: ' + err.message);
-            });
+    var editId = document.getElementById('coinAnalysisForm').dataset.editId || '';
+    var data = {
+        id: editId || null,
+        symbol: document.getElementById('coinSymbol').value,
+        tf1_link: document.getElementById('tf1Link').value,
+        tf2_link: document.getElementById('tf2Link').value,
+        tf3_link: document.getElementById('tf3Link').value,
+        tf4_link: document.getElementById('tf4Link').value,
+        chart_image: document.getElementById('chartImage').value,
+        tf1_screenshot: document.getElementById('tf1Screenshot').value,
+        tf2_screenshot: document.getElementById('tf2Screenshot').value,
+        tf3_screenshot: document.getElementById('tf3Screenshot').value,
+        tf4_screenshot: document.getElementById('tf4Screenshot').value,
+        tf1_comment: document.getElementById('tf1Comment').value,
+        tf2_comment: document.getElementById('tf2Comment').value,
+        tf3_comment: document.getElementById('tf3Comment').value,
+        tf4_comment: document.getElementById('tf4Comment').value,
+        description: document.getElementById('coinDescription').value,
+        bingx_link: document.getElementById('bingxLink').value,
+        admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
+    };
+    
+    fetch('/api/coin_analysis', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.ok) {
+            alert('Сохранено!');
+            cancelCoinAnalysis();
+            loadCoinAnalyses();
+        } else {
+            alert('Ошибка: ' + (res.error || ''));
         }
+    })
+    .catch(function(err) {
+        alert('Ошибка: ' + err.message);
+    });
+}
 
         function editCoinAnalysis(id) {
             showCoinAnalysisForm(id);
