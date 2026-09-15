@@ -15,208 +15,42 @@
             color: #ffffff; 
             min-height: 100vh;
         }
-        
-        .header {
-            text-align: center;
-            padding: 10px 0 20px 0;
-            margin-bottom: 15px;
-        }
-        .header img {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
-            margin-bottom: 10px;
-            border: 2px solid rgba(0, 212, 255, 0.4);
-        }
-        .header h1 {
-            font-size: 24px;
-            margin: 0;
-            background: linear-gradient(90deg, #ff6b35, #00d4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
-        
-        .card { 
-            background: rgba(30, 30, 50, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            border-radius: 16px; 
-            padding: 18px; 
-            margin-bottom: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        }
-        
+        .header { text-align: center; padding: 10px 0 20px 0; margin-bottom: 15px; }
+        .header img { width: 90px; height: 90px; border-radius: 50%; box-shadow: 0 0 30px rgba(0, 212, 255, 0.6); margin-bottom: 10px; border: 2px solid rgba(0, 212, 255, 0.4); }
+        .header h1 { font-size: 24px; margin: 0; background: linear-gradient(90deg, #ff6b35, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; letter-spacing: 1px; }
+        .card { background: rgba(30, 30, 50, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 16px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16px; }
         .stat-label { color: #8e8e93; }
-        .stat-value { 
-            font-weight: bold;
-            color: #00d4ff;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-        }
-        
+        .stat-value { font-weight: bold; color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
         canvas { max-height: 250px; margin-bottom: 15px; }
-        
-        .btn-container { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            margin-top: 20px; 
-        }
-        
-        .btn { 
-            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-            color: #ffffff; 
-            border: none; 
-            padding: 14px 20px; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s;
-            text-align: center; 
-            text-decoration: none; 
-            display: block;
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
-        }
-        .btn:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
-        }
-        
-        .btn-secondary { 
-            background: rgba(30, 30, 50, 0.8);
-            border: 2px solid #00d4ff;
-            box-shadow: none;
-        }
-        .btn-secondary:hover {
-            background: rgba(0, 212, 255, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .btn-danger { 
-            background: linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);
-            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
-        }
-        .btn-danger:hover {
-            box-shadow: 0 6px 20px rgba(255, 59, 48, 0.5);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-        }
-        .btn-success:hover {
-            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
-        }
-        
+        .btn-container { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .btn { background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color: #ffffff; border: none; padding: 14px 20px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; text-align: center; text-decoration: none; display: block; box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5); }
+        .btn-secondary { background: rgba(30, 30, 50, 0.8); border: 2px solid #00d4ff; box-shadow: none; }
+        .btn-secondary:hover { background: rgba(0, 212, 255, 0.1); transform: translateY(-2px); }
+        .btn-danger { background: linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%); box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3); }
+        .btn-danger:hover { box-shadow: 0 6px 20px rgba(255, 59, 48, 0.5); }
+        .btn-success { background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3); }
+        .btn-success:hover { box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5); }
         .hidden { display: none !important; }
-        
-        #secretZone { 
-            margin-top: 20px; 
-            padding: 20px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
-            border-radius: 16px; 
-            text-align: center;
-            box-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
-            border: 2px solid rgba(168, 85, 247, 0.6);
-        }
-        
-        .analysis-item { 
-            padding: 12px; 
-            margin: 8px 0; 
-            background: rgba(0, 212, 255, 0.1); 
-            border-radius: 10px; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            border: 1px solid rgba(0, 212, 255, 0.3); 
-        }
-        .analysis-item:hover { 
-            background: rgba(0, 212, 255, 0.2); 
-            transform: translateX(5px);
-            border-color: #00d4ff;
-        }
+        #secretZone { margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%); border-radius: 16px; text-align: center; box-shadow: 0 0 40px rgba(168, 85, 247, 0.5); border: 2px solid rgba(168, 85, 247, 0.6); }
+        .analysis-item { padding: 12px; margin: 8px 0; background: rgba(0, 212, 255, 0.1); border-radius: 10px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(0, 212, 255, 0.3); }
+        .analysis-item:hover { background: rgba(0, 212, 255, 0.2); transform: translateX(5px); border-color: #00d4ff; }
         .analysis-item.has-image { border-left: 4px solid #ff6b35; }
-        
-        .modal-overlay { 
-            position: fixed; 
-            top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(0, 0, 0, 0.9); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 1000; 
-            padding: 20px; 
-        }
-        .modal-content { 
-            background: #1a1a2e; 
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 16px; 
-            padding: 20px; 
-            max-width: 600px; 
-            width: 100%; 
-            max-height: 90vh; 
-            overflow-y: auto;
-            box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: #1a1a2e; border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 16px; padding: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 40px rgba(0, 212, 255, 0.2); }
         .modal-image { width: 100%; border-radius: 8px; margin: 15px 0; max-height: 400px; object-fit: contain; }
         .modal-text { white-space: pre-wrap; line-height: 1.6; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; }
-
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            margin-top: 15px;
-        }
-        .video-card {
-            background: rgba(30, 30, 50, 0.8);
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .video-card:hover { 
-            transform: scale(1.03);
-            border-color: #00d4ff;
-        }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 15px; }
+        .video-card { background: rgba(30, 30, 50, 0.8); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+        .video-card:hover { transform: scale(1.03); border-color: #00d4ff; }
         .video-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #000; }
         .video-title { padding: 8px; font-size: 13px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        .footer {
-            text-align: center;
-            padding: 25px 20px 10px 20px;
-            margin-top: 30px;
-            border-top: 1px solid rgba(0, 212, 255, 0.2);
-        }
-        .footer img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
-            margin-bottom: 8px;
-            border: 1px solid rgba(0, 212, 255, 0.3);
-        }
-        .footer .brand {
-            background: linear-gradient(90deg, #ff6b35, #00d4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
-            font-size: 16px;
-            margin: 5px 0;
-        }
-        .footer p {
-            margin: 3px 0;
-            color: #8e8e93;
-            font-size: 13px;
-        }
-        
-        input, select, textarea {
-            background: rgba(10, 10, 20, 0.8) !important;
-            color: #fff !important;
-        }
+        .footer { text-align: center; padding: 25px 20px 10px 20px; margin-top: 30px; border-top: 1px solid rgba(0, 212, 255, 0.2); }
+        .footer img { width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 0 20px rgba(0, 212, 255, 0.4); margin-bottom: 8px; border: 1px solid rgba(0, 212, 255, 0.3); }
+        .footer .brand { background: linear-gradient(90deg, #ff6b35, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 16px; margin: 5px 0; }
+        .footer p { margin: 3px 0; color: #8e8e93; font-size: 13px; }
+        input, select, textarea { background: rgba(10, 10, 20, 0.8) !important; color: #fff !important; }
     </style>
 </head>
 <body>
@@ -244,13 +78,14 @@
     </div>
 
     <div class="card hidden" id="coinAnalysisCard">
-        <h3 style="margin-top:0; color:#00d4ff;"> Разборы монет</h3>
+        <h3 style="margin-top:0; color:#00d4ff;">🪙 Разборы монет</h3>
         <div id="coinAnalysisList">Загрузка...</div>
     </div>
+    
     <div class="card hidden" id="feedCard">
-    <h3 style="margin-top:0; color:#ff6b35;">🔥 Актуальные сетапы</h3>
-    <div id="feedList">Загрузка...</div>
-</div>
+        <h3 style="margin-top:0; color:#ff6b35;">🔥 Актуальные сетапы</h3>
+        <div id="feedList">Загрузка...</div>
+    </div>
 
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
@@ -290,7 +125,7 @@
         </div>
     </div>
 
-            <div class="card hidden" id="coinAnalysisForm">
+    <div class="card hidden" id="coinAnalysisForm">
         <h3 style="margin-top:0; color:#ff6b35;">🪙 Разбор монеты</h3>
         
         <div style="margin-bottom:15px;">
@@ -355,7 +190,6 @@
             <button class="btn btn-secondary" onclick="cancelCoinAnalysis()">Отмена</button>
         </div>
     </div>
-        
 
     <div class="card hidden" id="secretZone">
         <h3 style="margin:0 0 10px 0;">🔥 SECRET ZONE</h3>
@@ -388,13 +222,12 @@
         <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/logo.png" alt="MTC">
         <p class="brand">My Trading Club</p>
         <p>© 2026 MTC Platform</p>
-        <!-- ПАРТНЕРСКИЕ БАННЕРЫ -->
-<div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
-    <p style="font-size: 12px; color: #8e8e93; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Наши партнеры</p>
-    <a href="https://bingx.com/ru/perpetual/" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #0052ff 0%, #0033a0 100%);">🔷 Торговать на BingX</a>
-    <a href="https://t.me/upscale_news_ru" target="_blank" class="btn btn-success" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px;">🚀 Upscale Prop (Новости)</a>
-    <a href="https://t.me/HEADHEDGE" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%); border: 1px solid #666;">🦔 HeadHedge Prop</a>
-</div>
+        <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+            <p style="font-size: 12px; color: #8e8e93; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Наши партнеры</p>
+            <a href="https://bingx.com/ru/perpetual/" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #0052ff 0%, #0033a0 100%);">🔷 Торговать на BingX</a>
+            <a href="https://t.me/upscale_news_ru" target="_blank" class="btn btn-success" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px;">🚀 Upscale Prop (Новости)</a>
+            <a href="https://t.me/HEADHEDGE" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%); border: 1px solid #666;">🦔 HeadHedge Prop</a>
+        </div>
         <p style="font-size: 12px; opacity: 0.6;">@mtcthunter_bot</p>
     </div>
 
@@ -493,108 +326,95 @@
         }
 
         function viewCoinAnalysis(id) {
-    fetch('/api/coin_analysis')
-        .then(function(r) { return r.json(); })
-        .then(function(analyses) {
-            var a = analyses.find(function(x) { return x.id === id; });
-            if (!a) return;
-            
-            var content = '<div style="padding:15px;">';
-            content += '<h3 style="color:#00d4ff;">🪙 ' + (a.symbol || 'N/A') + '</h3>';
-            
-            // Основной график
-            if (a.chart_image) {
-                content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0; cursor:pointer;" onclick="openLightbox(\'' + a.chart_image + '\')">';
-            }
-            
-            // Скриншоты с переключением ТФ
-            var screenshots = [];
-            if (a.tf1_screenshot) screenshots.push({id: 'tf1', label: '5m', img: a.tf1_screenshot, comment: a.tf1_comment});
-            if (a.tf2_screenshot) screenshots.push({id: 'tf2', label: '1H', img: a.tf2_screenshot, comment: a.tf2_comment});
-            if (a.tf3_screenshot) screenshots.push({id: 'tf3', label: '4H', img: a.tf3_screenshot, comment: a.tf3_comment});
-            if (a.tf4_screenshot) screenshots.push({id: 'tf4', label: 'D', img: a.tf4_screenshot, comment: a.tf4_comment});
-            
-            if (screenshots.length > 0) {
-                content += '<div style="margin:15px 0;">';
-                content += '<strong style="color:#ff6b35;">📊 Графики по таймфреймам:</strong>';
-                
-                // Кнопки переключения
-                content += '<div style="display:flex; gap:5px; margin:10px 0; overflow-x:auto;">';
-                screenshots.forEach(function(s, idx) {
-                    var active = idx === 0 ? 'background:#00d4ff; color:#000;' : 'background:rgba(0,212,255,0.3); color:#fff;';
-                    content += '<button onclick="switchScreenshot(\'' + s.id + '\')" data-screenshot="' + s.id + '" style="flex:1; min-width:60px; padding:8px; ' + active + ' border:none; border-radius:6px; font-weight:600; cursor:pointer;"> ' + s.label + '</button>';
-                });
-                content += '</div>';
-                
-                // Контейнер для скриншотов
-                screenshots.forEach(function(s, idx) {
-                    var display = idx === 0 ? 'block' : 'none';
-                    content += '<div id="screenshot-' + s.id + '" class="screenshot-content" style="display:' + display + ';">';
-                    content += '<img src="' + s.img + '" style="width:100%; border-radius:8px; margin:10px 0; cursor:pointer;" onclick="openLightbox(\'' + s.img + '\')">';
-                    if (s.comment) {
-                        content += '<div style="padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; margin-top:10px;">';
-                        content += '<strong style="color:#ff6b35;">💬 Комментарий (' + s.label + '):</strong><br>';
-                        content += '<p style="white-space:pre-wrap; margin:5px 0;">' + s.comment + '</p>';
+            fetch('/api/coin_analysis')
+                .then(function(r) { return r.json(); })
+                .then(function(analyses) {
+                    var a = analyses.find(function(x) { return x.id === id; });
+                    if (!a) return;
+                    
+                    var content = '<div style="padding:15px;">';
+                    content += '<h3 style="color:#00d4ff;">🪙 ' + (a.symbol || 'N/A') + '</h3>';
+                    
+                    if (a.chart_image) {
+                        content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0; cursor:pointer;" onclick="openLightbox(\'' + a.chart_image + '\')">';
+                    }
+                    
+                    var screenshots = [];
+                    if (a.tf1_screenshot) screenshots.push({id: 'tf1', label: '5m', img: a.tf1_screenshot, comment: a.tf1_comment});
+                    if (a.tf2_screenshot) screenshots.push({id: 'tf2', label: '1H', img: a.tf2_screenshot, comment: a.tf2_comment});
+                    if (a.tf3_screenshot) screenshots.push({id: 'tf3', label: '4H', img: a.tf3_screenshot, comment: a.tf3_comment});
+                    if (a.tf4_screenshot) screenshots.push({id: 'tf4', label: 'D', img: a.tf4_screenshot, comment: a.tf4_comment});
+                    
+                    if (screenshots.length > 0) {
+                        content += '<div style="margin:15px 0;">';
+                        content += '<strong style="color:#ff6b35;">📊 Графики по таймфреймам:</strong>';
+                        content += '<div style="display:flex; gap:5px; margin:10px 0; overflow-x:auto;">';
+                        screenshots.forEach(function(s, idx) {
+                            var active = idx === 0 ? 'background:#00d4ff; color:#000;' : 'background:rgba(0,212,255,0.3); color:#fff;';
+                            content += '<button onclick="switchScreenshot(\'' + s.id + '\')" data-screenshot="' + s.id + '" style="flex:1; min-width:60px; padding:8px; ' + active + ' border:none; border-radius:6px; font-weight:600; cursor:pointer;"> ' + s.label + '</button>';
+                        });
+                        content += '</div>';
+                        screenshots.forEach(function(s, idx) {
+                            var display = idx === 0 ? 'block' : 'none';
+                            content += '<div id="screenshot-' + s.id + '" class="screenshot-content" style="display:' + display + ';">';
+                            content += '<img src="' + s.img + '" style="width:100%; border-radius:8px; margin:10px 0; cursor:pointer;" onclick="openLightbox(\'' + s.img + '\')">';
+                            if (s.comment) {
+                                content += '<div style="padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; margin-top:10px;">';
+                                content += '<strong style="color:#ff6b35;">💬 Комментарий (' + s.label + '):</strong><br>';
+                                content += '<p style="white-space:pre-wrap; margin:5px 0;">' + s.comment + '</p>';
+                                content += '</div>';
+                            }
+                            content += '</div>';
+                        });
                         content += '</div>';
                     }
+                    
+                    if (a.tf1_link || a.tf2_link || a.tf3_link || a.tf4_link) {
+                        content += '<div style="margin:15px 0;">';
+                        content += '<strong style="color:#ff6b35;">🔗 Ссылки на TradingView:</strong><br>';
+                        if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 5m</a> ';
+                        if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 1H</a> ';
+                        if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 4H</a> ';
+                        if (a.tf4_link) content += '<a href="' + a.tf4_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 D</a>';
+                        content += '</div>';
+                    }
+                    
+                    if (a.description) {
+                        content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
+                    }
+                    
+                    if (a.bingx_link) {
+                        content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none; cursor:pointer;">🔗 Открыть на BingX</a>';
+                    }
+                    
+                    content += '<div style="margin-top:20px; padding:15px; background:rgba(0,212,255,0.1); border-radius:8px; border:1px solid rgba(0,212,255,0.3);">';
+                    content += '<p style="margin:0 0 10px 0; color:#00d4ff; font-weight:600;">💬 Есть вопросы или не согласен?</p>';
+                    content += '<a href="https://t.me/c/2026400906/2190/3597" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600; cursor:pointer;">Обсудить во флудилке VIP</a>';
+                    content += '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Разбор ' + (a.symbol || 'N/A') + ': ' + (a.description || '').substring(0, 100)) + '" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px; cursor:pointer;">📝 Выложить своё мнение во флудилку</a>';
                     content += '</div>';
+                    
+                    var secretZone = document.getElementById('secretZone');
+                    if (secretZone && !secretZone.classList.contains('hidden')) {
+                        content += '<div class="btn-container" style="margin-top:15px;">';
+                        content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')" style="cursor:pointer; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border:none; padding:14px; border-radius:10px; font-size:16px; font-weight:600;">✏️ Редактировать</button>';
+                        content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')" style="cursor:pointer;">🗑️ Удалить</button>';
+                        content += '</div>';
+                    } else {
+                        content += '<div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; text-align:center;">';
+                        content += '<p style="margin:0; font-size:12px; color:#8e8e93;">🔒 Админ-функции скрыты. Кликни 5 раз по логотипу для доступа.</p>';
+                        content += '</div>';
+                    }
+                    
+                    content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%; cursor:pointer;">Закрыть</button>';
+                    content += '</div>';
+                    
+                    var modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.onclick = function() { modal.remove(); };
+                    modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
+                    document.body.appendChild(modal);
                 });
-                
-                content += '</div>';
-            }
-            
-            // Ссылки на TradingView
-            if (a.tf1_link || a.tf2_link || a.tf3_link || a.tf4_link) {
-                content += '<div style="margin:15px 0;">';
-                content += '<strong style="color:#ff6b35;">🔗 Ссылки на TradingView:</strong><br>';
-                if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 5m</a> ';
-                if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;"> 1H</a> ';
-                if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 4H</a> ';
-                if (a.tf4_link) content += '<a href="' + a.tf4_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 D</a>';
-                content += '</div>';
-            }
-            
-            // Описание
-            if (a.description) {
-                content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
-            }
-            
-            // Ссылка на BingX
-            if (a.bingx_link) {
-                content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none; cursor:pointer;">🔗 Открыть на BingX</a>';
-            }
-            
-            // Кнопки обсуждения
-            content += '<div style="margin-top:20px; padding:15px; background:rgba(0,212,255,0.1); border-radius:8px; border:1px solid rgba(0,212,255,0.3);">';
-            content += '<p style="margin:0 0 10px 0; color:#00d4ff; font-weight:600;">💬 Есть вопросы или не согласен?</p>';
-            content += '<a href="https://t.me/c/2026400906/2190/3597" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600; cursor:pointer;"> Обсудить во флудилке VIP</a>';
-            content += '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Разбор ' + (a.symbol || 'N/A') + ': ' + (a.description || '').substring(0, 100)) + '" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px; cursor:pointer;">📝 Выложить своё мнение во флудилку</a>';
-            content += '</div>';
-            
-            // 🔥 ПРОВЕРКА: SECRET ZONE активирована?
-            var secretZone = document.getElementById('secretZone');
-            if (secretZone && !secretZone.classList.contains('hidden')) {
-                content += '<div class="btn-container" style="margin-top:15px;">';
-                content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')" style="cursor:pointer; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border:none; padding:14px; border-radius:10px; font-size:16px; font-weight:600;">✏️ Редактировать</button>';
-                content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')" style="cursor:pointer;">🗑️ Удалить</button>';
-                content += '</div>';
-            } else {
-                // Если SECRET ZONE не активирована, показываем подсказку
-                content += '<div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; text-align:center;">';
-                content += '<p style="margin:0; font-size:12px; color:#8e8e93;">🔒 Админ-функции скрыты. Кликни 5 раз по логотипу для доступа.</p>';
-                content += '</div>';
-            }
-            
-            content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%; cursor:pointer;">Закрыть</button>';
-            content += '</div>';
-            
-            var modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.onclick = function() { modal.remove(); };
-            modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
-            document.body.appendChild(modal);
-        });
-}
+        }
 
         function loadAnalyses() {
             var list = document.getElementById('analysesList');
@@ -656,118 +476,90 @@
         }
 
         function showCoinAnalysisForm(editId) {
-    document.getElementById('coinAnalysisForm').classList.remove('hidden');
-    document.getElementById('coinAnalysisCard').classList.add('hidden');
-    document.getElementById('statsCard').classList.add('hidden');
-    document.getElementById('chartCard').classList.add('hidden');
-    
-    if (editId) {
-        fetch('/api/coin_analysis')
-            .then(function(r) { return r.json(); })
-            .then(function(analyses) {
-                var a = analyses.find(function(x) { return x.id === editId; });
-                if (a) {
-                    document.getElementById('coinSymbol').value = a.symbol || '';
-                    document.getElementById('tf1Link').value = a.tf1_link || '';
-                    document.getElementById('tf2Link').value = a.tf2_link || '';
-                    document.getElementById('tf3Link').value = a.tf3_link || '';
-                    document.getElementById('tf4Link').value = a.tf4_link || '';
-                    document.getElementById('chartImage').value = a.chart_image || '';
-                    document.getElementById('tf1Screenshot').value = a.tf1_screenshot || '';
-                    document.getElementById('tf2Screenshot').value = a.tf2_screenshot || '';
-                    document.getElementById('tf3Screenshot').value = a.tf3_screenshot || '';
-                    document.getElementById('tf4Screenshot').value = a.tf4_screenshot || '';
-                    document.getElementById('tf1Comment').value = a.tf1_comment || '';
-                    document.getElementById('tf2Comment').value = a.tf2_comment || '';
-                    document.getElementById('tf3Comment').value = a.tf3_comment || '';
-                    document.getElementById('tf4Comment').value = a.tf4_comment || '';
-                    document.getElementById('coinDescription').value = a.description || '';
-                    document.getElementById('bingxLink').value = a.bingx_link || '';
-                    document.getElementById('coinAnalysisForm').dataset.editId = editId;
-                }
-            });
-    } else {
-        document.getElementById('coinAnalysisForm').dataset.editId = '';
-        document.getElementById('coinSymbol').value = '';
-        document.getElementById('tf1Link').value = '';
-        document.getElementById('tf2Link').value = '';
-        document.getElementById('tf3Link').value = '';
-        document.getElementById('tf4Link').value = '';
-        document.getElementById('chartImage').value = '';
-        document.getElementById('tf1Screenshot').value = '';
-        document.getElementById('tf2Screenshot').value = '';
-        document.getElementById('tf3Screenshot').value = '';
-        document.getElementById('tf4Screenshot').value = '';
-        document.getElementById('tf1Comment').value = '';
-        document.getElementById('tf2Comment').value = '';
-        document.getElementById('tf3Comment').value = '';
-        document.getElementById('tf4Comment').value = '';
-        document.getElementById('coinDescription').value = '';
-        document.getElementById('bingxLink').value = '';
-    }
-}
+            document.getElementById('coinAnalysisForm').classList.remove('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
+            document.getElementById('statsCard').classList.add('hidden');
+            document.getElementById('chartCard').classList.add('hidden');
+            
+            if (editId) {
+                fetch('/api/coin_analysis')
+                    .then(function(r) { return r.json(); })
+                    .then(function(analyses) {
+                        var a = analyses.find(function(x) { return x.id === editId; });
+                        if (a) {
+                            document.getElementById('coinSymbol').value = a.symbol || '';
+                            document.getElementById('tf1Link').value = a.tf1_link || '';
+                            document.getElementById('tf2Link').value = a.tf2_link || '';
+                            document.getElementById('tf3Link').value = a.tf3_link || '';
+                            document.getElementById('tf4Link').value = a.tf4_link || '';
+                            document.getElementById('chartImage').value = a.chart_image || '';
+                            document.getElementById('tf1Screenshot').value = a.tf1_screenshot || '';
+                            document.getElementById('tf2Screenshot').value = a.tf2_screenshot || '';
+                            document.getElementById('tf3Screenshot').value = a.tf3_screenshot || '';
+                            document.getElementById('tf4Screenshot').value = a.tf4_screenshot || '';
+                            document.getElementById('tf1Comment').value = a.tf1_comment || '';
+                            document.getElementById('tf2Comment').value = a.tf2_comment || '';
+                            document.getElementById('tf3Comment').value = a.tf3_comment || '';
+                            document.getElementById('tf4Comment').value = a.tf4_comment || '';
+                            document.getElementById('coinDescription').value = a.description || '';
+                            document.getElementById('bingxLink').value = a.bingx_link || '';
+                            document.getElementById('coinAnalysisForm').dataset.editId = editId;
+                        }
+                    });
+            } else {
+                document.getElementById('coinAnalysisForm').dataset.editId = '';
+                document.getElementById('coinSymbol').value = '';
+                document.getElementById('tf1Link').value = '';
+                document.getElementById('tf2Link').value = '';
+                document.getElementById('tf3Link').value = '';
+                document.getElementById('tf4Link').value = '';
+                document.getElementById('chartImage').value = '';
+                document.getElementById('tf1Screenshot').value = '';
+                document.getElementById('tf2Screenshot').value = '';
+                document.getElementById('tf3Screenshot').value = '';
+                document.getElementById('tf4Screenshot').value = '';
+                document.getElementById('tf1Comment').value = '';
+                document.getElementById('tf2Comment').value = '';
+                document.getElementById('tf3Comment').value = '';
+                document.getElementById('tf4Comment').value = '';
+                document.getElementById('coinDescription').value = '';
+                document.getElementById('bingxLink').value = '';
+            }
+        }
 
         function saveCoinAnalysis() {
-    var editId = document.getElementById('coinAnalysisForm').dataset.editId || '';
-    var data = {
-        id: editId || null,
-        symbol: document.getElementById('coinSymbol').value,
-        tf1_link: document.getElementById('tf1Link').value,
-        tf2_link: document.getElementById('tf2Link').value,
-        tf3_link: document.getElementById('tf3Link').value,
-        tf4_link: document.getElementById('tf4Link').value,
-        chart_image: document.getElementById('chartImage').value,
-        tf1_screenshot: document.getElementById('tf1Screenshot').value,
-        tf2_screenshot: document.getElementById('tf2Screenshot').value,
-        tf3_screenshot: document.getElementById('tf3Screenshot').value,
-        tf4_screenshot: document.getElementById('tf4Screenshot').value,
-        tf1_comment: document.getElementById('tf1Comment').value,
-        tf2_comment: document.getElementById('tf2Comment').value,
-        tf3_comment: document.getElementById('tf3Comment').value,
-        tf4_comment: document.getElementById('tf4Comment').value,
-        description: document.getElementById('coinDescription').value,
-        bingx_link: document.getElementById('bingxLink').value,
-        admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
-    };
-    
-    fetch('/api/coin_analysis', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(res) {
-        if (res.ok) {
-            alert('Сохранено!');
-            cancelCoinAnalysis();
-            loadCoinAnalyses();
-        } else {
-            alert('Ошибка: ' + (res.error || ''));
-        }
-    })
-    .catch(function(err) {
-        alert('Ошибка: ' + err.message);
-    });
-}
-
-        function editCoinAnalysis(id) {
-            showCoinAnalysisForm(id);
-        }
-
-        function deleteCoinAnalysis(id) {
-            if (!confirm('Удалить разбор?')) return;
+            var editId = document.getElementById('coinAnalysisForm').dataset.editId || '';
+            var data = {
+                id: editId || null,
+                symbol: document.getElementById('coinSymbol').value,
+                tf1_link: document.getElementById('tf1Link').value,
+                tf2_link: document.getElementById('tf2Link').value,
+                tf3_link: document.getElementById('tf3Link').value,
+                tf4_link: document.getElementById('tf4Link').value,
+                chart_image: document.getElementById('chartImage').value,
+                tf1_screenshot: document.getElementById('tf1Screenshot').value,
+                tf2_screenshot: document.getElementById('tf2Screenshot').value,
+                tf3_screenshot: document.getElementById('tf3Screenshot').value,
+                tf4_screenshot: document.getElementById('tf4Screenshot').value,
+                tf1_comment: document.getElementById('tf1Comment').value,
+                tf2_comment: document.getElementById('tf2Comment').value,
+                tf3_comment: document.getElementById('tf3Comment').value,
+                tf4_comment: document.getElementById('tf4Comment').value,
+                description: document.getElementById('coinDescription').value,
+                bingx_link: document.getElementById('bingxLink').value,
+                admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
+            };
             
-            fetch('/api/coin_analysis/' + id, {
-                method: 'DELETE',
+            fetch('/api/coin_analysis', {
+                method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
-                })
+                body: JSON.stringify(data)
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.ok) {
-                    alert('Удалено');
+                    alert('Сохранено!');
+                    cancelCoinAnalysis();
                     loadCoinAnalyses();
                 } else {
                     alert('Ошибка: ' + (res.error || ''));
@@ -776,6 +568,23 @@
             .catch(function(err) {
                 alert('Ошибка: ' + err.message);
             });
+        }
+
+        function editCoinAnalysis(id) { showCoinAnalysisForm(id); }
+
+        function deleteCoinAnalysis(id) {
+            if (!confirm('Удалить разбор?')) return;
+            fetch('/api/coin_analysis/' + id, {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0 })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) { alert('Удалено'); loadCoinAnalyses(); } 
+                else { alert('Ошибка: ' + (res.error || '')); }
+            })
+            .catch(function(err) { alert('Ошибка: ' + err.message); });
         }
 
         function cancelCoinAnalysis() {
@@ -857,115 +666,98 @@
             .then(function(res) { if (res.ok) { alert('Удалено'); loadAnalyses(); refreshData(); } else { alert('Ошибка'); } })
             .catch(function(err) { alert('Ошибка: ' + err.message); });
         }
-function toggleFeed() {
-    var card = document.getElementById('feedCard');
-    var isHidden = card.classList.contains('hidden');
-    document.getElementById('analysesCard').classList.add('hidden');
-    document.getElementById('youtubeCard').classList.add('hidden');
-    document.getElementById('coinAnalysisCard').classList.add('hidden');
-    card.classList.toggle('hidden');
-    if (isHidden) loadFeed();
-}
 
-function loadFeed() {
-    var list = document.getElementById('feedList');
-    list.innerHTML = 'Загрузка...';
-    fetch('/api/miniapp_feed')
-        .then(function(r) { return r.json(); })
-        .then(function(feed) {
-            if (!feed || feed.length === 0) {
-                list.innerHTML = '<p style="opacity:0.6;">Пока нет активных сетапов</p>';
-                return;
+        function toggleFeed() {
+            var card = document.getElementById('feedCard');
+            var isHidden = card.classList.contains('hidden');
+            document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('youtubeCard').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
+            card.classList.toggle('hidden');
+            if (isHidden) loadFeed();
+        }
+
+        function loadFeed() {
+            var list = document.getElementById('feedList');
+            list.innerHTML = 'Загрузка...';
+            fetch('/api/miniapp_feed')
+                .then(function(r) { return r.json(); })
+                .then(function(feed) {
+                    if (!feed || feed.length === 0) {
+                        list.innerHTML = '<p style="opacity:0.6;">Пока нет активных сетапов</p>';
+                        return;
+                    }
+                    list.innerHTML = feed.map(function(item) {
+                        var color = item.dir === 'long' ? '#00e676' : '#ff003c';
+                        var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
+                        var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="openLightbox(\'' + item.chart + '\')">' : '';
+                        
+                        return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
+                            '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                                '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
+                                '<span style="background:' + color + '; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">' + dirText + '</span>' +
+                            '</div>' +
+                            '<div style="margin-top:10px; font-size:14px; line-height:1.6;">' +
+                                '🎯 Вход: <b>' + item.entry + '</b><br>' +
+                                '🛡 SL: <b>' + item.sl + '</b><br>' +
+                                '💰 TP: <b>' + item.tp + '</b>' +
+                            '</div>' +
+                            chartHtml +
+                            '<div style="margin-top:10px;">' +
+                                '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Сетап ' + item.sym + ' ' + dirText + ': Вход ' + item.entry + ', SL ' + item.sl + ', TP ' + item.tp) + '" target="_blank" class="btn" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none; margin-right:5px;">💬 Обсудить</a>' +
+                                '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Моё мнение по сетапу ' + item.sym + ': ') + '" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
+                            '</div>' +
+                            '</div>';
+                    }).join('');
+                })
+                .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
+        }
+
+        function switchScreenshot(tfId) {
+            document.querySelectorAll('.screenshot-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('[data-screenshot]').forEach(btn => {
+                btn.style.background = 'rgba(0,212,255,0.3)';
+                btn.style.color = '#fff';
+            });
+            var content = document.getElementById('screenshot-' + tfId);
+            if (content) content.style.display = 'block';
+            var btn = document.querySelector('[data-screenshot="' + tfId + '"]');
+            if (btn) {
+                btn.style.background = '#00d4ff';
+                btn.style.color = '#000';
             }
-            list.innerHTML = feed.map(function(item) {
-                var color = item.dir === 'long' ? '#00e676' : '#ff003c';
-                var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
-                var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="openLightbox(\'' + item.chart + '\')">' : '';
-                
-                return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
-                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-                        '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
-                        '<span style="background:' + color + '; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">' + dirText + '</span>' +
-                    '</div>' +
-                    '<div style="margin-top:10px; font-size:14px; line-height:1.6;">' +
-                        ' Вход: <b>' + item.entry + '</b><br>' +
-                        '🛡 SL: <b>' + item.sl + '</b><br>' +
-                        '💰 TP: <b>' + item.tp + '</b>' +
-                    '</div>' +
-                    chartHtml +
-                    '<div style="margin-top:10px;">' +
-                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Сетап ' + item.sym + ' ' + dirText + ': Вход ' + item.entry + ', SL ' + item.sl + ', TP ' + item.tp) + '" target="_blank" class="btn" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none; margin-right:5px;">💬 Обсудить</a>' +
-                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Моё мнение по сетапу ' + item.sym + ': ') + '" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
-                    '</div>' +
-                    '</div>';
-            }).join('');
-        })
-        .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
-}
+        }
 
-
-
-function switchScreenshot(tfId) {
-    // Скрываем все скриншоты
-    document.querySelectorAll('.screenshot-content').forEach(el => el.style.display = 'none');
-    // Убираем активный класс с кнопок
-    document.querySelectorAll('[data-screenshot]').forEach(btn => {
-        btn.style.background = 'rgba(0,212,255,0.3)';
-        btn.style.color = '#fff';
-    });
-    
-    // Показываем нужный
-    var content = document.getElementById('screenshot-' + tfId);
-    if (content) content.style.display = 'block';
-    
-    // Делаем кнопку активной
-    var btn = document.querySelector('[data-screenshot="' + tfId + '"]');
-    if (btn) {
-        btn.style.background = '#00d4ff';
-        btn.style.color = '#000';
-    }
-}
-
-function openLightbox(imgUrl) {
-    var lightbox = document.createElement('div');
-    lightbox.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:2000; display:flex; align-items:center; justify-content:center; padding:20px; cursor:pointer;';
-    lightbox.onclick = function() { lightbox.remove(); };
-    
-    var img = document.createElement('img');
-    img.src = imgUrl;
-    img.style.cssText = 'max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-out;';
-    
-    lightbox.appendChild(img);
-    document.body.appendChild(lightbox);
-}
+        function openLightbox(imgUrl) {
+            var lightbox = document.createElement('div');
+            lightbox.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:2000; display:flex; align-items:center; justify-content:center; padding:20px; cursor:pointer;';
+            lightbox.onclick = function() { lightbox.remove(); };
+            var img = document.createElement('img');
+            img.src = imgUrl;
+            img.style.cssText = 'max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-out;';
+            lightbox.appendChild(img);
+            document.body.appendChild(lightbox);
+        }
         
-// Автогенерация ссылки на BingX
-function autoGenerateBingXLink() {
-    var symbol = document.getElementById('coinSymbol').value.toUpperCase().trim();
-    if (symbol && symbol.length >= 3) {
-        var bingxLink = 'https://bingx.com/ru/perpetual/' + symbol + '-USDT';
-        document.getElementById('bingxLink').value = bingxLink;
-    }
-}
+        function autoGenerateBingXLink() {
+            var symbol = document.getElementById('coinSymbol').value.toUpperCase().trim();
+            if (symbol && symbol.length >= 3) {
+                var bingxLink = 'https://bingx.com/ru/perpetual/' + symbol + '-USDT';
+                document.getElementById('bingxLink').value = bingxLink;
+            }
+        }
 
-// Переключение скриншотов в форме
-function switchFormScreenshot(tf) {
-    // Скрываем все поля
-    document.querySelectorAll('.form-screenshot-field').forEach(el => el.style.display = 'none');
-    // Сбрасываем кнопки
-    ['tf1', 'tf2', 'tf3', 'tf4'].forEach(function(t) {
-        var btn = document.getElementById('form-btn-' + t);
-        if (btn) btn.style.background = 'rgba(255,107,53,0.3)';
-    });
-    
-    // Показываем нужное
-    var field = document.getElementById('form-screenshot-' + tf);
-    if (field) field.style.display = 'block';
-    
-    // Делаем кнопку активной
-    var activeBtn = document.getElementById('form-btn-' + tf);
-    if (activeBtn) activeBtn.style.background = '#ff6b35';
-}
+        function switchFormScreenshot(tf) {
+            document.querySelectorAll('.form-screenshot-field').forEach(el => el.style.display = 'none');
+            ['tf1', 'tf2', 'tf3', 'tf4'].forEach(function(t) {
+                var btn = document.getElementById('form-btn-' + t);
+                if (btn) btn.style.background = 'rgba(255,107,53,0.3)';
+            });
+            var field = document.getElementById('form-screenshot-' + tf);
+            if (field) field.style.display = 'block';
+            var activeBtn = document.getElementById('form-btn-' + tf);
+            if (activeBtn) activeBtn.style.background = '#ff6b35';
+        }
         
         refreshData();
     </script>
