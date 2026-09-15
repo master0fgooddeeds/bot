@@ -3,35 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTC Dashboard</title>
+    <title>My Trading Club</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background-color: var(--tg-theme-bg-color, #1c1c1e); color: var(--tg-theme-text-color, #ffffff); }
-        h1 { font-size: 22px; margin-bottom: 15px; text-align: center; }
-        .card { background-color: var(--tg-theme-secondary-bg-color, #2c2c2e); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 16px; }
-        .stat-label { color: var(--tg-theme-hint-color, #8e8e93); }
-        .stat-value { font-weight: bold; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            color: #ffffff; 
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 10px 0 20px 0;
+            margin-bottom: 15px;
+        }
+        .header img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+            margin-bottom: 10px;
+            border: 2px solid rgba(0, 212, 255, 0.4);
+        }
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            background: linear-gradient(90deg, #ff6b35, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        
+        .card { 
+            background: rgba(30, 30, 50, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px; 
+            padding: 18px; 
+            margin-bottom: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16px; }
+        .stat-label { color: #8e8e93; }
+        .stat-value { 
+            font-weight: bold;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
         canvas { max-height: 250px; margin-bottom: 15px; }
-        .btn-container { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-        .btn { background-color: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; display: block; }
-        .btn:hover { opacity: 0.9; }
-        .btn-secondary { background-color: var(--tg-theme-secondary-bg-color, #2c2c2e); border: 2px solid var(--tg-theme-button-color, #3390ec); }
-        .btn-danger { background-color: #ff3b30; }
+        
+        .btn-container { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            margin-top: 20px; 
+        }
+        
+        .btn { 
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #ffffff; 
+            border: none; 
+            padding: 14px 20px; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            text-align: center; 
+            text-decoration: none; 
+            display: block;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+        .btn:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .btn-secondary { 
+            background: rgba(30, 30, 50, 0.8);
+            border: 2px solid #00d4ff;
+            box-shadow: none;
+        }
+        .btn-secondary:hover {
+            background: rgba(0, 212, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger { 
+            background: linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);
+            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
+        }
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(255, 59, 48, 0.5);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+        .btn-success:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+        }
+        
         .hidden { display: none !important; }
-        #secretZone { margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; text-align: center; }
         
-        .analysis-item { padding: 12px; margin: 8px 0; background: rgba(51, 144, 236, 0.1); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(51, 144, 236, 0.3); }
-        .analysis-item:hover { background: rgba(51, 144, 236, 0.2); transform: translateX(5px); }
-        .analysis-item.has-image { border-left: 4px solid #3390ec; }
+        #secretZone { 
+            margin-top: 20px; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+            border-radius: 16px; 
+            text-align: center;
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
+            border: 2px solid rgba(168, 85, 247, 0.6);
+        }
         
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: var(--tg-theme-secondary-bg-color, #2c2c2e); border-radius: 12px; padding: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .analysis-item { 
+            padding: 12px; 
+            margin: 8px 0; 
+            background: rgba(0, 212, 255, 0.1); 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            border: 1px solid rgba(0, 212, 255, 0.3); 
+        }
+        .analysis-item:hover { 
+            background: rgba(0, 212, 255, 0.2); 
+            transform: translateX(5px);
+            border-color: #00d4ff;
+        }
+        .analysis-item.has-image { border-left: 4px solid #ff6b35; }
+        
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0, 0, 0, 0.9); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000; 
+            padding: 20px; 
+        }
+        .modal-content { 
+            background: #1a1a2e; 
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px; 
+            padding: 20px; 
+            max-width: 600px; 
+            width: 100%; 
+            max-height: 90vh; 
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
+        }
         .modal-image { width: 100%; border-radius: 8px; margin: 15px 0; max-height: 400px; object-fit: contain; }
         .modal-text { white-space: pre-wrap; line-height: 1.6; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; }
 
-        /* СЕТКА ДЛЯ ВИДЕО */
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -39,19 +171,59 @@
             margin-top: 15px;
         }
         .video-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
+            background: rgba(30, 30, 50, 0.8);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
             transition: transform 0.2s;
         }
-        .video-card:hover { transform: scale(1.03); }
+        .video-card:hover { 
+            transform: scale(1.03);
+            border-color: #00d4ff;
+        }
         .video-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #000; }
         .video-title { padding: 8px; font-size: 13px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .footer {
+            text-align: center;
+            padding: 25px 20px 10px 20px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(0, 212, 255, 0.2);
+        }
+        .footer img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+            margin-bottom: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        .footer .brand {
+            background: linear-gradient(90deg, #ff6b35, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        .footer p {
+            margin: 3px 0;
+            color: #8e8e93;
+            font-size: 13px;
+        }
+        
+        input, select, textarea {
+            background: rgba(10, 10, 20, 0.8) !important;
+            color: #fff !important;
+        }
     </style>
 </head>
 <body>
-    <h1 id="logo">📊 MTC Dashboard</h1>
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/4901ce77-a166-4adb-a6e7-fc8af9770197_image.png" alt="MTC Logo">
+        <h1 id="logo">My Trading Club</h1>
+    </div>
     
     <div class="card" id="statsCard">
         <div class="stat-row"><span class="stat-label">Всего сделок:</span><span class="stat-value" id="total">Загрузка...</span></div>
@@ -62,17 +234,17 @@
     <div class="card" id="chartCard"><canvas id="myChart"></canvas></div>
 
     <div class="card hidden" id="analysesCard">
-        <h3 style="margin-top:0;">📚 Разборы сделок</h3>
+        <h3 style="margin-top:0; color:#00d4ff;">📚 Разборы сделок</h3>
         <div id="analysesList">Нажми "Обновить данные" для загрузки...</div>
     </div>
 
     <div class="card hidden" id="youtubeCard">
-        <h3 style="margin-top:0;">🎥 Видео с канала</h3>
+        <h3 style="margin-top:0; color:#00d4ff;">🎥 Видео с канала</h3>
         <div id="youtubeList" class="video-grid">Загрузка...</div>
     </div>
 
     <div class="card hidden" id="coinAnalysisCard">
-        <h3 style="margin-top:0;">🪙 Разборы монет</h3>
+        <h3 style="margin-top:0; color:#00d4ff;">🪙 Разборы монет</h3>
         <div id="coinAnalysisList">Загрузка...</div>
     </div>
 
@@ -81,82 +253,82 @@
         <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
         <button class="btn btn-secondary" onclick="toggleYoutube()">🎥 Видео</button>
         <button class="btn btn-secondary" onclick="toggleCoinAnalysis()">🪙 Разборы монет</button>
-        <button class="btn btn-secondary" onclick="shareStats()"> Поделиться статистикой</button>
+        <button class="btn btn-secondary" onclick="shareStats()">📤 Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
     </div>
 
     <div class="card hidden" id="createForm">
-        <h3 style="margin-top:0;">Разбор сделки</h3>
+        <h3 style="margin-top:0; color:#ff6b35;">📝 Разбор сделки</h3>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Выбери сетап:</label>
-            <select id="setupSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;"><option value="">Загрузка...</option></select>
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Выбери сетап:</label>
+            <select id="setupSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px;"><option value="">Загрузка...</option></select>
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Результат:</label>
-            <select id="resultSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Результат:</label>
+            <select id="resultSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px;">
                 <option value="tp">TP (Take Profit)</option>
                 <option value="sl">SL (Stop Loss)</option>
                 <option value="manual">Закрыт вручную</option>
             </select>
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Ссылка на картинку / график (URL):</label>
-            <input type="text" id="imageUrl" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на картинку / график (URL):</label>
+            <input type="text" id="imageUrl" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Текст разбора:</label>
-            <textarea id="analysisText" rows="5" placeholder="Опиши ситуацию..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;"></textarea>
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Текст разбора:</label>
+            <textarea id="analysisText" rows="5" placeholder="Опиши ситуацию..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
         </div>
         <div class="btn-container" style="margin-top:15px;">
-            <button class="btn" onclick="saveAnalysis()">💾 Сохранить</button>
+            <button class="btn btn-success" onclick="saveAnalysis()">💾 Сохранить</button>
             <button class="btn btn-secondary" onclick="cancelCreateForm()">Отмена</button>
         </div>
     </div>
 
     <div class="card hidden" id="coinAnalysisForm">
-        <h3 style="margin-top:0;">🪙 Разбор монеты</h3>
+        <h3 style="margin-top:0; color:#ff6b35;">🪙 Разбор монеты</h3>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Монета (символ):</label>
-            <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:16px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Монета (символ):</label>
+            <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px; box-sizing:border-box;">
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">TradingView 1 (5m):</label>
-            <input type="text" id="tf1Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 1 (5m):</label>
+            <input type="text" id="tf1Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">TradingView 2 (1H):</label>
-            <input type="text" id="tf2Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 2 (1H):</label>
+            <input type="text" id="tf2Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">TradingView 3 (4H/D):</label>
-            <input type="text" id="tf3Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 3 (4H/D):</label>
+            <input type="text" id="tf3Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Ссылка на график (картинка):</label>
-            <input type="text" id="chartImage" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на график (картинка):</label>
+            <input type="text" id="chartImage" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Текстовый разбор:</label>
-            <textarea id="coinDescription" rows="6" placeholder="Опиши ситуацию, уровни, сценарии..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;"></textarea>
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Текстовый разбор:</label>
+            <textarea id="coinDescription" rows="6" placeholder="Опиши ситуацию, уровни, сценарии..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:var(--tg-theme-hint-color);">Ссылка на BingX:</label>
-            <input type="text" id="bingxLink" placeholder="https://bingx.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #3390ec; background:var(--tg-theme-bg-color); color:var(--tg-theme-text-color); font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на BingX:</label>
+            <input type="text" id="bingxLink" placeholder="https://bingx.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
         <div class="btn-container" style="margin-top:15px;">
-            <button class="btn" onclick="saveCoinAnalysis()">💾 Сохранить</button>
+            <button class="btn btn-success" onclick="saveCoinAnalysis()">💾 Сохранить</button>
             <button class="btn btn-secondary" onclick="cancelCoinAnalysis()">Отмена</button>
         </div>
     </div>
 
     <div class="card hidden" id="secretZone">
-        <h3>🔥 SECRET ZONE</h3>
-        <p>Ты настоящий админ!</p>
+        <h3 style="margin:0 0 10px 0;">🔥 SECRET ZONE</h3>
+        <p style="margin:0 0 15px 0;">Ты настоящий админ!</p>
         <div class="btn-container" style="margin-top:15px;">
-            <button class="btn" onclick="showCreateForm()">➕ Создать разбор</button>
-            <button class="btn btn-secondary" onclick="enableEditMode()">✏️ Редактировать</button>
-            <button class="btn btn-danger" onclick="enableDeleteMode()">🗑 Удалить</button>
-            <button class="btn btn-secondary" onclick="showCoinAnalysisForm()"> Создать разбор монет</button>
+            <button class="btn btn-success" onclick="showCreateForm()">➕ Создать разбор сделки</button>
+            <button class="btn btn-secondary" onclick="enableEditMode()">✏️ Редактировать сделки</button>
+            <button class="btn btn-danger" onclick="enableDeleteMode()">🗑 Удалить сделки</button>
+            <button class="btn btn-success" onclick="showCoinAnalysisForm()"> Создать разбор монет</button>
         </div>
         <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
         <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
@@ -164,7 +336,7 @@
 
     <div id="viewModal" class="modal-overlay hidden" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="modalTitle" style="margin-top:0;">📊 Разбор сделки</h2>
+            <h2 id="modalTitle" style="margin-top:0; color:#00d4ff;"> Разбор сделки</h2>
             <div id="modalMeta" style="margin-bottom:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;"></div>
             <div id="modalImageContainer" class="hidden" style="text-align:center;">
                 <img id="modalImage" class="modal-image" src="" alt="График">
@@ -174,6 +346,13 @@
             <div id="modalText" class="modal-text"></div>
             <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:15px; width:100%;">Закрыть</button>
         </div>
+    </div>
+
+    <div class="footer">
+        <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/4901ce77-a166-4adb-a6e7-fc8af9770197_image.png" alt="MTC">
+        <p class="brand">My Trading Club</p>
+        <p>© 2026 MTC Platform</p>
+        <p style="font-size: 12px; opacity: 0.6;">@mtcthunter_bot</p>
     </div>
 
     <script>
@@ -271,55 +450,54 @@
         }
 
         function viewCoinAnalysis(id) {
-    fetch('/api/coin_analysis')
-        .then(function(r) { return r.json(); })
-        .then(function(analyses) {
-            var a = analyses.find(function(x) { return x.id === id; });
-            if (!a) return;
-            
-            var content = '<div style="padding:15px;">';
-            content += '<h3>🪙 ' + (a.symbol || 'N/A') + '</h3>';
-            
-            if (a.chart_image) {
-                content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0;">';
-            }
-            
-            if (a.tf1_link || a.tf2_link || a.tf3_link) {
-                content += '<div style="margin:15px 0;">';
-                content += '<strong>📊 Графики TradingView:</strong><br>';
-                if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 1</a><br>';
-                if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 2</a><br>';
-                if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 3</a>';
-                content += '</div>';
-            }
-            
-            if (a.description) {
-                content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
-            }
-            
-            if (a.bingx_link) {
-                content += '<a href="' + a.bingx_link + '" target="_blank" class="btn" style="display:block; text-align:center; margin:15px 0; text-decoration:none;"> Открыть на BingX</a>';
-            }
-            
-            // 🔥 ПРОВЕРКА: кнопки только если SECRET ZONE видна
-               var secretZone = document.getElementById('secretZone');
-               if (secretZone && !secretZone.classList.contains('hidden')) {
-                content += '<div class="btn-container" style="margin-top:15px;">';
-                content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
-                content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
-                content += '</div>';
-            }
-            
-            content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%;">Закрыть</button>';
-            content += '</div>';
-            
-            var modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.onclick = function() { modal.remove(); };
-            modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
-            document.body.appendChild(modal);
-        });
-}
+            fetch('/api/coin_analysis')
+                .then(function(r) { return r.json(); })
+                .then(function(analyses) {
+                    var a = analyses.find(function(x) { return x.id === id; });
+                    if (!a) return;
+                    
+                    var content = '<div style="padding:15px;">';
+                    content += '<h3 style="color:#00d4ff;">🪙 ' + (a.symbol || 'N/A') + '</h3>';
+                    
+                    if (a.chart_image) {
+                        content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0;">';
+                    }
+                    
+                    if (a.tf1_link || a.tf2_link || a.tf3_link) {
+                        content += '<div style="margin:15px 0;">';
+                        content += '<strong style="color:#ff6b35;">📊 Графики TradingView:</strong><br>';
+                        if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 Таймфрейм 1</a><br>';
+                        if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 Таймфрейм 2</a><br>';
+                        if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 Таймфрейм 3</a>';
+                        content += '</div>';
+                    }
+                    
+                    if (a.description) {
+                        content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
+                    }
+                    
+                    if (a.bingx_link) {
+                        content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none;">🔗 Открыть на BingX</a>';
+                    }
+                    
+                    var secretZone = document.getElementById('secretZone');
+                    if (secretZone && !secretZone.classList.contains('hidden')) {
+                        content += '<div class="btn-container" style="margin-top:15px;">';
+                        content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
+                        content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')"> Удалить</button>';
+                        content += '</div>';
+                    }
+                    
+                    content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%;">Закрыть</button>';
+                    content += '</div>';
+                    
+                    var modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.onclick = function() { modal.remove(); };
+                    modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
+                    document.body.appendChild(modal);
+                });
+        }
 
         function loadAnalyses() {
             var list = document.getElementById('analysesList');
@@ -331,7 +509,7 @@
                     if (!analyses || analyses.length === 0) { list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>'; return; }
                     list.innerHTML = analyses.map(function(a, idx) {
                         var hasImg = a.chart_image ? 'has-image' : '';
-                        var imgIcon = a.chart_image ? ' 🖼️' : '';
+                        var imgIcon = a.chart_image ? ' ️' : '';
                         return '<div class="analysis-item ' + hasImg + '" onclick="viewAnalysis(' + idx + ')">' +
                             '<strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + ' ' + (a.direction ? a.direction.toUpperCase() : '') + '</strong><br>' +
                             '<small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small>' + imgIcon +
