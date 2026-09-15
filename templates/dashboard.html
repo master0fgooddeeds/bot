@@ -518,13 +518,13 @@
             
             if (screenshots.length > 0) {
                 content += '<div style="margin:15px 0;">';
-                content += '<strong style="color:#ff6b35;"> Графики по таймфреймам:</strong>';
+                content += '<strong style="color:#ff6b35;">📊 Графики по таймфреймам:</strong>';
                 
                 // Кнопки переключения
                 content += '<div style="display:flex; gap:5px; margin:10px 0; overflow-x:auto;">';
                 screenshots.forEach(function(s, idx) {
                     var active = idx === 0 ? 'background:#00d4ff; color:#000;' : 'background:rgba(0,212,255,0.3); color:#fff;';
-                    content += '<button onclick="switchScreenshot(\'' + s.id + '\')" data-screenshot="' + s.id + '" style="flex:1; min-width:60px; padding:8px; ' + active + ' border:none; border-radius:6px; font-weight:600; cursor:pointer;">📈 ' + s.label + '</button>';
+                    content += '<button onclick="switchScreenshot(\'' + s.id + '\')" data-screenshot="' + s.id + '" style="flex:1; min-width:60px; padding:8px; ' + active + ' border:none; border-radius:6px; font-weight:600; cursor:pointer;"> ' + s.label + '</button>';
                 });
                 content += '</div>';
                 
@@ -548,10 +548,10 @@
             // Ссылки на TradingView
             if (a.tf1_link || a.tf2_link || a.tf3_link || a.tf4_link) {
                 content += '<div style="margin:15px 0;">';
-                content += '<strong style="color:#ff6b35;"> Ссылки на TradingView:</strong><br>';
+                content += '<strong style="color:#ff6b35;">🔗 Ссылки на TradingView:</strong><br>';
                 if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 5m</a> ';
-                if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 1H</a> ';
-                if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;"> 4H</a> ';
+                if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;"> 1H</a> ';
+                if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 4H</a> ';
                 if (a.tf4_link) content += '<a href="' + a.tf4_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 D</a>';
                 content += '</div>';
             }
@@ -563,26 +563,31 @@
             
             // Ссылка на BingX
             if (a.bingx_link) {
-                content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none;">🔗 Открыть на BingX</a>';
+                content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none; cursor:pointer;">🔗 Открыть на BingX</a>';
             }
             
             // Кнопки обсуждения
             content += '<div style="margin-top:20px; padding:15px; background:rgba(0,212,255,0.1); border-radius:8px; border:1px solid rgba(0,212,255,0.3);">';
-            content += '<p style="margin:0 0 10px 0; color:#00d4ff; font-weight:600;"> Есть вопросы или не согласен?</p>';
-            content += '<a href="https://t.me/c/2026400906/2190/3597" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600;">💬 Обсудить во флудилке VIP</a>';
-            content += '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Разбор ' + (a.symbol || 'N/A') + ': ' + (a.description || '').substring(0, 100)) + '" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px;">📝 Выложить своё мнение во флудилку</a>';
+            content += '<p style="margin:0 0 10px 0; color:#00d4ff; font-weight:600;">💬 Есть вопросы или не согласен?</p>';
+            content += '<a href="https://t.me/c/2026400906/2190/3597" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600; cursor:pointer;"> Обсудить во флудилке VIP</a>';
+            content += '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Разбор ' + (a.symbol || 'N/A') + ': ' + (a.description || '').substring(0, 100)) + '" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px; cursor:pointer;">📝 Выложить своё мнение во флудилку</a>';
             content += '</div>';
             
-            // Кнопки админа
+            // 🔥 ПРОВЕРКА: SECRET ZONE активирована?
             var secretZone = document.getElementById('secretZone');
             if (secretZone && !secretZone.classList.contains('hidden')) {
                 content += '<div class="btn-container" style="margin-top:15px;">';
-                content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">️ Редактировать</button>';
-                content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
+                content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')" style="cursor:pointer; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border:none; padding:14px; border-radius:10px; font-size:16px; font-weight:600;">✏️ Редактировать</button>';
+                content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')" style="cursor:pointer;">🗑️ Удалить</button>';
+                content += '</div>';
+            } else {
+                // Если SECRET ZONE не активирована, показываем подсказку
+                content += '<div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; text-align:center;">';
+                content += '<p style="margin:0; font-size:12px; color:#8e8e93;">🔒 Админ-функции скрыты. Кликни 5 раз по логотипу для доступа.</p>';
                 content += '</div>';
             }
             
-            content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%;">Закрыть</button>';
+            content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%; cursor:pointer;">Закрыть</button>';
             content += '</div>';
             
             var modal = document.createElement('div');
