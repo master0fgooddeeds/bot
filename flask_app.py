@@ -696,50 +696,41 @@ def api_stats():
 @app.route('/api/youtube', methods=['GET'])
 def api_youtube():
     try:
-        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
-        
+        # Парсим HTML страницы НАШЕГО канала
+        url = f"https://www.youtube.com/@MyTradingClub/videos"
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'application/xml, text/xml, */*; q=0.01'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-        
-        r = requests.get(rss_url, headers=headers, timeout=10)
+        r = requests.get(url, headers=headers, timeout=10)
         
         if r.status_code == 200:
-            xml_text = r.text
             videos = []
+            # Ищем все видео на странице
+            video_urls = re.findall(r'/watch\?v=([a-zA-Z0-9_-]{11})', r.text)
             
-            # Парсим все видео из RSS
-            entries = re.findall(r'<entry>(.*?)</entry>', xml_text, re.DOTALL)
+            # Ищем заголовки видео
+            titles = re.findall(r'"title":{"runs":\[{"text":"([^"]+)"}\]', r.text)
             
-            for entry in entries[:12]:
-                vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', entry)
-                
-                # Пробуем несколько вариантов парсинга title
-                title_match = (
-                    re.search(r'<title><!\[CDATA\[(.*?)\]\]></title>', entry) or
-                    re.search(r'<title>(.*?)</title>', entry) or
-                    re.search(r'"title":\s*"(.*?)"', entry)
-                )
-                
-                link_match = re.search(r'<link rel="alternate" href="(.*?)"', entry)
-                
-                if vid_match:
-                    vid_id = vid_match.group(1)
-                    title = title_match.group(1) if title_match else f"Видео {vid_id}"
-                    link = link_match.group(1) if link_match else f"https://www.youtube.com/watch?v={vid_id}"
-                    
+            # Берем первые 12 уникальных видео
+            seen = set()
+            idx = 0
+            for vid_id in video_urls:
+                if vid_id not in seen and len(vid_id) == 11:
+                    seen.add(vid_id)
+                    title = titles[idx] if idx < len(titles) else f"Видео {vid_id}"
                     videos.append({
                         "id": vid_id,
                         "title": title,
-                        "link": link,
+                        "link": f"https://www.youtube.com/watch?v={vid_id}",
                         "thumbnail": f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg"
                     })
+                    idx += 1
+                    if len(videos) >= 12:
+                        break
             
-            return jsonify(videos[:12])
+            return jsonify(videos)
         
         return jsonify([])
-        
     except Exception as e:
         print(f"YouTube API error: {e}")
         return jsonify([])
