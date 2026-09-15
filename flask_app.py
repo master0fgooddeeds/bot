@@ -27,6 +27,7 @@ DATA_DIR = "/app/data"
 SETUPS_FILE = DATA_DIR + "/bingx_setups.json"
 STATS_FILE = DATA_DIR + "/trading_stats.json"
 ANALYSES_FILE = DATA_DIR + "/analyses.json"
+COIN_ANALYSIS_FILE = DATA_DIR + "/coin_analyses.json"
 BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
@@ -104,6 +105,48 @@ def delete_analysis(setup_id):
     return False
 
 def get_all_analyses(): return load_analyses()
+    def load_coin_analyses():
+    import os
+    try:
+        if not os.path.exists(COIN_ANALYSIS_FILE):
+            with open(COIN_ANALYSIS_FILE, "w") as f:
+                json.dump([], f)
+        with open(COIN_ANALYSIS_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_coin_analysis(analysis_id, data):
+    analyses = load_coin_analyses()
+    # Ищем существующий или создаём новый
+    for i, item in enumerate(analyses):
+        if item.get("id") == analysis_id:
+            analyses[i] = data
+            with open(COIN_ANALYSIS_FILE, "w") as f:
+                json.dump(analyses, f, indent=2)
+            return True
+    # Новый разбор
+    analyses.append(data)
+    with open(COIN_ANALYSIS_FILE, "w") as f:
+        json.dump(analyses, f, indent=2)
+    return True
+
+def delete_coin_analysis(analysis_id):
+    analyses = load_coin_analyses()
+    for i, item in enumerate(analyses):
+        if item.get("id") == analysis_id:
+            analyses.pop(i)
+            with open(COIN_ANALYSIS_FILE, "w") as f:
+                json.dump(analyses, f, indent=2)
+            return True
+    return False
+
+def get_coin_analysis(analysis_id):
+    analyses = load_coin_analyses()
+    for item in analyses:
+        if item.get("id") == analysis_id:
+            return item
+    return None
 
 def fetch_admins_from_group():
     global ADMIN_IDS
@@ -818,6 +861,68 @@ def api_analysis(setup_id):
             if delete_analysis(setup_id):
                 return jsonify({"ok": True})
             return jsonify({"error": "Not found"}), 404
+
+@app.route('/api/coin_analysis', methods=['GET', 'POST'])
+def api_coin_analysis():
+    if request.method == 'GET':
+        return jsonify(load_coin_analyses())
+    
+    if request.method == 'POST':
+        data = request.json
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        analysis_id = data.get('id') or str(_time.time())
+        analysis_data = {
+            "id": analysis_id,
+            "symbol": data.get('symbol', ''),
+            "tf1_link": data.get('tf1_link', ''),
+            "tf2_link": data.get('tf2_link', ''),
+            "tf3_link': data.get('tf3_link', ''),
+            "chart_image": data.get('chart_image', ''),
+            "description": data.get('description', ''),
+            "bingx_link": data.get('bingx_link', ''),
+            "created_by": int(admin_uid),
+            "created_at": _time.time(),
+            "updated_at": _time.time()
+        }
+        save_coin_analysis(analysis_id, analysis_data)
+        return jsonify({"ok": True, "id": analysis_id})
+
+@app.route('/api/coin_analysis/<analysis_id>', methods=['DELETE', 'PUT'])
+def api_coin_analysis_item(analysis_id):
+    if request.method == 'DELETE':
+        data = request.json or {}
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        if delete_coin_analysis(analysis_id):
+            return jsonify({"ok": True})
+        return jsonify({"error": "Not found"}), 404
+    
+    if request.method == 'PUT':
+        data = request.json
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        existing = get_coin_analysis(analysis_id)
+        if not existing:
+            return jsonify({"error": "Not found"}), 404
+        
+        existing.update({
+            "symbol": data.get('symbol', existing.get('symbol')),
+            "tf1_link": data.get('tf1_link', existing.get('tf1_link')),
+            "tf2_link": data.get('tf2_link', existing.get('tf2_link')),
+            "tf3_link": data.get('tf3_link', existing.get('tf3_link')),
+            "chart_image": data.get('chart_image', existing.get('chart_image')),
+            "description": data.get('description', existing.get('description')),
+            "bingx_link": data.get('bingx_link', existing.get('bingx_link')),
+            "updated_at": _time.time()
+        })
+        save_coin_analysis(analysis_id, existing)
+        return jsonify({"ok": True})
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
