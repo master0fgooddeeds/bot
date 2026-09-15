@@ -906,7 +906,7 @@ def api_coin_analysis():
             "symbol": data.get('symbol', ''),
             "tf1_link": data.get('tf1_link', ''),
             "tf2_link": data.get('tf2_link', ''),
-            "tf3_link": data.get('tf3_link', ''),  # <-- ТЕПЕРЬ ТУТ ВСЁ ЧИСТО
+            "tf3_link": data.get('tf3_link', ''),
             "chart_image": data.get('chart_image', ''),
             "description": data.get('description', ''),
             "bingx_link": data.get('bingx_link', ''),
