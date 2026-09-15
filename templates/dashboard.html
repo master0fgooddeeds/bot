@@ -271,53 +271,54 @@
         }
 
         function viewCoinAnalysis(id) {
-            fetch('/api/coin_analysis')
-                .then(function(r) { return r.json(); })
-                .then(function(analyses) {
-                    var a = analyses.find(function(x) { return x.id === id; });
-                    if (!a) return;
-                    
-                    var content = '<div style="padding:15px;">';
-                    content += '<h3>🪙 ' + (a.symbol || 'N/A') + '</h3>';
-                    
-                    if (a.chart_image) {
-                        content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0;">';
-                    }
-                    
-                    if (a.tf1_link || a.tf2_link || a.tf3_link) {
-                        content += '<div style="margin:15px 0;">';
-                        content += '<strong>📊 Графики TradingView:</strong><br>';
-                        if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 1</a><br>';
-                        if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);"> Таймфрейм 2</a><br>';
-                        if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 3</a>';
-                        content += '</div>';
-                    }
-                    
-                    if (a.description) {
-                        content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
-                    }
-                    
-                    if (a.bingx_link) {
-                        content += '<a href="' + a.bingx_link + '" target="_blank" class="btn" style="display:block; text-align:center; margin:15px 0; text-decoration:none;">🔗 Открыть на BingX</a>';
-                    }
-                    
-                    if (userRole === 'admin') {
-                        content += '<div class="btn-container" style="margin-top:15px;">';
-                        content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
-                        content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
-                        content += '</div>';
-                    }
-                    
-                    content += '<button class="btn btn-secondary" onclick="document.getElementById(\'coinAnalysisCard\').classList.remove(\'hidden\'); document.querySelector(\'.modal-overlay\').remove();" style="margin-top:15px; width:100%;">Закрыть</button>';
-                    content += '</div>';
-                    
-                    var modal = document.createElement('div');
-                    modal.className = 'modal-overlay';
-                    modal.onclick = function() { modal.remove(); };
-                    modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
-                    document.body.appendChild(modal);
-                });
-        }
+    fetch('/api/coin_analysis')
+        .then(function(r) { return r.json(); })
+        .then(function(analyses) {
+            var a = analyses.find(function(x) { return x.id === id; });
+            if (!a) return;
+            
+            var content = '<div style="padding:15px;">';
+            content += '<h3>🪙 ' + (a.symbol || 'N/A') + '</h3>';
+            
+            if (a.chart_image) {
+                content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0;">';
+            }
+            
+            if (a.tf1_link || a.tf2_link || a.tf3_link) {
+                content += '<div style="margin:15px 0;">';
+                content += '<strong>📊 Графики TradingView:</strong><br>';
+                if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 1</a><br>';
+                if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 2</a><br>';
+                if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(51,144,236,0.2); border-radius:6px; text-decoration:none; color:var(--tg-theme-text-color);">📈 Таймфрейм 3</a>';
+                content += '</div>';
+            }
+            
+            if (a.description) {
+                content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
+            }
+            
+            if (a.bingx_link) {
+                content += '<a href="' + a.bingx_link + '" target="_blank" class="btn" style="display:block; text-align:center; margin:15px 0; text-decoration:none;"> Открыть на BingX</a>';
+            }
+            
+            // 🔥 ПРОВЕРКА: кнопки только если SECRET ZONE активирован (clickCount >= 5)
+            if (clickCount >= 5) {
+                content += '<div class="btn-container" style="margin-top:15px;">';
+                content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
+                content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
+                content += '</div>';
+            }
+            
+            content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%;">Закрыть</button>';
+            content += '</div>';
+            
+            var modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.onclick = function() { modal.remove(); };
+            modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
+            document.body.appendChild(modal);
+        });
+}
 
         function loadAnalyses() {
             var list = document.getElementById('analysesList');
