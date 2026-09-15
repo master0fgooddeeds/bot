@@ -291,40 +291,73 @@
     </div>
 
     <div class="card hidden" id="coinAnalysisForm">
-        <h3 style="margin-top:0; color:#ff6b35;">🪙 Разбор монеты</h3>
+    <h3 style="margin-top:0; color:#ff6b35;">🪙 Разбор монеты</h3>
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">Монета (символ):</label>
+        <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 1 (5m):</label>
+        <input type="text" id="tf1Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 2 (1H):</label>
+        <input type="text" id="tf2Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 3 (4H):</label>
+        <input type="text" id="tf3Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 4 (D):</label>
+        <input type="text" id="tf4Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    
+    <div style="margin-bottom:20px; padding:15px; background:rgba(255,107,53,0.1); border-radius:8px; border-left:4px solid #ff6b35;">
+        <h4 style="margin:0 0 15px 0; color:#ff6b35;">📸 Скриншоты с рисунками</h4>
+        
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Монета (символ):</label>
-            <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 1 (5m):</label>
+            <input type="text" id="tf1Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
+            <textarea id="tf1Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
         </div>
+        
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 1 (5m):</label>
-            <input type="text" id="tf1Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 2 (1H):</label>
+            <input type="text" id="tf2Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
+            <textarea id="tf2Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
         </div>
+        
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 2 (1H):</label>
-            <input type="text" id="tf2Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 3 (4H):</label>
+            <input type="text" id="tf3Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
+            <textarea id="tf3Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
         </div>
+        
         <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93;">TradingView 3 (4H/D):</label>
-            <input type="text" id="tf3Link" placeholder="https://www.tradingview.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
-        </div>
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на график (картинка):</label>
-            <input type="text" id="chartImage" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
-        </div>
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Текстовый разбор:</label>
-            <textarea id="coinDescription" rows="6" placeholder="Опиши ситуацию, уровни, сценарии..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
-        </div>
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на BingX:</label>
-            <input type="text" id="bingxLink" placeholder="https://bingx.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
-        </div>
-        <div class="btn-container" style="margin-top:15px;">
-            <button class="btn btn-success" onclick="saveCoinAnalysis()">💾 Сохранить</button>
-            <button class="btn btn-secondary" onclick="cancelCoinAnalysis()">Отмена</button>
+            <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">📈 Скриншот ТФ 4 (D):</label>
+            <input type="text" id="tf4Screenshot" placeholder="https://... (ссылка на картинку)" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;">
+            <textarea id="tf4Comment" rows="2" placeholder="Комментарий к этому ТФ..." style="width:100%; margin-top:5px; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
         </div>
     </div>
+    
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на график (картинка):</label>
+        <input type="text" id="chartImage" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">Текстовый разбор:</label>
+        <textarea id="coinDescription" rows="6" placeholder="Опиши ситуацию, уровни, сценарии..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
+    </div>
+    <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; color:#8e8e93;">Ссылка на BingX:</label>
+        <input type="text" id="bingxLink" placeholder="https://bingx.com/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
+    </div>
+    <div class="btn-container" style="margin-top:15px;">
+        <button class="btn btn-success" onclick="saveCoinAnalysis()">💾 Сохранить</button>
+        <button class="btn btn-secondary" onclick="cancelCoinAnalysis()">Отмена</button>
+    </div>
+</div>
 
     <div class="card hidden" id="secretZone">
         <h3 style="margin:0 0 10px 0;">🔥 SECRET ZONE</h3>
@@ -462,54 +495,103 @@
         }
 
         function viewCoinAnalysis(id) {
-            fetch('/api/coin_analysis')
-                .then(function(r) { return r.json(); })
-                .then(function(analyses) {
-                    var a = analyses.find(function(x) { return x.id === id; });
-                    if (!a) return;
-                    
-                    var content = '<div style="padding:15px;">';
-                    content += '<h3 style="color:#00d4ff;">🪙 ' + (a.symbol || 'N/A') + '</h3>';
-                    
-                    if (a.chart_image) {
-                        content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0;">';
-                    }
-                    
-                    if (a.tf1_link || a.tf2_link || a.tf3_link) {
-                        content += '<div style="margin:15px 0;">';
-                        content += '<strong style="color:#ff6b35;">📊 Графики TradingView:</strong><br>';
-                        if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 Таймфрейм 1</a><br>';
-                        if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 Таймфрейм 2</a><br>';
-                        if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 Таймфрейм 3</a>';
-                        content += '</div>';
-                    }
-                    
-                    if (a.description) {
-                        content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
-                    }
-                    
-                    if (a.bingx_link) {
-                        content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none;">🔗 Открыть на BingX</a>';
-                    }
-                    
-                    var secretZone = document.getElementById('secretZone');
-                    if (secretZone && !secretZone.classList.contains('hidden')) {
-                        content += '<div class="btn-container" style="margin-top:15px;">';
-                        content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
-                        content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
-                        content += '</div>';
-                    }
-                    
-                    content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%;">Закрыть</button>';
-                    content += '</div>';
-                    
-                    var modal = document.createElement('div');
-                    modal.className = 'modal-overlay';
-                    modal.onclick = function() { modal.remove(); };
-                    modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
-                    document.body.appendChild(modal);
+    fetch('/api/coin_analysis')
+        .then(function(r) { return r.json(); })
+        .then(function(analyses) {
+            var a = analyses.find(function(x) { return x.id === id; });
+            if (!a) return;
+            
+            var content = '<div style="padding:15px;">';
+            content += '<h3 style="color:#00d4ff;">🪙 ' + (a.symbol || 'N/A') + '</h3>';
+            
+            // Основной график
+            if (a.chart_image) {
+                content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0; cursor:pointer;" onclick="openLightbox(\'' + a.chart_image + '\')">';
+            }
+            
+            // Скриншоты с переключением ТФ
+            var screenshots = [];
+            if (a.tf1_screenshot) screenshots.push({id: 'tf1', label: '5m', img: a.tf1_screenshot, comment: a.tf1_comment});
+            if (a.tf2_screenshot) screenshots.push({id: 'tf2', label: '1H', img: a.tf2_screenshot, comment: a.tf2_comment});
+            if (a.tf3_screenshot) screenshots.push({id: 'tf3', label: '4H', img: a.tf3_screenshot, comment: a.tf3_comment});
+            if (a.tf4_screenshot) screenshots.push({id: 'tf4', label: 'D', img: a.tf4_screenshot, comment: a.tf4_comment});
+            
+            if (screenshots.length > 0) {
+                content += '<div style="margin:15px 0;">';
+                content += '<strong style="color:#ff6b35;"> Графики по таймфреймам:</strong>';
+                
+                // Кнопки переключения
+                content += '<div style="display:flex; gap:5px; margin:10px 0; overflow-x:auto;">';
+                screenshots.forEach(function(s, idx) {
+                    var active = idx === 0 ? 'background:#00d4ff; color:#000;' : 'background:rgba(0,212,255,0.3); color:#fff;';
+                    content += '<button onclick="switchScreenshot(\'' + s.id + '\')" data-screenshot="' + s.id + '" style="flex:1; min-width:60px; padding:8px; ' + active + ' border:none; border-radius:6px; font-weight:600; cursor:pointer;">📈 ' + s.label + '</button>';
                 });
-        }
+                content += '</div>';
+                
+                // Контейнер для скриншотов
+                screenshots.forEach(function(s, idx) {
+                    var display = idx === 0 ? 'block' : 'none';
+                    content += '<div id="screenshot-' + s.id + '" class="screenshot-content" style="display:' + display + ';">';
+                    content += '<img src="' + s.img + '" style="width:100%; border-radius:8px; margin:10px 0; cursor:pointer;" onclick="openLightbox(\'' + s.img + '\')">';
+                    if (s.comment) {
+                        content += '<div style="padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; margin-top:10px;">';
+                        content += '<strong style="color:#ff6b35;">💬 Комментарий (' + s.label + '):</strong><br>';
+                        content += '<p style="white-space:pre-wrap; margin:5px 0;">' + s.comment + '</p>';
+                        content += '</div>';
+                    }
+                    content += '</div>';
+                });
+                
+                content += '</div>';
+            }
+            
+            // Ссылки на TradingView
+            if (a.tf1_link || a.tf2_link || a.tf3_link || a.tf4_link) {
+                content += '<div style="margin:15px 0;">';
+                content += '<strong style="color:#ff6b35;"> Ссылки на TradingView:</strong><br>';
+                if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 5m</a> ';
+                if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 1H</a> ';
+                if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;"> 4H</a> ';
+                if (a.tf4_link) content += '<a href="' + a.tf4_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 D</a>';
+                content += '</div>';
+            }
+            
+            // Описание
+            if (a.description) {
+                content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
+            }
+            
+            // Ссылка на BingX
+            if (a.bingx_link) {
+                content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none;">🔗 Открыть на BingX</a>';
+            }
+            
+            // Кнопки обсуждения
+            content += '<div style="margin-top:20px; padding:15px; background:rgba(0,212,255,0.1); border-radius:8px; border:1px solid rgba(0,212,255,0.3);">';
+            content += '<p style="margin:0 0 10px 0; color:#00d4ff; font-weight:600;"> Есть вопросы или не согласен?</p>';
+            content += '<a href="https://t.me/c/2026400906/2190/3597" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600;">💬 Обсудить во флудилке VIP</a>';
+            content += '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Разбор ' + (a.symbol || 'N/A') + ': ' + (a.description || '').substring(0, 100)) + '" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px;">📝 Выложить своё мнение во флудилку</a>';
+            content += '</div>';
+            
+            // Кнопки админа
+            var secretZone = document.getElementById('secretZone');
+            if (secretZone && !secretZone.classList.contains('hidden')) {
+                content += '<div class="btn-container" style="margin-top:15px;">';
+                content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">️ Редактировать</button>';
+                content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
+                content += '</div>';
+            }
+            
+            content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%;">Закрыть</button>';
+            content += '</div>';
+            
+            var modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.onclick = function() { modal.remove(); };
+            modal.innerHTML = '<div class="modal-content" onclick="event.stopPropagation()">' + content + '</div>';
+            document.body.appendChild(modal);
+        });
+}
 
         function loadAnalyses() {
             var list = document.getElementById('analysesList');
@@ -571,38 +653,56 @@
         }
 
         function showCoinAnalysisForm(editId) {
-            document.getElementById('coinAnalysisForm').classList.remove('hidden');
-            document.getElementById('coinAnalysisCard').classList.add('hidden');
-            document.getElementById('statsCard').classList.add('hidden');
-            document.getElementById('chartCard').classList.add('hidden');
-            
-            if (editId) {
-                fetch('/api/coin_analysis')
-                    .then(function(r) { return r.json(); })
-                    .then(function(analyses) {
-                        var a = analyses.find(function(x) { return x.id === editId; });
-                        if (a) {
-                            document.getElementById('coinSymbol').value = a.symbol || '';
-                            document.getElementById('tf1Link').value = a.tf1_link || '';
-                            document.getElementById('tf2Link').value = a.tf2_link || '';
-                            document.getElementById('tf3Link').value = a.tf3_link || '';
-                            document.getElementById('chartImage').value = a.chart_image || '';
-                            document.getElementById('coinDescription').value = a.description || '';
-                            document.getElementById('bingxLink').value = a.bingx_link || '';
-                            document.getElementById('coinAnalysisForm').dataset.editId = editId;
-                        }
-                    });
-            } else {
-                document.getElementById('coinAnalysisForm').dataset.editId = '';
-                document.getElementById('coinSymbol').value = '';
-                document.getElementById('tf1Link').value = '';
-                document.getElementById('tf2Link').value = '';
-                document.getElementById('tf3Link').value = '';
-                document.getElementById('chartImage').value = '';
-                document.getElementById('coinDescription').value = '';
-                document.getElementById('bingxLink').value = '';
-            }
-        }
+    document.getElementById('coinAnalysisForm').classList.remove('hidden');
+    document.getElementById('coinAnalysisCard').classList.add('hidden');
+    document.getElementById('statsCard').classList.add('hidden');
+    document.getElementById('chartCard').classList.add('hidden');
+    
+    if (editId) {
+        fetch('/api/coin_analysis')
+            .then(function(r) { return r.json(); })
+            .then(function(analyses) {
+                var a = analyses.find(function(x) { return x.id === editId; });
+                if (a) {
+                    document.getElementById('coinSymbol').value = a.symbol || '';
+                    document.getElementById('tf1Link').value = a.tf1_link || '';
+                    document.getElementById('tf2Link').value = a.tf2_link || '';
+                    document.getElementById('tf3Link').value = a.tf3_link || '';
+                    document.getElementById('tf4Link').value = a.tf4_link || '';
+                    document.getElementById('chartImage').value = a.chart_image || '';
+                    document.getElementById('tf1Screenshot').value = a.tf1_screenshot || '';
+                    document.getElementById('tf2Screenshot').value = a.tf2_screenshot || '';
+                    document.getElementById('tf3Screenshot').value = a.tf3_screenshot || '';
+                    document.getElementById('tf4Screenshot').value = a.tf4_screenshot || '';
+                    document.getElementById('tf1Comment').value = a.tf1_comment || '';
+                    document.getElementById('tf2Comment').value = a.tf2_comment || '';
+                    document.getElementById('tf3Comment').value = a.tf3_comment || '';
+                    document.getElementById('tf4Comment').value = a.tf4_comment || '';
+                    document.getElementById('coinDescription').value = a.description || '';
+                    document.getElementById('bingxLink').value = a.bingx_link || '';
+                    document.getElementById('coinAnalysisForm').dataset.editId = editId;
+                }
+            });
+    } else {
+        document.getElementById('coinAnalysisForm').dataset.editId = '';
+        document.getElementById('coinSymbol').value = '';
+        document.getElementById('tf1Link').value = '';
+        document.getElementById('tf2Link').value = '';
+        document.getElementById('tf3Link').value = '';
+        document.getElementById('tf4Link').value = '';
+        document.getElementById('chartImage').value = '';
+        document.getElementById('tf1Screenshot').value = '';
+        document.getElementById('tf2Screenshot').value = '';
+        document.getElementById('tf3Screenshot').value = '';
+        document.getElementById('tf4Screenshot').value = '';
+        document.getElementById('tf1Comment').value = '';
+        document.getElementById('tf2Comment').value = '';
+        document.getElementById('tf3Comment').value = '';
+        document.getElementById('tf4Comment').value = '';
+        document.getElementById('coinDescription').value = '';
+        document.getElementById('bingxLink').value = '';
+    }
+}
 
         function saveCoinAnalysis() {
             var editId = document.getElementById('coinAnalysisForm').dataset.editId || '';
@@ -768,6 +868,42 @@ function loadFeed() {
             list.innerHTML = feed.map(function(item) {
                 var color = item.dir === 'long' ? '#00e676' : '#ff003c';
                 var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
+                var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="openLightbox(\'' + item.chart + '\')">' : '';
+                
+                return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
+                        '<span style="background:' + color + '; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">' + dirText + '</span>' +
+                    '</div>' +
+                    '<div style="margin-top:10px; font-size:14px; line-height:1.6;">' +
+                        ' Вход: <b>' + item.entry + '</b><br>' +
+                        '🛡 SL: <b>' + item.sl + '</b><br>' +
+                        '💰 TP: <b>' + item.tp + '</b>' +
+                    '</div>' +
+                    chartHtml +
+                    '<div style="margin-top:10px;">' +
+                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Сетап ' + item.sym + ' ' + dirText + ': Вход ' + item.entry + ', SL ' + item.sl + ', TP ' + item.tp) + '" target="_blank" class="btn" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none; margin-right:5px;">💬 Обсудить</a>' +
+                        '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Моё мнение по сетапу ' + item.sym + ': ') + '" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        })
+        .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
+}
+
+function loadFeed() {
+    var list = document.getElementById('feedList');
+    list.innerHTML = 'Загрузка...';
+    fetch('/api/miniapp_feed')
+        .then(function(r) { return r.json(); })
+        .then(function(feed) {
+            if (!feed || feed.length === 0) {
+                list.innerHTML = '<p style="opacity:0.6;">Пока нет активных сетапов</p>';
+                return;
+            }
+            list.innerHTML = feed.map(function(item) {
+                var color = item.dir === 'long' ? '#00e676' : '#ff003c';
+                var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
                 var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px;">' : '';
                 
                 return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
@@ -786,6 +922,42 @@ function loadFeed() {
         })
         .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
 }
+
+function switchScreenshot(tfId) {
+    // Скрываем все скриншоты
+    document.querySelectorAll('.screenshot-content').forEach(el => el.style.display = 'none');
+    // Убираем активный класс с кнопок
+    document.querySelectorAll('[data-screenshot]').forEach(btn => {
+        btn.style.background = 'rgba(0,212,255,0.3)';
+        btn.style.color = '#fff';
+    });
+    
+    // Показываем нужный
+    var content = document.getElementById('screenshot-' + tfId);
+    if (content) content.style.display = 'block';
+    
+    // Делаем кнопку активной
+    var btn = document.querySelector('[data-screenshot="' + tfId + '"]');
+    if (btn) {
+        btn.style.background = '#00d4ff';
+        btn.style.color = '#000';
+    }
+}
+
+function openLightbox(imgUrl) {
+    var lightbox = document.createElement('div');
+    lightbox.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:2000; display:flex; align-items:center; justify-content:center; padding:20px; cursor:pointer;';
+    lightbox.onclick = function() { lightbox.remove(); };
+    
+    var img = document.createElement('img');
+    img.src = imgUrl;
+    img.style.cssText = 'max-width:100%; max-height:100%; object-fit:contain; cursor:zoom-out;';
+    
+    lightbox.appendChild(img);
+    document.body.appendChild(lightbox);
+}
+        
+        
         refreshData();
     </script>
 </body>
