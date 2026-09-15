@@ -20,7 +20,7 @@ ADMIN_IDS = []
 
 # --- YOUTUBE НАСТРОЙКИ ---
 # ВСТАВЬ СЮДА СВОЙ CHANNEL ID (начинается с UC)
-YT_CHANNEL_ID = "UCC71uNPC5AA9wFGvIPL1lig"
+YT_CHANNEL_ID = "UCC71uNPC5AA9wFGvlPL1Iig"
 YT_LAST_FILE = "/app/data/yt_last.json"
 
 DATA_DIR = "/app/data"
