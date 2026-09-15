@@ -221,7 +221,7 @@
 </head>
 <body>
     <div class="header">
-        <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/4901ce77-a166-4adb-a6e7-fc8af9770197_image.png" alt="MTC Logo">
+        <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/logo.png" alt="MTC Logo">
         <h1 id="logo">My Trading Club</h1>
     </div>
     
@@ -244,7 +244,7 @@
     </div>
 
     <div class="card hidden" id="coinAnalysisCard">
-        <h3 style="margin-top:0; color:#00d4ff;">🪙 Разборы монет</h3>
+        <h3 style="margin-top:0; color:#00d4ff;"> Разборы монет</h3>
         <div id="coinAnalysisList">Загрузка...</div>
     </div>
 
@@ -328,7 +328,7 @@
             <button class="btn btn-success" onclick="showCreateForm()">➕ Создать разбор сделки</button>
             <button class="btn btn-secondary" onclick="enableEditMode()">✏️ Редактировать сделки</button>
             <button class="btn btn-danger" onclick="enableDeleteMode()">🗑 Удалить сделки</button>
-            <button class="btn btn-success" onclick="showCoinAnalysisForm()"> Создать разбор монет</button>
+            <button class="btn btn-success" onclick="showCoinAnalysisForm()">🪙 Создать разбор монет</button>
         </div>
         <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
         <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
@@ -336,7 +336,7 @@
 
     <div id="viewModal" class="modal-overlay hidden" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="modalTitle" style="margin-top:0; color:#00d4ff;"> Разбор сделки</h2>
+            <h2 id="modalTitle" style="margin-top:0; color:#00d4ff;">📊 Разбор сделки</h2>
             <div id="modalMeta" style="margin-bottom:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;"></div>
             <div id="modalImageContainer" class="hidden" style="text-align:center;">
                 <img id="modalImage" class="modal-image" src="" alt="График">
@@ -349,7 +349,7 @@
     </div>
 
     <div class="footer">
-        <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/4901ce77-a166-4adb-a6e7-fc8af9770197_image.png" alt="MTC">
+        <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/logo.png" alt="MTC">
         <p class="brand">My Trading Club</p>
         <p>© 2026 MTC Platform</p>
         <p style="font-size: 12px; opacity: 0.6;">@mtcthunter_bot</p>
@@ -484,7 +484,7 @@
                     if (secretZone && !secretZone.classList.contains('hidden')) {
                         content += '<div class="btn-container" style="margin-top:15px;">';
                         content += '<button class="btn" onclick="editCoinAnalysis(\'' + a.id + '\')">✏️ Редактировать</button>';
-                        content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')"> Удалить</button>';
+                        content += '<button class="btn btn-danger" onclick="deleteCoinAnalysis(\'' + a.id + '\')">🗑 Удалить</button>';
                         content += '</div>';
                     }
                     
@@ -509,7 +509,7 @@
                     if (!analyses || analyses.length === 0) { list.innerHTML = '<p style="opacity:0.6;">Нет разборов</p>'; return; }
                     list.innerHTML = analyses.map(function(a, idx) {
                         var hasImg = a.chart_image ? 'has-image' : '';
-                        var imgIcon = a.chart_image ? ' ️' : '';
+                        var imgIcon = a.chart_image ? ' 🖼️' : '';
                         return '<div class="analysis-item ' + hasImg + '" onclick="viewAnalysis(' + idx + ')">' +
                             '<strong>' + (a.symbol || 'N/A') + ' ' + (a.tf || '') + ' ' + (a.direction ? a.direction.toUpperCase() : '') + '</strong><br>' +
                             '<small>' + (a.result || '') + ' | PnL: ' + (a.pnl || '0') + '%</small>' + imgIcon +
