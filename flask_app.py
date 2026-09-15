@@ -233,19 +233,34 @@ def bx_watch_step():
     for sid in list(BX["active"].keys()):
         s = BX["active"][sid]
         price = get_price(s["sym"])
-        if not price: continue
-        buf_frac = 0.001 if s["tf"] in ("15m", "1H") else 0.0
+        if not price: 
+            print(f"⚠️ Не удалось получить цену для {s['sym']}")
+            continue
+        
+        print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
+        
+        buf_frac = 0.0005  # Уменьшил буфер до 0.05% для точности
+        
         if s.get("status") == "pending":
             entry = s["entry_price"]
             reached, skipped_tp = False, False
+            
+            # ПРАВИЛЬНАЯ ЛОГИКА ВХОДА:
             if s["dir"] == "long":
-                if price >= s["tp"] * (1 + buf_frac): skipped_tp = True
-                elif price <= entry * (1 + buf_frac): reached = True
+                # LONG: ждём ОТКАТА вниз до входа
+                if price >= s["tp"] * (1 - buf_frac): 
+                    skipped_tp = True  # Улетел на TP без входа
+                elif price <= entry * (1 + buf_frac): 
+                    reached = True  # Цена опустилась до входа
             else:
-                if price <= s["tp"] * (1 - buf_frac): skipped_tp = True
-                elif price >= entry * (1 - buf_frac): reached = True
+                # SHORT: ждём ПОДЪЁМА до входа
+                if price <= s["tp"] * (1 + buf_frac): 
+                    skipped_tp = True  # Улетел на TP без входа
+                elif price >= entry * (1 - buf_frac): 
+                    reached = True  # Цена поднялась до входа
+            
             if skipped_tp:
-                cap = f"""️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
+                cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
 
 🚀 *Причина:* Цена достигла TP, не задев вход.
  *Ожидаемый вход:* `{entry:,.2f}`
@@ -253,24 +268,28 @@ def bx_watch_step():
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
-                BX["active"].pop(sid, None); save_stat(s, "skipped_tp", 0.0); bx_save()
-                print(f"⚠️ Сетап {sid} аннулирован: улетел на ТП")
+                BX["active"].pop(sid, None)
+                save_stat(s, "skipped_tp", 0.0)
+                bx_save()
+                print(f"️ Сетап {sid} аннулирован: улетел на ТП")
                 continue
+                
             if now > s.get("expires_entry", 0):
                 if not s.get("asked_extend"):
                     s["asked_extend"] = True
                     bx_save()
-                    kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": " Закрыть", "callback_data": f"cncl:{sid}"}]]}
-                    admin_msg = f"⏳ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
+                    kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": "❌ Закрыть", "callback_data": f"cncl:{sid}"}]]}
+                    admin_msg = f"⏳ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏰ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
                     for aid in ADMIN_IDS:
                         tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
-                    print(f"⏳ Сетап {sid} ждёт решения админа")
+                    print(f" Сетап {sid} ждёт решения админа")
                 continue
+                
             if reached:
                 s["status"] = "active"
                 s["entry_time"] = now
                 bx_save()
-                print(f"✅ Сетап {sid} активирован @ {price:,.2f}")
+                print(f"✅ Сетап {sid} АКТИВИРОВАН @ {price:,.2f}")
                 active_cap = f"""✅ *СЕТАП АКТИВИРОВАН* · {s['sym']}USDT · {s['tf']}
 
 🎯 Вход пройден! Цена: `{price:,.2f}`
@@ -278,18 +297,29 @@ def bx_watch_step():
 💰 *TAKE PROFIT:* `{s['tp']:,.2f}`
 
 🛡 Бот следит за SL и TP до победного конца!"""
-                try: tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": active_cap, "parse_mode": "Markdown", "reply_to_message_id": s.get("vip_msg")})
+                try: 
+                    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": active_cap, "parse_mode": "Markdown", "reply_to_message_id": s.get("vip_msg")})
                 except: pass
+                
         elif s.get("status") == "active":
             result = None
+            
+            # ПРАВИЛЬНАЯ ЛОГИКА TP/SL:
             if s["dir"] == "long":
-                if price >= s["tp"] * (1 + buf_frac): result = "tp"
-                elif price <= s["sl"] * (1 - buf_frac): result = "sl"
+                # LONG: TP когда цена ПОДНЯЛАСЬ, SL когда цена УПАЛА
+                if price >= s["tp"] * (1 - buf_frac): 
+                    result = "tp"
+                elif price <= s["sl"] * (1 + buf_frac): 
+                    result = "sl"
             else:
-                if price <= s["tp"] * (1 - buf_frac): result = "tp"
-                elif price >= s["sl"] * (1 + buf_frac): result = "sl"
+                # SHORT: TP когда цена УПАЛА, SL когда цена ПОДНЯЛАСЬ
+                if price <= s["tp"] * (1 + buf_frac): 
+                    result = "tp"
+                elif price >= s["sl"] * (1 - buf_frac): 
+                    result = "sl"
+                    
             if result:
-                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f}")
+                print(f" #{sid}: {result.upper()} @ {price:,.2f}")
                 close_setup(sid, result)
 
 def bx_watch_loop():
