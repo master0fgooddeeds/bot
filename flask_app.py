@@ -129,7 +129,7 @@ def save_coin_analysis(analysis_id, data):
     with open(COIN_ANALYSIS_FILE, "w") as f:
         json.dump(analyses, f, indent=2)
     return True
-
+    
 def delete_coin_analysis(analysis_id):
     analyses = load_coin_analyses()
     for i, item in enumerate(analyses):
@@ -900,7 +900,16 @@ def api_coin_analysis():
             "tf1_link": data.get('tf1_link', ''),
             "tf2_link": data.get('tf2_link', ''),
             "tf3_link": data.get('tf3_link', ''),
+            "tf4_link": data.get('tf4_link', ''),
             "chart_image": data.get('chart_image', ''),
+            "tf1_screenshot": data.get('tf1_screenshot', ''),
+            "tf2_screenshot": data.get('tf2_screenshot', ''),
+            "tf3_screenshot": data.get('tf3_screenshot', ''),
+            "tf4_screenshot": data.get('tf4_screenshot', ''),
+            "tf1_comment": data.get('tf1_comment', ''),
+            "tf2_comment": data.get('tf2_comment', ''),
+            "tf3_comment": data.get('tf3_comment', ''),
+            "tf4_comment": data.get('tf4_comment', ''),
             "description": data.get('description', ''),
             "bingx_link": data.get('bingx_link', ''),
             "created_by": int(admin_uid),
