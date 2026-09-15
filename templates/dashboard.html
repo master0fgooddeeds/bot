@@ -247,12 +247,17 @@
         <h3 style="margin-top:0; color:#00d4ff;"> Разборы монет</h3>
         <div id="coinAnalysisList">Загрузка...</div>
     </div>
+    <div class="card hidden" id="feedCard">
+    <h3 style="margin-top:0; color:#ff6b35;">🔥 Актуальные сетапы</h3>
+    <div id="feedList">Загрузка...</div>
+</div>
 
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
         <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
         <button class="btn btn-secondary" onclick="toggleYoutube()">🎥 Видео</button>
         <button class="btn btn-secondary" onclick="toggleCoinAnalysis()">🪙 Разборы монет</button>
+        <button class="btn btn-secondary" onclick="toggleFeed()">🔥 Лента сигналов</button>
         <button class="btn btn-secondary" onclick="shareStats()">📤 Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
     </div>
@@ -352,6 +357,13 @@
         <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/logo.png" alt="MTC">
         <p class="brand">My Trading Club</p>
         <p>© 2026 MTC Platform</p>
+        <!-- ПАРТНЕРСКИЕ БАННЕРЫ -->
+<div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+    <p style="font-size: 12px; color: #8e8e93; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Наши партнеры</p>
+    <a href="https://bingx.com/ru/perpetual/" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #0052ff 0%, #0033a0 100%);">🔷 Торговать на BingX</a>
+    <a href="https://t.me/upscale_news_ru" target="_blank" class="btn btn-success" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px;">🚀 Upscale Prop (Новости)</a>
+    <a href="https://t.me/HEADHEDGE" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%); border: 1px solid #666;">🦔 HeadHedge Prop</a>
+</div>
         <p style="font-size: 12px; opacity: 0.6;">@mtcthunter_bot</p>
     </div>
 
@@ -733,7 +745,47 @@
             .then(function(res) { if (res.ok) { alert('Удалено'); loadAnalyses(); refreshData(); } else { alert('Ошибка'); } })
             .catch(function(err) { alert('Ошибка: ' + err.message); });
         }
+function toggleFeed() {
+    var card = document.getElementById('feedCard');
+    var isHidden = card.classList.contains('hidden');
+    document.getElementById('analysesCard').classList.add('hidden');
+    document.getElementById('youtubeCard').classList.add('hidden');
+    document.getElementById('coinAnalysisCard').classList.add('hidden');
+    card.classList.toggle('hidden');
+    if (isHidden) loadFeed();
+}
 
+function loadFeed() {
+    var list = document.getElementById('feedList');
+    list.innerHTML = 'Загрузка...';
+    fetch('/api/miniapp_feed')
+        .then(function(r) { return r.json(); })
+        .then(function(feed) {
+            if (!feed || feed.length === 0) {
+                list.innerHTML = '<p style="opacity:0.6;">Пока нет активных сетапов</p>';
+                return;
+            }
+            list.innerHTML = feed.map(function(item) {
+                var color = item.dir === 'long' ? '#00e676' : '#ff003c';
+                var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
+                var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px;">' : '';
+                
+                return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
+                        '<span style="background:' + color + '; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">' + dirText + '</span>' +
+                    '</div>' +
+                    '<div style="margin-top:10px; font-size:14px; line-height:1.6;">' +
+                        '🎯 Вход: <b>' + item.entry + '</b><br>' +
+                        '🛡 SL: <b>' + item.sl + '</b><br>' +
+                        '💰 TP: <b>' + item.tp + '</b>' +
+                    '</div>' +
+                    chartHtml +
+                    '</div>';
+            }).join('');
+        })
+        .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
+}
         refreshData();
     </script>
 </body>
