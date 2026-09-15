@@ -746,7 +746,48 @@ def api_active_setups():
 def api_all_analyses():
     analyses = get_all_analyses()
     return jsonify(list(analyses.values()))
-
+@app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
+def api_analysis(setup_id):
+    if request.method == 'GET':
+        analysis = get_analysis(setup_id)
+        if analysis:
+            analysis['views'] = analysis.get('views', 0) + 1
+            save_analysis(setup_id, analysis)
+            return jsonify(analysis)
+        return jsonify({"error": "Analysis not found"}), 404
+    
+    if request.method in ('POST', 'DELETE'):
+        data = request.json
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        if request.method == 'POST':
+            # Получаем данные сетапа для заполнения полей
+            setup = BX.get('active', {}).get(setup_id) or BX.get('pending', {}).get(setup_id)
+            
+            analysis_data = {
+                "setup_id": setup_id,
+                "symbol": setup.get('sym') if setup else data.get('symbol'),
+                "tf": setup.get('tf') if setup else data.get('tf'),
+                "direction": setup.get('dir') if setup else data.get('direction'),
+                "entry": setup.get('entry_price') if setup else data.get('entry'),
+                "exit": data.get('exit'),
+                "result": data.get('result'),
+                "pnl": data.get('pnl'),
+                "analysis_text": data.get('analysis_text', ''),
+                "chart_image": data.get('chart_image', ''),
+                "created_by": int(admin_uid),
+                "created_at": _time.time(),
+                "views": 0
+            }
+            save_analysis(setup_id, analysis_data)
+            return jsonify({"ok": True, "setup_id": setup_id})
+        
+        elif request.method == 'DELETE':
+            if delete_analysis(setup_id):
+                return jsonify({"ok": True})
+            return jsonify({"error": "Not found"}), 404
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
