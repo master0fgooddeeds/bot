@@ -906,7 +906,7 @@ def api_coin_analysis():
             "symbol": data.get('symbol', ''),
             "tf1_link": data.get('tf1_link', ''),
             "tf2_link": data.get('tf2_link', ''),
-            "tf3_link": data.get('tf3_link', ''),  # <-- ИСПРАВЛЕНО ЗДЕСЬ
+            "tf3_link": data.get('tf3_link', ''),  # <-- ТЕПЕРЬ ТУТ ВСЁ ЧИСТО
             "chart_image": data.get('chart_image', ''),
             "description": data.get('description', ''),
             "bingx_link": data.get('bingx_link', ''),
@@ -916,8 +916,42 @@ def api_coin_analysis():
         }
         save_coin_analysis(analysis_id, analysis_data)
         return jsonify({"ok": True, "id": analysis_id})
+
+@app.route('/api/coin_analysis/<analysis_id>', methods=['DELETE', 'PUT'])
+def api_coin_analysis_item(analysis_id):
+    if request.method == 'DELETE':
+        data = request.json or {}
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        if delete_coin_analysis(analysis_id):
+            return jsonify({"ok": True})
+        return jsonify({"error": "Not found"}), 404
+    
+    if request.method == 'PUT':
+        data = request.json
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        existing = get_coin_analysis(analysis_id)
+        if not existing:
+            return jsonify({"error": "Not found"}), 404
+        
+        existing.update({
+            "symbol": data.get('symbol', existing.get('symbol')),
+            "tf1_link": data.get('tf1_link', existing.get('tf1_link')),
+            "tf2_link": data.get('tf2_link', existing.get('tf2_link')),
+            "tf3_link": data.get('tf3_link', existing.get('tf3_link')),
+            "chart_image": data.get('chart_image', existing.get('chart_image')),
+            "description": data.get('description', existing.get('description')),
+            "bingx_link": data.get('bingx_link', existing.get('bingx_link')),
+            "updated_at": _time.time()
+        })
+        save_coin_analysis(analysis_id, existing)
+        return jsonify({"ok": True})
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
