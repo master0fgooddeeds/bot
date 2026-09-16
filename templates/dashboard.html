@@ -7,14 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
-            color: #ffffff; 
-            min-height: 100vh;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%); color: #ffffff; min-height: 100vh; }
         .header { text-align: center; padding: 10px 0 20px 0; margin-bottom: 15px; }
         .header img { width: 90px; height: 90px; border-radius: 50%; box-shadow: 0 0 30px rgba(0, 212, 255, 0.6); margin-bottom: 10px; border: 2px solid rgba(0, 212, 255, 0.4); }
         .header h1 { font-size: 24px; margin: 0; background: linear-gradient(90deg, #ff6b35, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; letter-spacing: 1px; }
@@ -127,18 +120,15 @@
 
     <div class="card hidden" id="coinAnalysisForm">
         <h3 style="margin-top:0; color:#ff6b35;">🪙 Разбор монеты</h3>
-        
         <div style="margin-bottom:15px;">
             <label style="display:block; margin-bottom:5px; color:#8e8e93;">Монета (символ):</label>
             <input type="text" id="coinSymbol" placeholder="BTC, ETH..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:16px; box-sizing:border-box;" oninput="autoGenerateBingXLink()">
             <small style="color:#8e8e93; display:block; margin-top:5px;">💡 Ссылка на BingX сгенерируется автоматически</small>
         </div>
-        
         <div style="margin-bottom:15px;">
             <label style="display:block; margin-bottom:5px; color:#8e8e93;">🔗 Ссылка на BingX:</label>
             <input type="text" id="bingxLink" placeholder="https://bingx.com/ru/perpetual/BTC-USDT" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
-        
         <div style="margin-bottom:15px; padding:15px; background:rgba(0,212,255,0.05); border-radius:8px; border:1px solid rgba(0,212,255,0.2);">
             <label style="display:block; margin-bottom:10px; color:#00d4ff; font-weight:600;">📊 TradingView ссылки:</label>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -148,7 +138,6 @@
                 <div><small style="color:#8e8e93;">D:</small><input type="text" id="tf4Link" placeholder="https://..." style="width:100%; padding:8px; border-radius:6px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:12px; box-sizing:border-box;"></div>
             </div>
         </div>
-        
         <div style="margin-bottom:15px; padding:15px; background:rgba(255,107,53,0.05); border-radius:8px; border:1px solid rgba(255,107,53,0.2);">
             <label style="display:block; margin-bottom:10px; color:#ff6b35; font-weight:600;">📸 Скриншоты с комментариями:</label>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -174,40 +163,55 @@
                 <textarea id="tf4Comment" rows="3" placeholder="💬 Комментарий..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
             </div>
         </div>
-
         <div style="margin-bottom:15px;">
             <label style="display:block; margin-bottom:5px; color:#8e8e93;">🖼️ Ссылка на общий график (картинка):</label>
             <input type="text" id="chartImage" placeholder="https://..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;">
         </div>
-        
         <div style="margin-bottom:15px;">
             <label style="display:block; margin-bottom:5px; color:#8e8e93;">📝 Текстовый разбор:</label>
             <textarea id="coinDescription" rows="6" placeholder="Опиши ситуацию, уровни, сценарии..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
         </div>
-        
         <div class="btn-container" style="margin-top:15px;">
             <button class="btn btn-success" onclick="saveCoinAnalysis()">💾 Сохранить</button>
             <button class="btn btn-secondary" onclick="cancelCoinAnalysis()">Отмена</button>
         </div>
     </div>
 
-        <!-- СЕКРЕТНАЯ ЗОНА -->
+    <!-- СЕКРЕТНАЯ ЗОНА (РЕАЛЬНЫЕ КНОПКИ) -->
     <div class="card hidden" id="secretZone">
-        ... кнопки админа ...
+        <h3 style="margin:0 0 10px 0;">🔥 SECRET ZONE</h3>
+        <p style="margin:0 0 15px 0;">Ты настоящий админ!</p>
+        <div class="btn-container" style="margin-top:15px;">
+            <button class="btn btn-success" onclick="showCreateForm()">➕ Создать разбор сделки</button>
+            <button class="btn btn-secondary" onclick="enableEditMode()">✏️ Редактировать сделки</button>
+            <button class="btn btn-danger" onclick="enableDeleteMode()">🗑 Удалить сделки</button>
+            <button class="btn btn-success" onclick="showCoinAnalysisForm()">🪙 Создать разбор монет</button>
+        </div>
+        <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
+        <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
     </div>
 
     <!-- МОДАЛЬНОЕ ОКНО -->
-    <div id="viewModal" ...>
-        ...
+    <div id="viewModal" class="modal-overlay hidden" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 id="modalTitle" style="margin-top:0; color:#00d4ff;">📊 Разбор сделки</h2>
+            <div id="modalMeta" style="margin-bottom:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;"></div>
+            <div id="modalImageContainer" class="hidden" style="text-align:center;">
+                <img id="modalImage" class="modal-image" src="" alt="График">
+                <br>
+                <a id="modalLink" href="#" target="_blank" class="btn" style="display:inline-block; margin-top:10px; text-decoration:none;">🔗 Открыть ссылку на график</a>
+            </div>
+            <div id="modalText" class="modal-text"></div>
+            <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:15px; width:100%;">Закрыть</button>
+        </div>
     </div>
 
-    <!-- ФУТЕР С ПАРТНЁРАМИ (вне секретной зоны!) -->
+    <!-- ФУТЕР С ПАРТНЁРАМИ (ДОСТУПЕН ВСЕМ) -->
     <div class="footer">
         <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/logo.png" alt="MTC">
         <p class="brand">My Trading Club</p>
         <p>© 2026 MTC Platform</p>
         
-        <!-- ПАРТНЁРЫ -->
         <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
             <p style="font-size: 12px; color: #8e8e93; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Наши партнеры</p>
             <a href="https://bingx.com/ru/perpetual/" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #0052ff 0%, #0033a0 100%);">🔷 Торговать на BingX</a>
@@ -218,9 +222,7 @@
         <p style="font-size: 12px; opacity: 0.6;">@mtcthunter_bot</p>
     </div>
 
-</body>
-</html>
-
+    <!-- СКРИПТЫ (ВНУТРИ BODY, В САМОМ КОНЦЕ) -->
     <script>
         var tg = window.Telegram.WebApp; tg.expand();
         var userRole = 'guest', clickCount = 0, lastClickTime = 0, chartInstance = null, allAnalyses = [];
@@ -321,23 +323,18 @@
                 .then(function(analyses) {
                     var a = analyses.find(function(x) { return x.id === id; });
                     if (!a) return;
-                    
                     var content = '<div style="padding:15px;">';
                     content += '<h3 style="color:#00d4ff;">🪙 ' + (a.symbol || 'N/A') + '</h3>';
-                    
                     if (a.chart_image) {
                         content += '<img src="' + a.chart_image + '" style="width:100%; border-radius:8px; margin:15px 0; cursor:pointer;" onclick="openLightbox(\'' + a.chart_image + '\')">';
                     }
-                    
                     var screenshots = [];
                     if (a.tf1_screenshot) screenshots.push({id: 'tf1', label: '5m', img: a.tf1_screenshot, comment: a.tf1_comment});
                     if (a.tf2_screenshot) screenshots.push({id: 'tf2', label: '1H', img: a.tf2_screenshot, comment: a.tf2_comment});
                     if (a.tf3_screenshot) screenshots.push({id: 'tf3', label: '4H', img: a.tf3_screenshot, comment: a.tf3_comment});
                     if (a.tf4_screenshot) screenshots.push({id: 'tf4', label: 'D', img: a.tf4_screenshot, comment: a.tf4_comment});
-                    
                     if (screenshots.length > 0) {
-                        content += '<div style="margin:15px 0;">';
-                        content += '<strong style="color:#ff6b35;">📊 Графики по таймфреймам:</strong>';
+                        content += '<div style="margin:15px 0;"><strong style="color:#ff6b35;">📊 Графики по таймфреймам:</strong>';
                         content += '<div style="display:flex; gap:5px; margin:10px 0; overflow-x:auto;">';
                         screenshots.forEach(function(s, idx) {
                             var active = idx === 0 ? 'background:#00d4ff; color:#000;' : 'background:rgba(0,212,255,0.3); color:#fff;';
@@ -351,38 +348,31 @@
                             if (s.comment) {
                                 content += '<div style="padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; margin-top:10px;">';
                                 content += '<strong style="color:#ff6b35;">💬 Комментарий (' + s.label + '):</strong><br>';
-                                content += '<p style="white-space:pre-wrap; margin:5px 0;">' + s.comment + '</p>';
-                                content += '</div>';
+                                content += '<p style="white-space:pre-wrap; margin:5px 0;">' + s.comment + '</p></div>';
                             }
                             content += '</div>';
                         });
                         content += '</div>';
                     }
-                    
                     if (a.tf1_link || a.tf2_link || a.tf3_link || a.tf4_link) {
-                        content += '<div style="margin:15px 0;">';
-                        content += '<strong style="color:#ff6b35;">🔗 Ссылки на TradingView:</strong><br>';
+                        content += '<div style="margin:15px 0;"><strong style="color:#ff6b35;">🔗 Ссылки на TradingView:</strong><br>';
                         if (a.tf1_link) content += '<a href="' + a.tf1_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 5m</a> ';
                         if (a.tf2_link) content += '<a href="' + a.tf2_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 1H</a> ';
                         if (a.tf3_link) content += '<a href="' + a.tf3_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 4H</a> ';
                         if (a.tf4_link) content += '<a href="' + a.tf4_link + '" target="_blank" style="display:inline-block; margin:5px 0; padding:8px 12px; background:rgba(0,212,255,0.2); border-radius:6px; text-decoration:none; color:#00d4ff;">📈 D</a>';
                         content += '</div>';
                     }
-                    
                     if (a.description) {
                         content += '<div style="margin:15px 0; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; white-space:pre-wrap;">' + a.description + '</div>';
                     }
-                    
                     if (a.bingx_link) {
                         content += '<a href="' + a.bingx_link + '" target="_blank" class="btn btn-success" style="display:block; text-align:center; margin:15px 0; text-decoration:none; cursor:pointer;">🔗 Открыть на BingX</a>';
                     }
-                    
                     content += '<div style="margin-top:20px; padding:15px; background:rgba(0,212,255,0.1); border-radius:8px; border:1px solid rgba(0,212,255,0.3);">';
                     content += '<p style="margin:0 0 10px 0; color:#00d4ff; font-weight:600;">💬 Есть вопросы или не согласен?</p>';
                     content += '<a href="https://t.me/c/2026400906/2190/3597" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600; cursor:pointer;">Обсудить во флудилке VIP</a>';
                     content += '<a href="https://t.me/c/2026400906/2190/3597?text=' + encodeURIComponent('Разбор ' + (a.symbol || 'N/A') + ': ' + (a.description || '').substring(0, 100)) + '" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px; cursor:pointer;">📝 Выложить своё мнение во флудилку</a>';
                     content += '</div>';
-                    
                     var secretZone = document.getElementById('secretZone');
                     if (secretZone && !secretZone.classList.contains('hidden')) {
                         content += '<div class="btn-container" style="margin-top:15px;">';
@@ -394,10 +384,8 @@
                         content += '<p style="margin:0; font-size:12px; color:#8e8e93;">🔒 Админ-функции скрыты. Кликни 5 раз по логотипу для доступа.</p>';
                         content += '</div>';
                     }
-                    
                     content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%; cursor:pointer;">Закрыть</button>';
                     content += '</div>';
-                    
                     var modal = document.createElement('div');
                     modal.className = 'modal-overlay';
                     modal.onclick = function() { modal.remove(); };
@@ -470,7 +458,6 @@
             document.getElementById('coinAnalysisCard').classList.add('hidden');
             document.getElementById('statsCard').classList.add('hidden');
             document.getElementById('chartCard').classList.add('hidden');
-            
             if (editId) {
                 fetch('/api/coin_analysis')
                     .then(function(r) { return r.json(); })
@@ -539,7 +526,6 @@
                 bingx_link: document.getElementById('bingxLink').value,
                 admin_uid: tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 0
             };
-            
             fetch('/api/coin_analysis', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -547,17 +533,10 @@
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.ok) {
-                    alert('Сохранено!');
-                    cancelCoinAnalysis();
-                    loadCoinAnalyses();
-                } else {
-                    alert('Ошибка: ' + (res.error || ''));
-                }
+                if (res.ok) { alert('Сохранено!'); cancelCoinAnalysis(); loadCoinAnalyses(); } 
+                else { alert('Ошибка: ' + (res.error || '')); }
             })
-            .catch(function(err) {
-                alert('Ошибка: ' + err.message);
-            });
+            .catch(function(err) { alert('Ошибка: ' + err.message); });
         }
 
         function editCoinAnalysis(id) { showCoinAnalysisForm(id); }
@@ -681,7 +660,6 @@
                         var color = item.dir === 'long' ? '#00e676' : '#ff003c';
                         var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
                         var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="openLightbox(\'' + item.chart + '\')">' : '';
-                        
                         return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
                             '<div style="display:flex; justify-content:space-between; align-items:center;">' +
                                 '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
