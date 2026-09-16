@@ -982,14 +982,26 @@ def api_upscale_news():
     announcements = parse_upscale_news()
     return jsonify(announcements)
 
-@app.route('/api/miniapp_feed')
+@app.route('/api/miniapp_feed', methods=['GET'])
 def api_miniapp_feed():
-    feed_file = DATA_DIR + "/miniapp_feed.json"
-    try:
-        if os.path.exists(feed_file):
-            with open(feed_file, "r") as f: return jsonify(json.load(f))
-    except: pass
-    return jsonify([])
+    """Возвращает активные сетапы для ленты мини-аппа напрямую из памяти"""
+    setups = []
+    active_setups = BX.get('active', {})
+    
+    for sid, s in active_setups.items():
+        # Показываем только те, что в работе или ожидают входа
+        if s.get('status') in ['pending', 'active']:
+            setups.append({
+                'id': sid,
+                'sym': s.get('sym', 'N/A'),
+                'dir': s.get('dir', 'long'),
+                'entry': s.get('entry_price', 'N/A'),
+                'sl': s.get('sl', 'N/A'),
+                'tp': s.get('tp', 'N/A'),
+                'chart': s.get('chart_image', s.get('chart', ''))
+            })
+    
+    return jsonify(setups)
 if __name__ == "__main__":
     import os
     import threading
