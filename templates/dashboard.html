@@ -779,6 +779,48 @@
             if (isHidden) loadFeed();
         }
 
+                function toggleCalculator() {
+            var card = document.getElementById('calculatorCard');
+            var isHidden = card.classList.contains('hidden');
+            // Скрываем остальные карточки для чистоты
+            document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('youtubeCard').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
+            document.getElementById('feedCard').classList.add('hidden');
+            
+            card.classList.toggle('hidden');
+        }
+
+        function calculateRisk() {
+            var deposit = parseFloat(document.getElementById('calcDeposit').value) || 0;
+            var riskPercent = parseFloat(document.getElementById('calcRisk').value) || 0;
+            var entry = parseFloat(document.getElementById('calcEntry').value) || 0;
+            var sl = parseFloat(document.getElementById('calcSL').value) || 0;
+            var tp = parseFloat(document.getElementById('calcTP').value) || 0;
+
+            if (deposit <= 0 || riskPercent <= 0 || entry <= 0 || sl <= 0) {
+                alert('Пожалуйста, заполни Депозит, Риск, Вход и SL');
+                return;
+            }
+
+            var riskAmount = deposit * (riskPercent / 100);
+            var priceDiff = Math.abs(entry - sl);
+            var positionSizeUsd = (riskAmount / priceDiff) * entry;
+            var positionSizeCoins = riskAmount / priceDiff;
+            
+            var profitPerCoin = Math.abs(tp - entry);
+            var potentialProfit = positionSizeCoins * profitPerCoin;
+            
+            var rr = (potentialProfit / riskAmount).toFixed(2);
+
+            document.getElementById('resLoss').innerText = '-$' + riskAmount.toFixed(2);
+            document.getElementById('resProfit').innerText = '+$' + potentialProfit.toFixed(2);
+            document.getElementById('resRR').innerText = '1 : ' + rr;
+            document.getElementById('resSize').innerText = '$' + positionSizeUsd.toFixed(2) + ' (' + positionSizeCoins.toFixed(4) + ' мон.)';
+            
+            document.getElementById('calcResults').style.display = 'block';
+        }
+
         function loadFeed() {
             var list = document.getElementById('feedList');
             list.innerHTML = 'Загрузка...';
