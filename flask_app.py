@@ -1097,6 +1097,30 @@ def api_derivatives_data():
     except Exception as e:
         print(f"Derivatives API error: {e}")
         return jsonify({"error": str(e)})
+
+@app.route('/api/liquidations')
+def api_liquidations():
+    """Получаем данные о ликвидациях с Binance"""
+    try:
+        # Binance API для ликвидаций (последние 50)
+        r = requests.get("https://fapi.binance.com/fapi/v1/allForceOrders?limit=50", timeout=5)
+        if r.status_code == 200:
+            data = r.json()
+            liq_data = []
+            for order in data:
+                liq_data.append({
+                    'symbol': order['symbol'].replace('USDT', ''),
+                    'side': 'LONG' if order['side'] == 'SELL' else 'SHORT',  # LONG ликвидация = продажа
+                    'price': float(order['price']),
+                    'qty': float(order['origQty']),
+                    'value': float(order['price']) * float(order['origQty']),
+                    'time': datetime.fromtimestamp(order['time']/1000).strftime('%H:%M:%S')
+                })
+            return jsonify(liq_data)
+        return jsonify([])
+    except Exception as e:
+        print(f"Liquidations API error: {e}")
+        return jsonify([])
 if __name__ == "__main__":
     import os
     import threading
