@@ -166,6 +166,22 @@
         </div>
     </div>
 
+        <!-- КАРТА ЛИКВИДАЦИЙ -->
+    <div class="card hidden" id="liquidationCard">
+        <h3 style="margin-top:0; color:#ff3b30;">💥 Карта ликвидаций (BTC/ETH)</h3>
+        <p style="font-size:12px; color:#8e8e93; margin-bottom:10px;">Показывает скопления ликвидаций — куда может пойти цена</p>
+        <div style="width:100%; height:500px; border-radius:8px; overflow:hidden; border:1px solid rgba(255,59,48,0.3);">
+            <iframe src="https://www.coinglass.com/pro/widget/liquidation-heatmap" 
+                    style="width:100%; height:100%; border:none;" 
+                    frameborder="0">
+            </iframe>
+        </div>
+        <div style="margin-top:10px; padding:10px; background:rgba(255,59,48,0.1); border-radius:8px; font-size:12px; color:#ff9500;">
+            💡 <strong>Как читать:</strong> Красные зоны = скопление ликвидаций лонгов (цена может пойти вниз). 
+            Зелёные зоны = ликвидации шортов (цена может пойти вверх).
+        </div>
+    </div>
+
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
         <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
@@ -174,6 +190,7 @@
         <button class="btn btn-secondary" onclick="toggleFeed()">🔥 Лента сигналов</button>
         <button class="btn btn-secondary" onclick="toggleCalculator()">🧮 Калькулятор риска</button>
         <button class="btn btn-secondary" onclick="toggleMarketData()">🌍 Обзор рынка</button>
+        <button class="btn btn-secondary" onclick="toggleLiquidations()">💥 Карта ликвидаций</button>
         <button class="btn btn-secondary" onclick="shareStats()">📤 Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
     </div>
