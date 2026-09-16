@@ -1016,7 +1016,27 @@ def api_fear_greed():
     except Exception as e:
         print(f"Fear & Greed API error: {e}")
         return jsonify({"error": str(e)})
-
+@app.route('/api/market_data')
+def api_market_data():
+    """Получаем общий обзор рынка с CoinGecko"""
+    try:
+        r = requests.get("https://api.coingecko.com/api/v3/global", timeout=5)
+        if r.status_code == 200:
+            data = r.json().get('data', {})
+            market_cap = data.get('total_market_cap', {}).get('usd', 0)
+            btc_dominance = data.get('market_cap_percentage', {}).get('btc', 0)
+            market_cap_change = data.get('market_cap_change_percentage_24h_usd', 0)
+            
+            return jsonify({
+                "market_cap": f"${market_cap / 1e12:.2f}T", # В триллионах
+                "btc_dominance": f"{btc_dominance:.1f}%",
+                "trend": "up" if market_cap_change > 0 else "down",
+                "trend_value": f"{abs(market_cap_change):.2f}%"
+            })
+        return jsonify({"error": "Failed to fetch"})
+    except Exception as e:
+        print(f"Market Data API error: {e}")
+        return jsonify({"error": str(e)})
 if __name__ == "__main__":
     import os
     import threading
