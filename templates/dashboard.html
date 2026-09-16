@@ -954,6 +954,20 @@
             if (isHidden) loadMarketData();
         }
 
+                function toggleLiquidations() {
+            var card = document.getElementById('liquidationCard');
+            var isHidden = card.classList.contains('hidden');
+            // Скрываем остальные
+            document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('youtubeCard').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
+            document.getElementById('feedCard').classList.add('hidden');
+            document.getElementById('calculatorCard').classList.add('hidden');
+            document.getElementById('marketDataCard').classList.add('hidden');
+            
+            card.classList.toggle('hidden');
+        }
+
         function loadMarketData() {
             fetch('/api/market_data')
                 .then(function(r) { return r.json(); })
