@@ -1002,7 +1002,8 @@ def api_miniapp_feed():
             })
     
     return jsonify(setups)
-    @app.route('/api/fear_greed')
+
+@app.route('/api/fear_greed')
 def api_fear_greed():
     """Получаем Индекс Страха и Жадности"""
     try:
@@ -1015,6 +1016,7 @@ def api_fear_greed():
     except Exception as e:
         print(f"Fear & Greed API error: {e}")
         return jsonify({"error": str(e)})
+
 if __name__ == "__main__":
     import os
     import threading
