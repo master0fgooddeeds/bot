@@ -166,19 +166,33 @@
         </div>
     </div>
 
-        <!-- КАРТА ЛИКВИДАЦИЙ -->
+           <!-- КАРТА ЛИКВИДАЦИЙ -->
     <div class="card hidden" id="liquidationCard">
-        <h3 style="margin-top:0; color:#ff3b30;">💥 Карта ликвидаций (BTC/ETH)</h3>
-        <p style="font-size:12px; color:#8e8e93; margin-bottom:10px;">Показывает скопления ликвидаций — куда может пойти цена</p>
-        <div style="width:100%; height:500px; border-radius:8px; overflow:hidden; border:1px solid rgba(255,59,48,0.3);">
-            <iframe src="https://www.coinglass.com/pro/widget/liquidation-heatmap" 
-                    style="width:100%; height:100%; border:none;" 
-                    frameborder="0">
-            </iframe>
+        <h3 style="margin-top:0; color:#ff3b30;">💥 Карта ликвидаций (Live)</h3>
+        <p style="font-size:12px; color:#8e8e93; margin-bottom:15px;">Реальные ликвидации с Binance (последние 50)</p>
+        
+        <!-- Фильтры -->
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button onclick="filterLiq('all')" class="btn" style="flex:1; padding:8px; font-size:12px;">Все</button>
+            <button onclick="filterLiq('LONG')" class="btn btn-danger" style="flex:1; padding:8px; font-size:12px;">LONG</button>
+            <button onclick="filterLiq('SHORT')" class="btn btn-success" style="flex:1; padding:8px; font-size:12px;">SHORT</button>
         </div>
-        <div style="margin-top:10px; padding:10px; background:rgba(255,59,48,0.1); border-radius:8px; font-size:12px; color:#ff9500;">
-            💡 <strong>Как читать:</strong> Красные зоны = скопление ликвидаций лонгов (цена может пойти вниз). 
-            Зелёные зоны = ликвидации шортов (цена может пойти вверх).
+        
+        <!-- Список ликвидаций -->
+        <div id="liquidationList" style="max-height:450px; overflow-y:auto;">
+            <p style="text-align:center; color:#8e8e93; padding:20px;">Загрузка...</p>
+        </div>
+        
+        <!-- Статистика -->
+        <div style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div style="text-align:center;">
+                <div style="font-size:11px; color:#8e8e93;">Ликвидаций LONG</div>
+                <div id="liqLongCount" style="font-size:18px; font-weight:bold; color:#ff3b30;">0</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:11px; color:#8e8e93;">Ликвидаций SHORT</div>
+                <div id="liqShortCount" style="font-size:18px; font-weight:bold; color:#00e676;">0</div>
+            </div>
         </div>
     </div>
 
@@ -997,6 +1011,64 @@
             document.getElementById('marketDataCard').classList.add('hidden');
             
             card.classList.toggle('hidden');
+        }
+
+                var currentLiqFilter = 'all';
+        var allLiquidations = [];
+
+        function loadLiquidations() {
+            fetch('/api/liquidations')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    allLiquidations = data;
+                    renderLiquidations();
+                })
+                .catch(function(err) { console.error('Liquidations Error:', err); });
+        }
+
+        function filterLiq(type) {
+            currentLiqFilter = type;
+            renderLiquidations();
+        }
+
+        function renderLiquidations() {
+            var filtered = allLiquidations;
+            if (currentLiqFilter !== 'all') {
+                filtered = allLiquidations.filter(function(l) { return l.side === currentLiqFilter; });
+            }
+            
+            var html = '';
+            var longCount = 0;
+            var shortCount = 0;
+            
+            filtered.forEach(function(liq) {
+                var color = liq.side === 'LONG' ? '#ff3b30' : '#00e676';
+                var emoji = liq.side === 'LONG' ? '🔴' : '🟢';
+                var bg = liq.side === 'LONG' ? 'rgba(255,59,48,0.1)' : 'rgba(0,230,118,0.1)';
+                
+                if (liq.side === 'LONG') longCount++;
+                else shortCount++;
+                
+                html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin:5px 0; background:' + bg + '; border-radius:6px; border-left:3px solid ' + color + '">' +
+                    '<div>' +
+                        '<div style="font-weight:bold; color:#fff;">' + emoji + ' ' + liq.symbol + '</div>' +
+                        '<div style="font-size:11px; color:#8e8e93;">' + liq.time + '</div>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                        '<div style="color:' + color + '; font-weight:bold; font-size:13px;">' + liq.side + '</div>' +
+                        '<div style="font-size:12px;">$' + liq.price.toLocaleString() + '</div>' +
+                        '<div style="font-size:11px; color:#8e8e93;">' + (liq.value/1000).toFixed(1) + 'k</div>' +
+                    '</div>' +
+                '</div>';
+            });
+            
+            if (filtered.length === 0) {
+                html = '<p style="text-align:center; color:#8e8e93; padding:20px;">Нет ликвидаций</p>';
+            }
+            
+            document.getElementById('liquidationList').innerHTML = html;
+            document.getElementById('liqLongCount').innerText = longCount;
+            document.getElementById('liqShortCount').innerText = shortCount;
         }
 
                 function toggleDerivatives() {
