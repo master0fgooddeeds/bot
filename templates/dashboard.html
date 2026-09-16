@@ -147,6 +147,25 @@
         <button class="btn" onclick="calculateRisk()" style="margin-top:15px; width:100%;">📊 Рассчитать</button>
     </div>
 
+        <!-- ОБЗОР РЫНКА -->
+    <div class="card hidden" id="marketDataCard">
+        <h3 style="margin-top:0; color:#00d4ff;">🌍 Обзор рынка (24ч)</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:12px; color:#8e8e93;">Капитализация</div>
+                <div id="mdCap" style="font-size:18px; font-weight:bold; color:#fff;">--</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:12px; color:#8e8e93;">Доминация BTC</div>
+                <div id="mdBtc" style="font-size:18px; font-weight:bold; color:#ff9500;">--</div>
+            </div>
+            <div style="grid-column: 1 / -1; background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:12px; color:#8e8e93;">Изменение рынка за 24ч</div>
+                <div id="mdTrend" style="font-size:20px; font-weight:bold;">--</div>
+            </div>
+        </div>
+    </div>
+
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
         <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
@@ -154,6 +173,7 @@
         <button class="btn btn-secondary" onclick="toggleCoinAnalysis()">🪙 Разборы монет</button>
         <button class="btn btn-secondary" onclick="toggleFeed()">🔥 Лента сигналов</button>
         <button class="btn btn-secondary" onclick="toggleCalculator()">🧮 Калькулятор риска</button>
+        <button class="btn btn-secondary" onclick="toggleMarketData()">🌍 Обзор рынка</button>
         <button class="btn btn-secondary" onclick="shareStats()">📤 Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
     </div>
@@ -901,7 +921,42 @@
             var activeBtn = document.getElementById('form-btn-' + tf);
             if (activeBtn) activeBtn.style.background = '#ff6b35';
         }
-        
+
+
+                function toggleMarketData() {
+            var card = document.getElementById('marketDataCard');
+            var isHidden = card.classList.contains('hidden');
+            // Скрываем остальные для чистоты
+            document.getElementById('analysesCard').classList.add('hidden');
+            document.getElementById('youtubeCard').classList.add('hidden');
+            document.getElementById('coinAnalysisCard').classList.add('hidden');
+            document.getElementById('feedCard').classList.add('hidden');
+            document.getElementById('calculatorCard').classList.add('hidden');
+            
+            card.classList.toggle('hidden');
+            if (isHidden) loadMarketData();
+        }
+
+        function loadMarketData() {
+            fetch('/api/market_data')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.market_cap) {
+                        document.getElementById('mdCap').innerText = data.market_cap;
+                        document.getElementById('mdBtc').innerText = data.btc_dominance;
+                        
+                        var trendEl = document.getElementById('mdTrend');
+                        if (data.trend === 'up') {
+                            trendEl.innerText = '📈 +' + data.trend_value;
+                            trendEl.style.color = '#00e676';
+                        } else {
+                            trendEl.innerText = '📉 -' + data.trend_value;
+                            trendEl.style.color = '#ff3b30';
+                        }
+                    }
+                })
+                .catch(function(err) { console.error('Market Data Error:', err); });
+        }
         refreshData();
         loadFearGreed();
     </script>
