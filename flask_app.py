@@ -1037,6 +1037,66 @@ def api_market_data():
     except Exception as e:
         print(f"Market Data API error: {e}")
         return jsonify({"error": str(e)})
+
+@app.route('/api/derivatives_data')
+def api_derivatives_data():
+    """Funding Rates + Ликвидации + RSI"""
+    try:
+        # 1. Funding Rates с Binance
+        funding_r = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex", timeout=5)
+        funding_data = {}
+        if funding_r.status_code == 200:
+            for item in funding_r.json()[:10]:  # Топ-10 по funding
+                symbol = item['symbol'].replace('USDT', '')
+                rate = float(item['lastFundingRate']) * 100
+                if abs(rate) > 0.005:  # Показываем только экстремальные (>0.005%)
+                    funding_data[symbol] = {
+                        'rate': f"{rate:.4f}%",
+                        'next': datetime.fromtimestamp(int(item['nextFundingTime']/1000)).strftime('%H:%M'),
+                        'extreme': '🔴' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
+                    }
+        
+        # 2. RSI для BTC и ETH на 4H и 1D
+        rsi_data = {}
+        for coin in ['BTC', 'ETH']:
+            for tf, interval in [('4H', '4h'), ('1D', '1d')]:
+                try:
+                    klines = requests.get(
+                        f"https://api.binance.com/api/v3/klines",
+                        params={'symbol': f'{coin}USDT', 'interval': interval, 'limit': 100},
+                        timeout=5
+                    ).json()
+                    closes = [float(k[4]) for k in klines]
+                    # Считаем RSI
+                    gains = []
+                    losses = []
+                    for i in range(1, len(closes)):
+                        diff = closes[i] - closes[i-1]
+                        if diff > 0:
+                            gains.append(diff)
+                            losses.append(0)
+                        else:
+                            gains.append(0)
+                            losses.append(abs(diff))
+                    avg_gain = sum(gains[-14:]) / 14
+                    avg_loss = sum(losses[-14:]) / 14
+                    rs = avg_gain / avg_loss if avg_loss > 0 else 0
+                    rsi = 100 - (100 / (1 + rs))
+                    rsi_data[f'{coin}_{tf}'] = {
+                        'value': round(rsi, 1),
+                        'signal': '🔴 Overbought' if rsi > 70 else '🟢 Oversold' if rsi < 30 else '🟡 Neutral',
+                        'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
+                    }
+                except:
+                    pass
+        
+        return jsonify({
+            'funding': funding_data,
+            'rsi': rsi_data
+        })
+    except Exception as e:
+        print(f"Derivatives API error: {e}")
+        return jsonify({"error": str(e)})
 if __name__ == "__main__":
     import os
     import threading
