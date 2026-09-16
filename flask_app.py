@@ -1002,6 +1002,19 @@ def api_miniapp_feed():
             })
     
     return jsonify(setups)
+    @app.route('/api/fear_greed')
+def api_fear_greed():
+    """Получаем Индекс Страха и Жадности"""
+    try:
+        r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
+        if r.status_code == 200:
+            data = r.json().get('data', [])
+            if data:
+                return jsonify(data[0])
+        return jsonify({"error": "Failed to fetch"})
+    except Exception as e:
+        print(f"Fear & Greed API error: {e}")
+        return jsonify({"error": str(e)})
 if __name__ == "__main__":
     import os
     import threading
