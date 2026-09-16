@@ -182,6 +182,36 @@
         </div>
     </div>
 
+        <!-- FUNDING RATES & RSI -->
+    <div class="card hidden" id="derivativesCard">
+        <h3 style="margin-top:0; color:#ff6b35;">📊 Funding Rates & RSI</h3>
+        
+        <!-- Funding Rates -->
+        <div style="margin-bottom:20px;">
+            <h4 style="color:#00d4ff; font-size:14px; margin-bottom:10px;">🔥 Экстремальный Funding</h4>
+            <div id="fundingList" style="display:grid; gap:8px;">
+                <p style="color:#8e8e93; text-align:center;">Загрузка...</p>
+            </div>
+        </div>
+        
+        <!-- RSI -->
+        <div>
+            <h4 style="color:#00d4ff; font-size:14px; margin-bottom:10px;">📈 RSI Дивергенции</h4>
+            <div id="rsiList" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <p style="color:#8e8e93; grid-column: 1/-1; text-align:center;">Загрузка...</p>
+            </div>
+        </div>
+        
+        <!-- Ссылка на полную карту ликвидаций -->
+        <div style="margin-top:20px; padding:15px; background:rgba(255,59,48,0.1); border-radius:8px; text-align:center;">
+            <p style="font-size:12px; color:#8e8e93; margin-bottom:10px;">️ Полная карта ликвидаций:</p>
+            <a href="https://www.coinglass.com/pro/futures/LiquidationHeatMap" target="_blank" 
+               class="btn" style="display:inline-block; padding:8px 16px; font-size:13px; text-decoration:none;">
+                Открыть Coinglass ↗
+            </a>
+        </div>
+    </div>
+
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
         <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
@@ -191,6 +221,7 @@
         <button class="btn btn-secondary" onclick="toggleCalculator()">🧮 Калькулятор риска</button>
         <button class="btn btn-secondary" onclick="toggleMarketData()">🌍 Обзор рынка</button>
         <button class="btn btn-secondary" onclick="toggleLiquidations()">💥 Карта ликвидаций</button>
+        <button class="btn btn-secondary" onclick="toggleDerivatives()">📊 Funding & RSI</button>
         <button class="btn btn-secondary" onclick="shareStats()">📤 Поделиться статистикой</button>
         <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
     </div>
@@ -966,6 +997,58 @@
             document.getElementById('marketDataCard').classList.add('hidden');
             
             card.classList.toggle('hidden');
+        }
+
+                function toggleDerivatives() {
+            var card = document.getElementById('derivativesCard');
+            var isHidden = card.classList.contains('hidden');
+            // Скрываем остальные
+            ['analysesCard', 'youtubeCard', 'coinAnalysisCard', 'feedCard', 
+             'calculatorCard', 'marketDataCard', 'liquidationCard'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            card.classList.toggle('hidden');
+            if (isHidden) loadDerivativesData();
+        }
+
+        function loadDerivativesData() {
+            fetch('/api/derivatives_data')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    // Funding Rates
+                    var fundingHtml = '';
+                    if (Object.keys(data.funding).length === 0) {
+                        fundingHtml = '<p style="color:#00e676; text-align:center;">✅ Нет экстремальных funding rates</p>';
+                    } else {
+                        for (var coin in data.funding) {
+                            var f = data.funding[coin];
+                            var color = f.rate.includes('-') ? '#00e676' : '#ff3b30';
+                            fundingHtml += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:6px;">' +
+                                '<div><strong style="color:#fff;">' + f.extreme + ' ' + coin + '</strong></div>' +
+                                '<div style="text-align:right;">' +
+                                    '<div style="color:' + color + '; font-weight:bold;">' + f.rate + '</div>' +
+                                    '<div style="font-size:11px; color:#8e8e93;">След: ' + f.next + '</div>' +
+                                '</div>' +
+                            '</div>';
+                        }
+                    }
+                    document.getElementById('fundingList').innerHTML = fundingHtml;
+                    
+                    // RSI
+                    var rsiHtml = '';
+                    for (var pair in data.rsi) {
+                        var r = data.rsi[pair];
+                        var [coin, tf] = pair.split('_');
+                        var color = r.value > 70 ? '#ff3b30' : r.value < 30 ? '#00e676' : '#ffcc00';
+                        rsiHtml += '<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:6px; text-align:center;">' +
+                            '<div style="font-size:12px; color:#8e8e93;">' + coin + ' ' + tf + '</div>' +
+                            '<div style="font-size:20px; font-weight:bold; color:' + color + ';">' + r.value + '</div>' +
+                            '<div style="font-size:11px; color:#8e8e93;">' + r.signal + '</div>' +
+                        '</div>';
+                    }
+                    document.getElementById('rsiList').innerHTML = rsiHtml;
+                })
+                .catch(function(err) { console.error('Derivatives Error:', err); });
         }
 
         function loadMarketData() {
