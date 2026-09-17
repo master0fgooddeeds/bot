@@ -84,23 +84,38 @@ def load_analyses():
                 json.dump({}, f)
         with open(ANALYSES_FILE, "r") as f: return json.load(f)
     except: return {}
-
 def save_stat(setup, result, pnl):
     stats = load_stats()
     stats["total"] += 1
-    status_text = {"tp": "TP", "sl": "SL", "skipped_tp": "Пропуск", "expired": "Истек", "admin_cancel": "Отмена"}.get(result, "Неизвестно")
+    status_text = {"tp": "TP", "sl": "SL", "skipped_tp": "Пропуск", "expired": "Истек", "admin_cancel": "Отмена", "manual": "Ручное"}.get(result, "Неизвестно")
     if result == "tp": stats["wins"] += 1
     elif result == "sl": stats["losses"] += 1
     elif result == "skipped_tp": stats["skipped"] += 1
     elif result in ["expired", "admin_cancel"]: stats["expired"] += 1
     
+    # PnL в процентах
     stats["pnl"] = round(stats["pnl"] + pnl, 2)
-    stats["history"].append({"date": datetime.now().strftime("%d.%m.%Y"), "sym": setup["sym"], "tf": setup["tf"], "dir": setup["dir"], "result": status_text, "pnl": round(pnl, 2)})
+    
+    # PnL в долларах (от текущего баланса)
+    pnl_usd = stats["balance"] * (pnl / 100)
+    stats["pnl_usd"] = round(stats["pnl_usd"] + pnl_usd, 2)
+    stats["balance"] = round(stats["balance"] + pnl_usd, 2)
+    
+    stats["history"].append({
+        "date": datetime.now().strftime("%d.%m.%Y %H:%M"), 
+        "sym": setup["sym"], 
+        "tf": setup["tf"], 
+        "dir": setup["dir"], 
+        "result": status_text, 
+        "pnl": round(pnl, 2),
+        "pnl_usd": round(pnl_usd, 2)
+    })
     
     if len(stats["history"]) > 1000:
         stats["history"] = stats["history"][-1000:]
     
-    with open(STATS_FILE, "w") as f: json.dump(stats, f, indent=2)
+    with open(STATS_FILE, "w") as f: 
+        json.dump(stats, f, indent=2)
 
 def save_analysis(setup_id, data):
     analyses = load_analyses()
