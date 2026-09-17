@@ -869,7 +869,7 @@ def setup_webhook():
 def dashboard_page():
     return render_template('dashboard.html')
 
-@app.route('/api/stats')
+
 @app.route('/api/stats')
 def api_stats():
     stats = load_stats()
