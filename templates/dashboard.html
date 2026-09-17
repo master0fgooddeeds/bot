@@ -1280,59 +1280,7 @@
             document.getElementById('liqShortCount').innerText = shortCount;
         }
 
-        function toggleDerivatives() {
-            var card = document.getElementById('derivativesCard');
-            var isHidden = card.classList.contains('hidden');
-            // Скрываем остальные
-            ['analysesCard', 'youtubeCard', 'coinAnalysisCard', 'feedCard', 
-             'calculatorCard', 'marketDataCard', 'liquidationCard'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            card.classList.toggle('hidden');
-            if (isHidden) loadDerivativesData();
-        }
-
-        function loadDerivativesData() {
-            fetch('/api/derivatives_data')
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    // Funding Rates
-                    var fundingHtml = '';
-                    if (Object.keys(data.funding).length === 0) {
-                        fundingHtml = '<p style="color:#00e676; text-align:center;">✅ Нет экстремальных funding rates</p>';
-                    } else {
-                        for (var coin in data.funding) {
-                            var f = data.funding[coin];
-                            var color = f.rate.includes('-') ? '#00e676' : '#ff3b30';
-                            fundingHtml += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:6px;">' +
-                                '<div><strong style="color:#fff;">' + f.extreme + ' ' + coin + '</strong></div>' +
-                                '<div style="text-align:right;">' +
-                                    '<div style="color:' + color + '; font-weight:bold;">' + f.rate + '</div>' +
-                                    '<div style="font-size:11px; color:#8e8e93;">След: ' + f.next + '</div>' +
-                                '</div>' +
-                            '</div>';
-                        }
-                    }
-                    document.getElementById('fundingList').innerHTML = fundingHtml;
-                    
-                    // RSI
-                    var rsiHtml = '';
-                    for (var pair in data.rsi) {
-                        var r = data.rsi[pair];
-                        var parts = pair.split('_');
-                        var coin = parts[0];
-                        var tf = parts[1];
-                        var color = r.value > 70 ? '#ff3b30' : r.value < 30 ? '#00e676' : '#ffcc00';
-                        rsiHtml += '<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:6px; text-align:center;">' +
-                            '<div style="font-size:12px; color:#8e8e93;">' + coin + ' ' + tf + '</div>' +
-                            '<div style="font-size:20px; font-weight:bold; color:' + color + ';">' + r.value + '</div>' +
-                            '<div style="font-size:11px; color:#8e8e93;">' + r.signal + '</div>' +
-                        '</div>';
-                    }
-                    document.getElementById('rsiList').innerHTML = rsiHtml;
-                })
-                .catch(function(err) { console.error('Derivatives Error:', err); });
-        }
+        
         refreshData();
         loadFearGreed();
     </script>
