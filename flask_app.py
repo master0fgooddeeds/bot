@@ -727,18 +727,7 @@ _Платформа в разработке. Следим за прогресс�
                         tg("sendMessage", data={"chat_id": uid, "text": "❌ Неверная цена. Формат: /manual_close ID ЦЕНА"})
                 return
 
-            if txt.startswith("/test_setup ") and is_admin(uid):
 
-            if txt.startswith("/test_setup ") and is_admin(uid):
-                parts = txt.split()
-                if len(parts) >= 4:
-                    sym = parts[1].upper()
-                    tf = parts[2]
-                    direction = parts[3].lower()
-                    sid = new_pending(sym, tf, direction, None)
-                    kb = {"inline_keyboard": [[{"text": f" BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
-                    tg("sendMessage", data={"chat_id": uid, "text": f" *ТЕСТОВЫЙ СЕТАП #{sid}*\n\n{sym} {tf} {direction}\n\nНажми 'Сетап готов' и отправь данные.", "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
-                return
 
         if is_admin(uid) and str(uid) in BX.get("wait_link", {}):
             sid = BX["wait_link"].pop(str(uid))
