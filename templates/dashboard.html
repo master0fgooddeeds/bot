@@ -342,39 +342,38 @@
         </div>
     </div>
 
-        <!-- СЕКРЕТНАЯ ЗОНА (АДМИН-ПАНЕЛЬ) -->
-    <div class="card hidden" id="secretZone">
-        <h3 style="margin:0 0 10px 0;">🔥 ADMIN PANEL</h3>
-        <p style="margin:0 0 15px 0;">Полный доступ к управлению ботом</p>
+<div class="card hidden" id="secretZone">
+    <h3 style="margin:0 0 10px 0;">🔥 ADMIN PANEL</h3>
+    <p style="margin:0 0 15px 0;">Полный доступ к управлению ботом</p>
+    
+    <div class="btn-container" style="margin-top:15px;">
+        <button class="btn btn-success" onclick="showCreateForm()"> Создать разбор сделки</button>
+        <button class="btn btn-secondary" onclick="enableEditMode()">️ Редактировать сделки</button>
+        <button class="btn btn-danger" onclick="enableDeleteMode()"> Удалить сделки</button>
+        <button class="btn btn-success" onclick="showCoinAnalysisForm()">🪙 Создать разбор монет</button>
         
-        <div class="btn-container" style="margin-top:15px;">
-            <button class="btn btn-success" onclick="showCreateForm()"> Создать разбор сделки</button>
-            <button class="btn btn-secondary" onclick="enableEditMode()">️ Редактировать сделки</button>
-            <button class="btn btn-danger" onclick="enableDeleteMode()">🗑 Удалить сделки</button>
-            <button class="btn btn-success" onclick="showCoinAnalysisForm()">🪙 Создать разбор монет</button>
-            
-            <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
-                <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">️ Управление статистикой</h4>
-                <button class="btn" onclick="window.open('https://t.me/mtcthunter_bot', '_blank')" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
-                     Сбросить статистику (в боте /reset_stats)
-                </button>
-                <button class="btn btn-secondary" onclick="window.open('https://t.me/mtcthunter_bot', '_blank')" style="margin-top:10px;">
-                    💰 Установить депозит (в боте /set_deposit)
-                </button>
-            </div>
-            
-            <div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:12px; color:#8e8e93;">
-                💡 Все команды доступны в Telegram боте:<br>
-                /reset_stats - сброс статистики<br>
-                /set_deposit XXXX - установить депозит<br>
-                /balance - проверить баланс<br>
-                /active - активные сетапы
-            </div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+            <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">️ Управление статистикой</h4>
+            <button class="btn" onclick="tg.sendData(JSON.stringify({action: 'reset_stats'})); tg.close();" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
+                 🔄 Сбросить статистику
+            </button>
+            <button class="btn btn-secondary" onclick="tg.showAlert(' Для установки депозита используй команду в боте:\n/set_deposit 10000\n\n(где 10000 — твоя сумма)')" style="margin-top:10px;">
+                💰 Установить депозит
+            </button>
         </div>
         
-        <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
-        <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
+        <div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:12px; color:#8e8e93;">
+            💡 Все команды доступны в Telegram боте:<br>
+            /reset_stats - сброс статистики<br>
+            /set_deposit XXXX - установить депозит<br>
+            /balance - проверить баланс<br>
+            /active - активные сетапы
+        </div>
     </div>
+    
+    <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
+    <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
+</div>
 
     <!-- МОДАЛЬНОЕ ОКНО -->
     <div id="viewModal" class="modal-overlay hidden" onclick="closeModal(event)">
@@ -397,15 +396,7 @@
         <p class="brand">My Trading Club</p>
         <p>© 2026 MTC Platform</p>
         
-        <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
-            <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">️ Управление статистикой</h4>
-            <button class="btn" onclick="tg.sendData(JSON.stringify({action: 'reset_stats'})); tg.close();" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
-                 Сбросить статистику
-            </button>
-            <button class="btn btn-secondary" onclick="tg.showAlert(' Для установки депозита используй команду в боте:\n/set_deposit 10000\n\n(где 10000 — твоя сумма)')" style="margin-top:10px;">
-                💰 Установить депозит
-            </button>
-        </div>
+        
         
         <p style="font-size: 12px; opacity: 0.6;">@mtcthunter_bot</p>
     </div>
