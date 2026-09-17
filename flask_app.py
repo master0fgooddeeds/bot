@@ -59,9 +59,22 @@ def load_stats():
     try:
         if not os.path.exists(STATS_FILE):
             with open(STATS_FILE, "w") as f:
-                json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "pnl": 0.0, "history": []}, f)
-        with open(STATS_FILE, "r") as f: return json.load(f)
-    except: return {"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "pnl": 0.0, "history": []}
+                json.dump({
+                    "total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, 
+                    "pnl": 0.0, "pnl_usd": 0.0, "deposit": 10000.0, "balance": 10000.0, "history": []
+                }, f)
+        with open(STATS_FILE, "r") as f: 
+            data = json.load(f)
+            # Миграция для старых файлов: добавляем поля, если их нет
+            if "deposit" not in data: data["deposit"] = 10000.0
+            if "balance" not in data: data["balance"] = data.get("deposit", 10000.0)
+            if "pnl_usd" not in data: data["pnl_usd"] = 0.0
+            return data
+    except: 
+        return {
+            "total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, 
+            "pnl": 0.0, "pnl_usd": 0.0, "deposit": 10000.0, "balance": 10000.0, "history": []
+        }
 
 def load_analyses():
     import os
