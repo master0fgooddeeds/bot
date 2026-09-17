@@ -1232,12 +1232,12 @@
 
     <!-- TradingView Widget -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script>
+        <script>
     function initTradingView() {
         try {
             new TradingView.widget({
                 "width": "100%",
-                "height": 400,
+                "height": 550, // Чуть увеличил высоту, чтобы панель с инструментами влезла комфортно
                 "symbol": "BITGET:BTCUSDT.P",
                 "interval": "15",
                 "timezone": "exchange",
@@ -1247,9 +1247,9 @@
                 "toolbar_bg": "#1e1e32",
                 "enable_publishing": false,
                 "allow_symbol_change": true,
-                "save_image": false,
+                "save_image": true,          // <--- ВКЛЮЧАЕМ СКРИНШОТЫ (иконка камеры)
                 "container_id": "tradingview_widget",
-                "hide_top_toolbar": false,
+                "hide_top_toolbar": false,   // <--- ВКЛЮЧАЕМ ПАНЕЛЬ С РИСОВАЛКАМИ!
                 "hide_legend": false,
                 "withdateranges": true,
                 "range": "1D",
@@ -1258,17 +1258,14 @@
                 "popup_width": "1000",
                 "popup_height": "650"
             });
-            console.log("✅ TradingView chart loaded");
+            console.log("✅ TradingView chart loaded with full toolbar");
         } catch(e) {
             console.error("⚠️ TradingView error:", e);
             document.getElementById('tradingview_widget').innerHTML = 
                 '<p style="text-align:center; padding:50px; color:#8e8e93;">⚠️ График загружается...</p>';
         }
     }
-    
-    window.addEventListener('load', function() {
-        setTimeout(initTradingView, 1000);
-    });
-    </script>    
+    window.addEventListener('load', function() { setTimeout(initTradingView, 1000); });
+    </script>   
 </body>
 </html>
