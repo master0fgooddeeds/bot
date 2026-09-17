@@ -1182,7 +1182,7 @@
                 .catch(function(err) { console.error('Derivatives Error:', err); });
         }
 
-        function loadMarketData() {
+                function loadMarketData() {
             fetch('/api/market_data')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
@@ -1203,84 +1203,7 @@
                 .catch(function(err) { console.error('Market Data Error:', err); });
         }
 
-
-                function toggleLiquidations() {
-            var card = document.getElementById('liquidationCard');
-            var isHidden = card.classList.contains('hidden');
-            // Скрываем остальные
-            ['analysesCard', 'youtubeCard', 'coinAnalysisCard', 'feedCard', 
-             'calculatorCard', 'marketDataCard', 'derivativesCard'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            card.classList.toggle('hidden');
-            if (isHidden) {
-                loadLiquidations();
-                // Автообновление каждые 10 секунд
-                window.liqInterval = setInterval(loadLiquidations, 10000);
-            } else {
-                clearInterval(window.liqInterval);
-            }
-        }
-
-        var currentLiqFilter = 'all';
-        var allLiquidations = [];
-
-        function loadLiquidations() {
-            fetch('/api/liquidations')
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    allLiquidations = data;
-                    renderLiquidations();
-                })
-                .catch(function(err) { console.error('Liquidations Error:', err); });
-        }
-
-        function filterLiq(type) {
-            currentLiqFilter = type;
-            renderLiquidations();
-        }
-
-        function renderLiquidations() {
-            var filtered = allLiquidations;
-            if (currentLiqFilter !== 'all') {
-                filtered = allLiquidations.filter(function(l) { return l.side === currentLiqFilter; });
-            }
-            
-            var html = '';
-            var longCount = 0;
-            var shortCount = 0;
-            
-            filtered.forEach(function(liq) {
-                var color = liq.side === 'LONG' ? '#ff3b30' : '#00e676';
-                var emoji = liq.side === 'LONG' ? '🔴' : '🟢';
-                var bg = liq.side === 'LONG' ? 'rgba(255,59,48,0.1)' : 'rgba(0,230,118,0.1)';
-                
-                if (liq.side === 'LONG') longCount++;
-                else shortCount++;
-                
-                html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin:5px 0; background:' + bg + '; border-radius:6px; border-left:3px solid ' + color + '">' +
-                    '<div>' +
-                        '<div style="font-weight:bold; color:#fff;">' + emoji + ' ' + liq.symbol + '</div>' +
-                        '<div style="font-size:11px; color:#8e8e93;">' + liq.time + '</div>' +
-                    '</div>' +
-                    '<div style="text-align:right;">' +
-                        '<div style="color:' + color + '; font-weight:bold; font-size:13px;">' + liq.side + '</div>' +
-                        '<div style="font-size:12px;">$' + liq.price.toLocaleString() + '</div>' +
-                        '<div style="font-size:11px; color:#8e8e93;">' + (liq.value/1000).toFixed(1) + 'k</div>' +
-                    '</div>' +
-                '</div>';
-            });
-            
-            if (filtered.length === 0) {
-                html = '<p style="text-align:center; color:#8e8e93; padding:20px;">Нет ликвидаций</p>';
-            }
-            
-            document.getElementById('liquidationList').innerHTML = html;
-            document.getElementById('liqLongCount').innerText = longCount;
-            document.getElementById('liqShortCount').innerText = shortCount;
-        }
-
-        
+        // Запуск при загрузке страницы
         refreshData();
         loadFearGreed();
     </script>
@@ -1288,7 +1211,6 @@
     <!-- TradingView Widget -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-    // Инициализация графика TradingView
     function initTradingView() {
         try {
             new TradingView.widget({
@@ -1322,7 +1244,6 @@
         }
     }
     
-    // Запускаем после загрузки страницы
     window.addEventListener('load', function() {
         setTimeout(initTradingView, 1000);
     });
