@@ -1232,14 +1232,14 @@
 
     <!-- TradingView Widget -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-        <script>
+    <script>
     function initTradingView() {
         try {
             new TradingView.widget({
                 "width": "100%",
-                "height": 550, // Чуть увеличил высоту, чтобы панель с инструментами влезла комфортно
+                "height": 650,
                 "symbol": "BITGET:BTCUSDT.P",
-                "interval": "15",
+                "interval": "60",
                 "timezone": "exchange",
                 "theme": "dark",
                 "style": "1",
@@ -1247,16 +1247,24 @@
                 "toolbar_bg": "#1e1e32",
                 "enable_publishing": false,
                 "allow_symbol_change": true,
-                "save_image": true,          // <--- ВКЛЮЧАЕМ СКРИНШОТЫ (иконка камеры)
+                "save_image": true,
                 "container_id": "tradingview_widget",
-                "hide_top_toolbar": true,   // <--- ВКЛЮЧАЕМ ПАНЕЛЬ С РИСОВАЛКАМИ!
+                "hide_top_toolbar": false,
+                "hide_side_toolbar": false,
                 "hide_legend": false,
                 "withdateranges": true,
                 "range": "1D",
                 "studies": ["MASimple@tv-basicstudies"],
                 "show_popup_button": true,
                 "popup_width": "1000",
-                "popup_height": "650"
+                "popup_height": "650",
+                "time_frames": [
+                    { text: "1ч", resolution: "60", description: "1 час" },
+                    { text: "4ч", resolution: "240", description: "4 часа" },
+                    { text: "1Д", resolution: "D", description: "1 день" },
+                    { text: "1Н", resolution: "W", description: "1 неделя" },
+                    { text: "1М", resolution: "M", description: "1 месяц" }
+                ]
             });
             console.log("✅ TradingView chart loaded with full toolbar");
         } catch(e) {
@@ -1266,6 +1274,6 @@
         }
     }
     window.addEventListener('load', function() { setTimeout(initTradingView, 1000); });
-    </script>   
+    </script>  
 </body>
 </html>
