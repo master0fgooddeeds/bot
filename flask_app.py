@@ -674,24 +674,24 @@ _Платформа в разработке. Следим за прогресс�
                         tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
                 return
 
-             if txt.startswith('/manual_close ') and is_admin(uid):
-                parts = txt.split()
-                if len(parts) >= 3:
-                    sid = parts[1]
-                    try:
-                        manual_price = float(parts[2])
-                        s = BX["active"].pop(sid, None)
-                        if s:
-                            s["status"] = "closed"
-                            s["close_result"] = "manual"
-                            entry = s["entry_price"]
-                            pnl_pct = (entry - manual_price) / entry * 100 if s["dir"] == "short" else (manual_price - entry) / entry * 100
-                            pnl_sign = "+" if pnl_pct > 0 else ""
+                if txt.startswith('/manual_close ') and is_admin(uid):
+                    parts = txt.split()
+                    if len(parts) >= 3:
+                        sid = parts[1]
+                        try:
+                            manual_price = float(parts[2])
+                            s = BX["active"].pop(sid, None)
+                            if s:
+                                s["status"] = "closed"
+                                s["close_result"] = "manual"
+                                entry = s["entry_price"]
+                                pnl_pct = (entry - manual_price) / entry * 100 if s["dir"] == "short" else (manual_price - entry) / entry * 100
+                                pnl_sign = "+" if pnl_pct > 0 else ""
                             
-                            save_stat(s, "manual", pnl_pct)
-                            bx_save()
+                                save_stat(s, "manual", pnl_pct)
+                                bx_save()
                             
-                            cap = f""" *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}
+                                cap = f""" *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}
 📊 Цена закрытия: `{manual_price:,.2f}`
 📈 Результат: {pnl_sign}{pnl_pct:.2f}%"""
                             if s.get("vip_msg"):
