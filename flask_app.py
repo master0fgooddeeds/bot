@@ -674,7 +674,7 @@ _Платформа в разработке. Следим за прогресс�
                         tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
                 return
 
-                        if txt.startswith('/manual_close ') and is_admin(uid):
+             if txt.startswith('/manual_close ') and is_admin(uid):
                 parts = txt.split()
                 if len(parts) >= 3:
                     sid = parts[1]
@@ -697,7 +697,7 @@ _Платформа в разработке. Следим за прогресс�
                             if s.get("vip_msg"):
                                 try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                                 except: pass
-                            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
+                            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
                             tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную @ {manual_price:,.2f}\nPnL: {pnl_sign}{pnl_pct:.2f}%"})
                         else:
                             tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
