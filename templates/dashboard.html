@@ -419,7 +419,7 @@
             lastClickTime = now;
         });
 
-        function refreshData() {
+                function refreshData() {
             document.getElementById('total').innerText = 'Загрузка...';
             fetch('/api/stats', { headers: { 'X-Telegram-Init-Data': tg.initData || '' } })
             .then(function(r) { return r.json(); })
@@ -427,7 +427,27 @@
                 userRole = data.role || 'guest';
                 document.getElementById('total').innerText = data.total || 0;
                 document.getElementById('winrate').innerText = (data.winrate || 0) + '%';
-                document.getElementById('pnl').innerText = (data.pnl || 0) + '%';
+                
+                // Баланс и депозит
+                var balance = data.balance || 10000;
+                var deposit = data.deposit || 10000;
+                var pnlUsd = data.pnl_usd || 0;
+                var pnl = data.pnl || 0;
+                
+                document.getElementById('balance').innerText = '$' + balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('deposit').innerText = '$' + deposit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                
+                // PnL в $ с цветом
+                var pnlUsdEl = document.getElementById('pnlUsd');
+                var pnlEl = document.getElementById('pnl');
+                pnlUsdEl.innerText = (pnlUsd >= 0 ? '+$' : '-$') + Math.abs(pnlUsd).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                pnlEl.innerText = (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%';
+                
+                // Цвета для прибыли/убытка
+                pnlUsdEl.style.color = pnlUsd >= 0 ? '#00e676' : '#ff3b30';
+                pnlEl.style.color = pnl >= 0 ? '#00e676' : '#ff3b30';
+                document.getElementById('balance').style.color = balance >= deposit ? '#00e676' : '#ff3b30';
+                
                 setTimeout(function() {
                     var ctx = document.getElementById('myChart').getContext('2d');
                     if (chartInstance) { chartInstance.data.datasets[0].data = [data.wins||0, data.losses||0, (data.skipped||0)+(data.expired||0)]; chartInstance.update(); }
