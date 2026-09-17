@@ -839,6 +839,7 @@ def dashboard_page():
     return render_template('dashboard.html')
 
 @app.route('/api/stats')
+@app.route('/api/stats')
 def api_stats():
     stats = load_stats()
     total = stats.get("total", 0)
@@ -847,10 +848,25 @@ def api_stats():
     skipped = stats.get("skipped", 0)
     expired = stats.get("expired", 0)
     pnl = stats.get("pnl", 0.0)
+    pnl_usd = stats.get("pnl_usd", 0.0)
+    deposit = stats.get("deposit", 10000.0)
+    balance = stats.get("balance", 10000.0)
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
-    return jsonify({"role": "admin", "total": total, "wins": wins, "losses": losses, "skipped": skipped, "expired": expired, "winrate": winrate, "pnl": pnl, "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))})
-
-@app.route('/api/youtube', methods=['GET'])
+    return jsonify({
+        "role": "admin", 
+        "total": total, 
+        "wins": wins, 
+        "losses": losses, 
+        "skipped": skipped, 
+        "expired": expired, 
+        "winrate": winrate, 
+        "pnl": pnl,
+        "pnl_usd": pnl_usd,
+        "deposit": deposit,
+        "balance": balance,
+        "history": stats.get("history", []), 
+        "active_setups_count": len(BX.get('active', {}))
+    })
 def api_youtube():
     try:
         # Парсим HTML страницы НАШЕГО канала
