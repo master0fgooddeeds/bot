@@ -728,6 +728,8 @@ _Платформа в разработке. Следим за прогресс�
                 return
 
             if txt.startswith("/test_setup ") and is_admin(uid):
+
+            if txt.startswith("/test_setup ") and is_admin(uid):
                 parts = txt.split()
                 if len(parts) >= 4:
                     sym = parts[1].upper()
