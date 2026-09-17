@@ -1233,6 +1233,40 @@ def api_liquidations():
     except Exception as e:
         print(f"Liquidations API error: {e}")
         return jsonify([])
+
+@app.route('/api/check_vip', methods=['GET'])
+def check_vip():
+    """Проверяет, подписан ли пользователь на VIP канал"""
+    init_data = request.headers.get('X-Telegram-Init-Data', '')
+    try:
+        import urllib.parse
+        data = dict(urllib.parse.parse_qsl(init_data))
+        user = json.loads(data.get('user', '{}'))
+        user_id = user.get('id')
+        
+        if not user_id:
+            return jsonify({"is_vip": False})
+        
+        # Запрашиваем статус участника в Telegram API (используем CHAT как VIP канал)
+        r = requests.get(
+            f"https://api.telegram.org/bot{TOKEN}/getChatMember", 
+            params={"chat_id": CHAT, "user_id": user_id},
+            timeout=5
+        )
+        res = r.json()
+        
+        if res.get("ok"):
+            status = res["result"]["status"]
+            # member, administrator, creator - всё это считается активной подпиской
+            if status in ["member", "administrator", "creator"]:
+                return jsonify({"is_vip": True})
+                
+        return jsonify({"is_vip": False})
+    except Exception as e:
+        print(f"Check VIP error: {e}")
+        return jsonify({"is_vip": False})
+
+
 if __name__ == "__main__":
     import os
     import threading
