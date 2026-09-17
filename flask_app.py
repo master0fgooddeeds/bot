@@ -870,7 +870,7 @@ def dashboard_page():
     return render_template('dashboard.html')
 
 
-@app.route('/api/stats')
+@app.route('/api/stats', methods=['GET'])
 def api_stats():
     stats = load_stats()
     total = stats.get("total", 0)
@@ -898,6 +898,8 @@ def api_stats():
         "history": stats.get("history", []), 
         "active_setups_count": len(BX.get('active', {}))
     })
+
+@app.route('/api/youtube', methods=['GET'])
 def api_youtube():
     try:
         # Парсим HTML страницы НАШЕГО канала
