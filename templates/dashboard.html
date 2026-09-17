@@ -412,10 +412,33 @@
         var tg = window.Telegram.WebApp; tg.expand();
         var userRole = 'guest', clickCount = 0, lastClickTime = 0, chartInstance = null, allAnalyses = [];
 
-        document.getElementById('logo').addEventListener('click', function() {
+                document.getElementById('logo').addEventListener('click', function() {
             var now = Date.now();
-            if (now - lastClickTime < 1000) { clickCount++; if (clickCount >= 5 && userRole === 'admin') { document.getElementById('secretZone').classList.remove('hidden'); clickCount = 0; } }
-            else { clickCount = 1; }
+            if (now - lastClickTime < 1000) { 
+                clickCount++; 
+                if (clickCount >= 5) {
+                    // Проверяем реальную подписку через API
+                    fetch('/api/check_vip', { headers: { 'X-Telegram-Init-Data': tg.initData || '' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.is_vip) {
+                            // Подписан: открываем админку
+                            document.getElementById('secretZone').classList.remove('hidden');
+                            tg.showAlert("🔓 Доступ к ADMIN PANEL разрешен!");
+                        } else {
+                            // Не подписан: отказываем в доступе
+                            tg.showAlert("🔒 Доступ запрещен!\n\nДля доступа к админ-панели необходимо быть подписанным на VIP канал.");
+                        }
+                        clickCount = 0; // Сбрасываем счетчик в любом случае
+                    })
+                    .catch(function(err) {
+                        console.error('VIP Check Error:', err);
+                        clickCount = 0;
+                    });
+                } 
+            } else { 
+                clickCount = 1; 
+            }
             lastClickTime = now;
         });
 
