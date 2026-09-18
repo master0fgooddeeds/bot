@@ -516,6 +516,44 @@
                 .catch(function(err) { console.error('FG Error:', err); });
         }
 
+        function updateGaugeChart(value, label) {
+    var ctx = document.getElementById('fgGauge').getContext('2d');
+    if (window.fgChart) window.fgChart.destroy();
+    
+    var color = '#ffcc00';
+    if (value <= 25) color = '#ff3b30';
+    else if (value <= 45) color = '#ff9500';
+    else if (value <= 55) color = '#ffcc00';
+    else if (value <= 75) color = '#a2e000';
+    else color = '#00e676';
+    
+    document.getElementById('fgValueBig').innerText = value;
+    document.getElementById('fgValueBig').style.color = color;
+    document.getElementById('fgLabelBig').innerText = label;
+    document.getElementById('fgLabelBig').style.color = color;
+    
+    window.fgChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Страх', 'Текущее', 'Жадность'],
+            datasets: [{
+                data: [value, 100 - value, 0],
+                backgroundColor: [color, 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)'],
+                borderWidth: 0,
+                circumference: 180,
+                rotation: 270,
+                cutout: '75%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            animation: { animateRotate: true, duration: 1000 }
+        }
+    });
+}
+
         function toggleAnalyses() {
             var card = document.getElementById('analysesCard');
             card.classList.toggle('hidden');
