@@ -1250,6 +1250,54 @@ def api_derivatives_data():
         print(f"Derivatives API error: {e}")
         return jsonify({"error": str(e)})
 
+@app.route('/api/liquidations')
+def api_liquidations():
+    """Волатильность/Ликвидации через BingX (топ движущиеся монеты)"""
+    try:
+        r = requests.get(
+            "https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
+            timeout=10
+        )
+        
+        if r.status_code == 200:
+            data = r.json()
+            if data.get('code') == 0:
+                tickers = data.get('data', [])
+                
+                # Сортируем по проценту изменения за 24ч (имитация зон ликвидаций)
+                sorted_tickers = sorted(
+                    tickers, 
+                    key=lambda x: abs(float(x.get('priceChangePercent', 0))), 
+                    reverse=True
+                )[:50]
+                
+                liq_data = []
+                for item in sorted_tickers:
+                    symbol = item.get('symbol', '').replace('-USDT', '')
+                    if not symbol:
+                        continue
+                    
+                    price = float(item.get('lastPrice', 0))
+                    pct = float(item.get('priceChangePercent', 0))
+                    volume = float(item.get('quoteVolume', 0))
+                    
+                    liq_data.append({
+                        'symbol': symbol,
+                        'side': 'LONG' if pct < 0 else 'SHORT',
+                        'price': price,
+                        'qty': 0,
+                        'value': volume,
+                        'time': datetime.now().strftime('%H:%M:%S')
+                    })
+                
+                return jsonify(liq_data)
+        
+        return jsonify([])
+    except Exception as e:
+        print(f"Liquidations API error: {e}")
+        return jsonify([])
+
+
 @app.route('/api/check_vip', methods=['GET'])
 def check_vip():
     """Проверяет, подписан ли пользователь на VIP канал"""
