@@ -72,6 +72,55 @@
             <a href="https://bingx.com/ru/perpetual/BTC-USDT" target="_blank" class="btn" style="padding:10px; font-size:14px; margin-top:10px;">🔷 Торговать BTC на BingX</a>
         </div>
     </div>
+
+    <!-- ПОСЛЕДНЕЕ ВИДЕО С YOUTUBE НА ГЛАВНОЙ -->
+<div class="card hidden" id="latestVideoCard" style="border: 2px solid #ff6b35; background: rgba(255, 107, 53, 0.05);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+        <h3 style="margin: 0; color: #ff6b35; font-size: 16px;">🎥 Свежее видео на канале!</h3>
+        <span style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">NEW</span>
+    </div>
+    
+    <div id="latestVideoContent">
+        <div style="text-align: center; padding: 20px; color: #8e8e93;">Проверка...</div>
+    </div>
+    
+    <button class="btn btn-secondary" onclick="document.getElementById('latestVideoCard').classList.add('hidden')" style="margin-top: 15px; font-size: 13px; padding: 8px;">
+        Скрыть уведомление
+    </button>
+</div>
+
+<script>
+// Функция проверки нового видео (добавь в конец скрипта)
+function checkLatestVideo() {
+    fetch('/api/youtube')
+        .then(r => r.json())
+        .then(videos => {
+            if (videos && videos.length > 0) {
+                const latest = videos[0];
+                const lastViewed = localStorage.getItem('lastMtcVideoViewed');
+                
+                if (lastViewed !== latest.id) {
+                    const html = `
+                        <div style="cursor: pointer;" onclick="openVideoModal('${latest.id}', '${latest.title.replace(/'/g, "\\'")}')">
+                            <img src="${latest.thumbnail}" style="width: 100%; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h4 style="margin: 0 0 10px 0; color: #fff; font-size: 15px; line-height: 1.4;">${latest.title}</h4>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: #8e8e93; font-size: 12px;">Нажмите, чтобы посмотреть</span>
+                                <span style="background: #ff6b35; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">Смотреть ▶</span>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('latestVideoContent').innerHTML = html;
+                    document.getElementById('latestVideoCard').classList.remove('hidden');
+                    localStorage.setItem('lastMtcVideoViewed', latest.id);
+                }
+            }
+        })
+        .catch(err => console.error('Video check error:', err));
+}
+// Вызываем при загрузке
+checkLatestVideo();
+</script>
         <!-- ИНДЕКС СТРАХА И ЖАДНОСТИ -->
         <!-- ИНДЕКС СТРАХА И ЖАДНОСТИ (СПИДОМЕТР) -->
     <div class="card" id="fearGreedCard">
