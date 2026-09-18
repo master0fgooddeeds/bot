@@ -1170,107 +1170,143 @@ def api_derivatives_data():
     """Funding Rates + RSI (через Bybit)"""
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'application/json'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Origin': 'https://www.bybit.com',
+            'Referer': 'https://www.bybit.com/'
         }
         
-        # 1. FUNDING RATES через Bybit
         funding_data = {}
+        
+        # 1. FUNDING RATES через Bybit
         try:
+            print("🔍 Запрашиваем Funding Rates с Bybit...")
             r = requests.get(
                 "https://api.bybit.com/v5/market/tickers",
                 params={"category": "linear"},
                 headers=headers,
-                timeout=10
+                timeout=15
             )
             
-            # Проверяем, что вернулся JSON
-            if r.headers.get('content-type') and 'application/json' in r.headers.get('content-type'):
-                data = r.json()
-                
-                if data.get("retCode") == 0 and data.get("result", {}).get("list"):
-                    tickers = data["result"]["list"]
-                    sorted_tickers = sorted(
-                        tickers, 
-                        key=lambda x: abs(float(x.get('fundingRate', 0))), 
-                        reverse=True
-                    )
+            print(f"📡 Status Code: {r.status_code}")
+            print(f" Content-Type: {r.headers.get('content-type', 'Unknown')}")
+            print(f"📡 Response length: {len(r.text)} bytes")
+            
+            # Показываем первые 500 символов ответа для отладки
+            print(f"📡 Response preview: {r.text[:500]}")
+            
+            if r.status_code == 200:
+                try:
+                    data = r.json()
+                    print(f"✅ JSON распаршен. RetCode: {data.get('retCode')}")
                     
-                    for item in sorted_tickers[:15]:
-                        symbol = item['symbol'].replace('USDT', '')
-                        rate = float(item.get('fundingRate', 0)) * 100
-                        next_funding = item.get('nextFundingTime', '')
-                        next_str = datetime.fromtimestamp(int(next_funding)/1000).strftime('%H:%M') if next_funding else '--'
+                    if data.get("retCode") == 0 and data.get("result", {}).get("list"):
+                        tickers = data["result"]["list"]
+                        print(f"📊 Найдено тикеров: {len(tickers)}")
                         
-                        funding_data[symbol] = {
-                            'rate': f"{rate:.4f}%",
-                            'next': next_str,
-                            'extreme': '' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
-                        }
+                        sorted_tickers = sorted(
+                            tickers, 
+                            key=lambda x: abs(float(x.get('fundingRate', 0) or 0)), 
+                            reverse=True
+                        )
+                        
+                        for item in sorted_tickers[:15]:
+                            try:
+                                symbol = item['symbol'].replace('USDT', '')
+                                rate = float(item.get('fundingRate', 0) or 0) * 100
+                                next_funding = item.get('nextFundingTime', '')
+                                next_str = datetime.fromtimestamp(int(next_funding)/1000).strftime('%H:%M') if next_funding and next_funding.isdigit() else '--'
+                                
+                                funding_data[symbol] = {
+                                    'rate': f"{rate:.4f}%",
+                                    'next': next_str,
+                                    'extreme': '' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
+                                }
+                            except Exception as e:
+                                print(f"️ Ошибка обработки тикера: {e}")
+                                continue
+                    else:
+                        print(f"❌ Bybit вернул ошибку: {data}")
+                except json.JSONDecodeError as e:
+                    print(f"❌ Ошибка парсинга JSON: {e}")
+                    print(f"❌ Текст ответа: {r.text[:1000]}")
             else:
-                print(f"⚠️ Bybit вернул не JSON: {r.text[:200]}")
+                print(f"❌ HTTP Error {r.status_code}: {r.text[:500]}")
+                
         except Exception as e:
-            print(f"Funding Bybit error: {e}")
+            print(f" Funding Bybit error: {e}")
+            import traceback
+            traceback.print_exc()
         
         # 2. RSI через Bybit
         rsi_data = {}
-        for coin in ['BTC', 'ETH']:  # Убрали SOL и XRP для скорости
+        for coin in ['BTC', 'ETH']:
             for tf, interval in [('4H', '240'), ('1D', 'D')]:
                 try:
+                    print(f"🔍 Запрашиваем RSI {coin} {tf}...")
                     klines_r = requests.get(
                         "https://api.bybit.com/v5/market/kline",
                         params={"category": "linear", "symbol": f"{coin}USDT", "interval": interval, "limit": 100},
                         headers=headers,
-                        timeout=10
+                        timeout=15
                     )
                     
-                    # Проверяем JSON
-                    if not (klines_r.headers.get('content-type') and 'application/json' in klines_r.headers.get('content-type')):
-                        print(f"️ Bybit RSI {coin} {tf} вернул не JSON")
+                    if klines_r.status_code != 200:
+                        print(f"❌ HTTP {klines_r.status_code} для {coin} {tf}")
                         continue
                     
-                    data = klines_r.json()
-                    
-                    if data.get("retCode") != 0:
-                        continue
-                    
-                    raw_list = data.get("result", {}).get("list", [])
-                    if len(raw_list) < 15:
-                        continue
-                    
-                    # Bybit отдаёт от новых к старым — разворачиваем
-                    raw_list.reverse()
-                    closes = [float(k[4]) for k in raw_list]
-                    
-                    # Считаем RSI (14 периодов)
-                    gains, losses = [], []
-                    for i in range(1, len(closes)):
-                        diff = closes[i] - closes[i-1]
-                        if diff > 0:
-                            gains.append(diff); losses.append(0)
-                        else:
-                            gains.append(0); losses.append(abs(diff))
-                    
-                    if len(gains) < 14:
-                        continue
-                    
-                    avg_gain = sum(gains[-14:]) / 14
-                    avg_loss = sum(losses[-14:]) / 14
-                    rs = avg_gain / avg_loss if avg_loss > 0 else 0
-                    rsi = 100 - (100 / (1 + rs))
-                    
-                    rsi_data[f'{coin}_{tf}'] = {
-                        'value': round(rsi, 1),
-                        'signal': '🔴 Overbought' if rsi > 70 else '🟢 Oversold' if rsi < 30 else '🟡 Neutral',
-                        'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
-                    }
+                    try:
+                        data = klines_r.json()
+                        if data.get("retCode") != 0:
+                            print(f"❌ Bybit error для {coin} {tf}: {data}")
+                            continue
+                        
+                        raw_list = data.get("result", {}).get("list", [])
+                        if len(raw_list) < 15:
+                            print(f"⚠️ Мало данных для {coin} {tf}: {len(raw_list)}")
+                            continue
+                        
+                        raw_list.reverse()
+                        closes = [float(k[4]) for k in raw_list]
+                        
+                        gains, losses = [], []
+                        for i in range(1, len(closes)):
+                            diff = closes[i] - closes[i-1]
+                            if diff > 0:
+                                gains.append(diff); losses.append(0)
+                            else:
+                                gains.append(0); losses.append(abs(diff))
+                        
+                        if len(gains) < 14:
+                            continue
+                        
+                        avg_gain = sum(gains[-14:]) / 14
+                        avg_loss = sum(losses[-14:]) / 14
+                        rs = avg_gain / avg_loss if avg_loss > 0 else 0
+                        rsi = 100 - (100 / (1 + rs))
+                        
+                        rsi_data[f'{coin}_{tf}'] = {
+                            'value': round(rsi, 1),
+                            'signal': '🔴 Overbought' if rsi > 70 else ' Oversold' if rsi < 30 else '🟡 Neutral',
+                            'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
+                        }
+                        print(f"✅ RSI {coin}_{tf} = {rsi:.1f}")
+                        
+                    except json.JSONDecodeError as e:
+                        print(f"❌ JSON decode error для {coin} {tf}: {e}")
+                        print(f"❌ Response: {klines_r.text[:500]}")
+                        
                 except Exception as e:
-                    print(f"RSI error {coin} {tf}: {e}")
+                    print(f"❌ RSI error {coin} {tf}: {e}")
         
+        print(f"✅ Возвращаем данные: Funding={len(funding_data)}, RSI={len(rsi_data)}")
         return jsonify({'funding': funding_data, 'rsi': rsi_data})
         
     except Exception as e:
-        print(f"Derivatives API error: {e}")
+        print(f"❌ Derivatives API error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)})
 
 @app.route('/api/liquidations')
