@@ -300,26 +300,46 @@ _Если цена не дойдет до входа — сетап будет �
 
 def close_setup(sid, result):
     s = BX["active"].pop(sid, None)
-    if not s: return
+    if not s: 
+        print(f"⚠️ Сетап #{sid} не найден в active")
+        return
+    
     s["status"] = "closed"
     s["close_result"] = result
-    head = {"tp": "🎯 TP ВЗЯТ", "sl": " SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
+    head = {"tp": "🎯 TP ВЗЯТ", "sl": " SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО", "skipped_tp": "️ АННУЛИРОВАН"}.get(result, "ЗАКРЫТ")
     entry = s.get("entry_price", 0)
     exit_price = s["tp"] if result == "tp" else s["sl"]
     pnl_pct = ((exit_price - entry) / entry * 100) if s["dir"] == "long" else ((entry - exit_price) / entry * 100)
     pnl_sign = "+" if pnl_pct > 0 else ""
     cap = f"""{head} · {s['sym']}USDT · {s['tf']}
  В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
-📊 Результат: {pnl_sign}{pnl_pct:.2f}%
+ Результат: {pnl_sign}{pnl_pct:.2f}%
  SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
+    
+    # Пытаемся отредактировать сообщение в VIP
     if s.get("vip_msg"):
-        try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
-        except: pass
+        try:
+            tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
+            print(f"✅ #{sid}: Сообщение в VIP отредактировано")
+        except Exception as e:
+            print(f"⚠️ #{sid}: Не удалось отредактировать сообщение в VIP: {e}")
+            # Если не удалось отредактировать — отправляем новое сообщение
+            try:
+                tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
+                print(f"✅ #{sid}: Отправлено новое сообщение о закрытии в VIP")
+            except Exception as e2:
+                print(f"❌ #{sid}: Ошибка отправки нового сообщения: {e2}")
+    
+    # Отправляем в VIP новое сообщение о закрытии
     tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
+    
+    # Уведомляем админов
     for aid in ADMIN_IDS:
         tg("sendMessage", data={"chat_id": aid, "text": f" Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
+    
     save_stat(s, result, pnl_pct)
     bx_save()
+    print(f"✅ #{sid}: Успешно закрыт и сохранен в статистику")
 
 def bx_watch_step():
     now = _time.time()
