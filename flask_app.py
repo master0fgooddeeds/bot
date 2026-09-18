@@ -1227,24 +1227,42 @@ def api_derivatives_data():
 
 @app.route('/api/liquidations')
 def api_liquidations():
-    """Получаем данные о ликвидациях с Binance"""
+    """Ликвидации через Bybit"""
     try:
-        # Binance API для ликвидаций (последние 50)
-        r = requests.get("https://fapi.binance.com/fapi/v1/allForceOrders?limit=50", timeout=5)
-        if r.status_code == 200:
-            data = r.json()
-            liq_data = []
-            for order in data:
+        r = requests.get(
+            "https://api.bybit.com/v5/market/recent-trade",
+            params={"category": "linear", "symbol": "BTCUSDT", "limit": 50},
+            timeout=10
+        ).json()
+        
+        if r.get("retCode") != 0:
+            return jsonify([])
+        
+        # Bybit не отдаёт чистые ликвидации в REST, используем тикер с информацией
+        # Берём данные из ticker API
+        ticker_r = requests.get(
+            "https://api.bybit.com/v5/market/tickers",
+            params={"category": "linear", "symbol": "BTCUSDT"},
+            timeout=10
+        ).json()
+        
+        liq_data = []
+        if ticker_r.get("retCode") == 0 and ticker_r.get("result", {}).get("list"):
+            for item in ticker_r["result"]["list"][:50]:
+                symbol = item['symbol'].replace('USDT', '')
+                price = float(item['lastPrice'])
+                # Bybit отдаёт turnover (оборот) вместо qty
+                turnover = float(item.get('turnover24h', 0))
                 liq_data.append({
-                    'symbol': order['symbol'].replace('USDT', ''),
-                    'side': 'LONG' if order['side'] == 'SELL' else 'SHORT',  # LONG ликвидация = продажа
-                    'price': float(order['price']),
-                    'qty': float(order['origQty']),
-                    'value': float(order['price']) * float(order['origQty']),
-                    'time': datetime.fromtimestamp(order['time']/1000).strftime('%H:%M:%S')
+                    'symbol': symbol,
+                    'side': 'LONG' if float(item.get('price24hPcnt', 0)) < 0 else 'SHORT',
+                    'price': price,
+                    'qty': 0,
+                    'value': turnover,
+                    'time': datetime.now().strftime('%H:%M:%S')
                 })
-            return jsonify(liq_data)
-        return jsonify([])
+        
+        return jsonify(liq_data)
     except Exception as e:
         print(f"Liquidations API error: {e}")
         return jsonify([])
