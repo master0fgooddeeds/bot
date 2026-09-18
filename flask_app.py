@@ -1167,137 +1167,115 @@ def api_market_data():
 
 @app.route('/api/derivatives_data')
 def api_derivatives_data():
-    """Данные о рынке через CoinGecko (не блокирует Railway)"""
+    """Funding Rates + RSI через BingX (работает с Railway)"""
     try:
-        # 1. Funding Rates через CoinGecko (Derivatives)
+        # 1. FUNDING RATES через BingX
         funding_data = {}
         try:
+            print("🔍 Запрашиваем Funding Rates с BingX...")
+            
+            # Получаем все перпетуалы с BingX
             r = requests.get(
-                "https://api.coingecko.com/api/v3/exchanges/bybit/tickers",
-                headers={'User-Agent': 'MTC Bot/1.0'},
+                "https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
                 timeout=10
             )
             
             if r.status_code == 200:
                 data = r.json()
-                tickers = data.get('tickers', [])
-                
-                # Фильтруем перпетуалы и сортируем по объему
-                perps = [t for t in tickers if 'PERP' in t.get('market', {}).get('identifier', '')]
-                sorted_perps = sorted(perps, key=lambda x: float(x.get('volume', 0)), reverse=True)[:15]
-                
-                for item in sorted_perps:
-                    try:
-                        symbol = item.get('base', '').replace('USDT', '')
-                        if not symbol: continue
-                        
-                        # CoinGecko не отдает funding rate напрямую, показываем volume
-                        volume_24h = float(item.get('volume', 0))
-                        
-                        funding_data[symbol] = {
-                            'rate': f"{volume_24h/1e6:.1f}M",  # Объем вместо funding
-                            'next': '--',
-                            'extreme': '🟡'  # Нейтральный индикатор
-                        }
-                    except:
-                        continue
+                if data.get('code') == 0 and data.get('data'):
+                    tickers = data['data']
+                    print(f"📊 Получено тикеров: {len(tickers)}")
+                    
+                    # Для топ-20 по объему получаем funding rate
+                    sorted_tickers = sorted(tickers, key=lambda x: float(x.get('quoteVolume', 0)), reverse=True)[:20]
+                    
+                    for item in sorted_tickers:
+                        try:
+                            symbol = item['symbol'].replace('-USDT', '')
+                            
+                            # Запрашиваем funding rate для каждой пары
+                            funding_r = requests.get(
+                                "https://open-api.bingx.com/openApi/swap/v2/quote/fundingRate",
+                                params={"symbol": item['symbol']},
+                                timeout=5
+                            )
+                            
+                            if funding_r.status_code == 200:
+                                funding_data_resp = funding_r.json()
+                                if funding_data_resp.get('code') == 0 and funding_data_resp.get('data'):
+                                    funding_rate = float(funding_data_resp['data']['fundingRate']) * 100
+                                    next_time = funding_data_resp['data'].get('nextFundingTime', 0)
+                                    next_str = datetime.fromtimestamp(next_time/1000).strftime('%H:%M') if next_time else '--'
+                                    
+                                    funding_data[symbol] = {
+                                        'rate': f"{funding_rate:.4f}%",
+                                        'next': next_str,
+                                        'extreme': '🔴' if funding_rate > 0.01 else '🟢' if funding_rate < -0.01 else '🟡'
+                                    }
+                        except Exception as e:
+                            print(f"⚠️ Ошибка funding для {symbol}: {e}")
+                            continue
         except Exception as e:
-            print(f"Funding CoinGecko error: {e}")
+            print(f"Funding BingX error: {e}")
         
-        # 2. RSI считаем сами через CoinGecko (исторические данные)
+        # 2. RSI через свечи BingX
         rsi_data = {}
-        for coin in ['bitcoin', 'ethereum']:
-            coin_name = 'BTC' if coin == 'bitcoin' else 'ETH'
-            
-            for tf, days in [('4H', 0.17), ('1D', 1)]:  # 4 часа = 0.17 дня
+        for coin in ['BTC', 'ETH']:
+            for tf, interval in [('4H', '4h'), ('1D', '1d')]:
                 try:
-                    # Получаем исторические данные
-                    r = requests.get(
-                        f"https://api.coingecko.com/api/v3/coins/{coin}/market_chart",
-                        params={"vs_currency": "usd", "days": str(days)},
-                        headers={'User-Agent': 'MTC Bot/1.0'},
+                    print(f"🔍 Запрашиваем свечи {coin} {tf} с BingX...")
+                    
+                    klines_r = requests.get(
+                        "https://open-api.bingx.com/openApi/swap/v2/quote/klines",
+                        params={"symbol": f"{coin}-USDT", "interval": interval, "limit": 100},
                         timeout=10
                     )
                     
-                    if r.status_code == 200:
-                        data = r.json()
-                        prices = [p[1] for p in data.get('prices', [])]
-                        
-                        if len(prices) < 14:
-                            continue
-                        
-                        # Считаем RSI
-                        gains, losses = [], []
-                        for i in range(1, len(prices)):
-                            diff = prices[i] - prices[i-1]
-                            if diff > 0:
-                                gains.append(diff); losses.append(0)
-                            else:
-                                gains.append(0); losses.append(abs(diff))
-                        
-                        if len(gains) < 14:
-                            continue
-                        
-                        avg_gain = sum(gains[-14:]) / 14
-                        avg_loss = sum(losses[-14:]) / 14
-                        rs = avg_gain / avg_loss if avg_loss > 0 else 0
-                        rsi = 100 - (100 / (1 + rs))
-                        
-                        rsi_data[f'{coin_name}_{tf}'] = {
-                            'value': round(rsi, 1),
-                            'signal': '🔴 Overbought' if rsi > 70 else '🟢 Oversold' if rsi < 30 else '🟡 Neutral',
-                            'divergence': 'possible' if (rsi > 70 and coin_name == 'BTC') else 'none'
-                        }
+                    if klines_r.status_code == 200:
+                        data = klines_r.json()
+                        if data.get('code') == 0 and data.get('data'):
+                            klines = data['data']
+                            
+                            if len(klines) < 15:
+                                continue
+                            
+                            # BingX отдает от старых к новым
+                            closes = [float(k[4]) for k in klines]
+                            
+                            # Считаем RSI
+                            gains, losses = [], []
+                            for i in range(1, len(closes)):
+                                diff = closes[i] - closes[i-1]
+                                if diff > 0:
+                                    gains.append(diff); losses.append(0)
+                                else:
+                                    gains.append(0); losses.append(abs(diff))
+                            
+                            if len(gains) < 14:
+                                continue
+                            
+                            avg_gain = sum(gains[-14:]) / 14
+                            avg_loss = sum(losses[-14:]) / 14
+                            rs = avg_gain / avg_loss if avg_loss > 0 else 0
+                            rsi = 100 - (100 / (1 + rs))
+                            
+                            rsi_data[f'{coin}_{tf}'] = {
+                                'value': round(rsi, 1),
+                                'signal': ' Overbought' if rsi > 70 else '🟢 Oversold' if rsi < 30 else '🟡 Neutral',
+                                'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
+                            }
+                            print(f"✅ RSI {coin}_{tf} = {rsi:.1f}")
                 except Exception as e:
-                    print(f"RSI {coin} {tf} error: {e}")
+                    print(f"❌ RSI error {coin} {tf}: {e}")
         
+        print(f"✅ Возвращаем: Funding={len(funding_data)}, RSI={len(rsi_data)}")
         return jsonify({'funding': funding_data, 'rsi': rsi_data})
         
     except Exception as e:
-        print(f"Derivatives API error: {e}")
+        print(f"❌ Derivatives API error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)})
-
-@app.route('/api/liquidations')
-def api_liquidations():
-    """Ликвидации через Bybit"""
-    try:
-        r = requests.get(
-            "https://api.bybit.com/v5/market/recent-trade",
-            params={"category": "linear", "symbol": "BTCUSDT", "limit": 50},
-            timeout=10
-        ).json()
-        
-        if r.get("retCode") != 0:
-            return jsonify([])
-        
-        # Bybit не отдаёт чистые ликвидации в REST, используем тикер с информацией
-        # Берём данные из ticker API
-        ticker_r = requests.get(
-            "https://api.bybit.com/v5/market/tickers",
-            params={"category": "linear", "symbol": "BTCUSDT"},
-            timeout=10
-        ).json()
-        
-        liq_data = []
-        if ticker_r.get("retCode") == 0 and ticker_r.get("result", {}).get("list"):
-            for item in ticker_r["result"]["list"][:50]:
-                symbol = item['symbol'].replace('USDT', '')
-                price = float(item['lastPrice'])
-                # Bybit отдаёт turnover (оборот) вместо qty
-                turnover = float(item.get('turnover24h', 0))
-                liq_data.append({
-                    'symbol': symbol,
-                    'side': 'LONG' if float(item.get('price24hPcnt', 0)) < 0 else 'SHORT',
-                    'price': price,
-                    'qty': 0,
-                    'value': turnover,
-                    'time': datetime.now().strftime('%H:%M:%S')
-                })
-        
-        return jsonify(liq_data)
-    except Exception as e:
-        print(f"Liquidations API error: {e}")
-        return jsonify([])
 
 @app.route('/api/check_vip', methods=['GET'])
 def check_vip():
