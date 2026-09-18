@@ -1167,112 +1167,69 @@ def api_market_data():
 
 @app.route('/api/derivatives_data')
 def api_derivatives_data():
-    """Funding Rates + RSI (через Bybit)"""
+    """Данные о рынке через CoinGecko (не блокирует Railway)"""
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Origin': 'https://www.bybit.com',
-            'Referer': 'https://www.bybit.com/'
-        }
-        
+        # 1. Funding Rates через CoinGecko (Derivatives)
         funding_data = {}
-        
-        # 1. FUNDING RATES через Bybit
         try:
-            print("🔍 Запрашиваем Funding Rates с Bybit...")
             r = requests.get(
-                "https://api.bybit.com/v5/market/tickers",
-                params={"category": "linear"},
-                headers=headers,
-                timeout=15
+                "https://api.coingecko.com/api/v3/exchanges/bybit/tickers",
+                headers={'User-Agent': 'MTC Bot/1.0'},
+                timeout=10
             )
             
-            print(f"📡 Status Code: {r.status_code}")
-            print(f" Content-Type: {r.headers.get('content-type', 'Unknown')}")
-            print(f"📡 Response length: {len(r.text)} bytes")
-            
-            # Показываем первые 500 символов ответа для отладки
-            print(f"📡 Response preview: {r.text[:500]}")
-            
             if r.status_code == 200:
-                try:
-                    data = r.json()
-                    print(f"✅ JSON распаршен. RetCode: {data.get('retCode')}")
-                    
-                    if data.get("retCode") == 0 and data.get("result", {}).get("list"):
-                        tickers = data["result"]["list"]
-                        print(f"📊 Найдено тикеров: {len(tickers)}")
-                        
-                        sorted_tickers = sorted(
-                            tickers, 
-                            key=lambda x: abs(float(x.get('fundingRate', 0) or 0)), 
-                            reverse=True
-                        )
-                        
-                        for item in sorted_tickers[:15]:
-                            try:
-                                symbol = item['symbol'].replace('USDT', '')
-                                rate = float(item.get('fundingRate', 0) or 0) * 100
-                                next_funding = item.get('nextFundingTime', '')
-                                next_str = datetime.fromtimestamp(int(next_funding)/1000).strftime('%H:%M') if next_funding and next_funding.isdigit() else '--'
-                                
-                                funding_data[symbol] = {
-                                    'rate': f"{rate:.4f}%",
-                                    'next': next_str,
-                                    'extreme': '' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
-                                }
-                            except Exception as e:
-                                print(f"️ Ошибка обработки тикера: {e}")
-                                continue
-                    else:
-                        print(f"❌ Bybit вернул ошибку: {data}")
-                except json.JSONDecodeError as e:
-                    print(f"❌ Ошибка парсинга JSON: {e}")
-                    print(f"❌ Текст ответа: {r.text[:1000]}")
-            else:
-                print(f"❌ HTTP Error {r.status_code}: {r.text[:500]}")
+                data = r.json()
+                tickers = data.get('tickers', [])
                 
+                # Фильтруем перпетуалы и сортируем по объему
+                perps = [t for t in tickers if 'PERP' in t.get('market', {}).get('identifier', '')]
+                sorted_perps = sorted(perps, key=lambda x: float(x.get('volume', 0)), reverse=True)[:15]
+                
+                for item in sorted_perps:
+                    try:
+                        symbol = item.get('base', '').replace('USDT', '')
+                        if not symbol: continue
+                        
+                        # CoinGecko не отдает funding rate напрямую, показываем volume
+                        volume_24h = float(item.get('volume', 0))
+                        
+                        funding_data[symbol] = {
+                            'rate': f"{volume_24h/1e6:.1f}M",  # Объем вместо funding
+                            'next': '--',
+                            'extreme': '🟡'  # Нейтральный индикатор
+                        }
+                    except:
+                        continue
         except Exception as e:
-            print(f" Funding Bybit error: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Funding CoinGecko error: {e}")
         
-        # 2. RSI через Bybit
+        # 2. RSI считаем сами через CoinGecko (исторические данные)
         rsi_data = {}
-        for coin in ['BTC', 'ETH']:
-            for tf, interval in [('4H', '240'), ('1D', 'D')]:
+        for coin in ['bitcoin', 'ethereum']:
+            coin_name = 'BTC' if coin == 'bitcoin' else 'ETH'
+            
+            for tf, days in [('4H', 0.17), ('1D', 1)]:  # 4 часа = 0.17 дня
                 try:
-                    print(f"🔍 Запрашиваем RSI {coin} {tf}...")
-                    klines_r = requests.get(
-                        "https://api.bybit.com/v5/market/kline",
-                        params={"category": "linear", "symbol": f"{coin}USDT", "interval": interval, "limit": 100},
-                        headers=headers,
-                        timeout=15
+                    # Получаем исторические данные
+                    r = requests.get(
+                        f"https://api.coingecko.com/api/v3/coins/{coin}/market_chart",
+                        params={"vs_currency": "usd", "days": str(days)},
+                        headers={'User-Agent': 'MTC Bot/1.0'},
+                        timeout=10
                     )
                     
-                    if klines_r.status_code != 200:
-                        print(f"❌ HTTP {klines_r.status_code} для {coin} {tf}")
-                        continue
-                    
-                    try:
-                        data = klines_r.json()
-                        if data.get("retCode") != 0:
-                            print(f"❌ Bybit error для {coin} {tf}: {data}")
+                    if r.status_code == 200:
+                        data = r.json()
+                        prices = [p[1] for p in data.get('prices', [])]
+                        
+                        if len(prices) < 14:
                             continue
                         
-                        raw_list = data.get("result", {}).get("list", [])
-                        if len(raw_list) < 15:
-                            print(f"⚠️ Мало данных для {coin} {tf}: {len(raw_list)}")
-                            continue
-                        
-                        raw_list.reverse()
-                        closes = [float(k[4]) for k in raw_list]
-                        
+                        # Считаем RSI
                         gains, losses = [], []
-                        for i in range(1, len(closes)):
-                            diff = closes[i] - closes[i-1]
+                        for i in range(1, len(prices)):
+                            diff = prices[i] - prices[i-1]
                             if diff > 0:
                                 gains.append(diff); losses.append(0)
                             else:
@@ -1286,27 +1243,18 @@ def api_derivatives_data():
                         rs = avg_gain / avg_loss if avg_loss > 0 else 0
                         rsi = 100 - (100 / (1 + rs))
                         
-                        rsi_data[f'{coin}_{tf}'] = {
+                        rsi_data[f'{coin_name}_{tf}'] = {
                             'value': round(rsi, 1),
-                            'signal': '🔴 Overbought' if rsi > 70 else ' Oversold' if rsi < 30 else '🟡 Neutral',
-                            'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
+                            'signal': '🔴 Overbought' if rsi > 70 else '🟢 Oversold' if rsi < 30 else '🟡 Neutral',
+                            'divergence': 'possible' if (rsi > 70 and coin_name == 'BTC') else 'none'
                         }
-                        print(f"✅ RSI {coin}_{tf} = {rsi:.1f}")
-                        
-                    except json.JSONDecodeError as e:
-                        print(f"❌ JSON decode error для {coin} {tf}: {e}")
-                        print(f"❌ Response: {klines_r.text[:500]}")
-                        
                 except Exception as e:
-                    print(f"❌ RSI error {coin} {tf}: {e}")
+                    print(f"RSI {coin} {tf} error: {e}")
         
-        print(f"✅ Возвращаем данные: Funding={len(funding_data)}, RSI={len(rsi_data)}")
         return jsonify({'funding': funding_data, 'rsi': rsi_data})
         
     except Exception as e:
-        print(f"❌ Derivatives API error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Derivatives API error: {e}")
         return jsonify({"error": str(e)})
 
 @app.route('/api/liquidations')
