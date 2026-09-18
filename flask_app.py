@@ -1169,108 +1169,64 @@ def api_market_data():
 def api_derivatives_data():
     """Funding Rates + RSI через BingX"""
     try:
+        # 1. FUNDING RATES — через premiumIndex (один запрос, все пары сразу)
         funding_data = {}
-        
-        # 1. FUNDING RATES через BingX
         try:
-            print("🔍 Запрашиваем Funding Rates с BingX...")
-            
-            # BingX возвращает список тикеров
             r = requests.get(
-                "https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
+                "https://open-api.bingx.com/openApi/swap/v2/quote/premiumIndex",
                 timeout=10
             )
-            
             if r.status_code == 200:
                 data = r.json()
-                print(f" BingX response: {data}")
-                
                 if data.get('code') == 0:
-                    tickers = data.get('data', [])
-                    print(f"📊 Получено тикеров: {len(tickers)}")
+                    items = data.get('data', [])
+                    # Сортируем по абсолютному funding rate
+                    sorted_items = sorted(items, key=lambda x: abs(float(x.get('lastFundingRate', 0))), reverse=True)
                     
-                    # Берем топ-15 по объему
-                    sorted_tickers = sorted(tickers, key=lambda x: float(x.get('quoteVolume', 0)), reverse=True)[:15]
-                    
-                    for item in sorted_tickers:
-                        try:
-                            # item — это словарь
-                            symbol_full = item.get('symbol', '')
-                            if not symbol_full or '-USDT' not in symbol_full:
-                                continue
-                            
-                            symbol = symbol_full.replace('-USDT', '')
-                            
-                            # Запрашиваем funding rate
-                            funding_r = requests.get(
-                                "https://open-api.bingx.com/openApi/swap/v2/quote/fundingRate",
-                                params={"symbol": symbol_full},
-                                timeout=5
-                            )
-                            
-                            if funding_r.status_code == 200:
-                                funding_data_resp = funding_r.json()
-                                print(f"📊 Funding для {symbol}: {funding_data_resp}")
-                                
-                                if funding_data_resp.get('code') == 0:
-                                    funding_info = funding_data_resp.get('data', {})
-                                    if funding_info:
-                                        funding_rate = float(funding_info.get('fundingRate', 0)) * 100
-                                        next_time = funding_info.get('nextFundingTime', 0)
-                                        next_str = datetime.fromtimestamp(next_time/1000).strftime('%H:%M') if next_time else '--'
-                                        
-                                        funding_data[symbol] = {
-                                            'rate': f"{funding_rate:.4f}%",
-                                            'next': next_str,
-                                            'extreme': '🔴' if funding_rate > 0.01 else '🟢' if funding_rate < -0.01 else '🟡'
-                                        }
-                        except Exception as e:
-                            print(f"⚠️ Ошибка funding: {e}")
+                    for item in sorted_items[:15]:
+                        symbol = item.get('symbol', '').replace('-USDT', '')
+                        if not symbol:
                             continue
+                        rate = float(item.get('lastFundingRate', 0)) * 100
+                        next_time = item.get('nextFundingTime', 0)
+                        next_str = datetime.fromtimestamp(next_time/1000).strftime('%H:%M') if next_time else '--'
+                        
+                        funding_data[symbol] = {
+                            'rate': f"{rate:.4f}%",
+                            'next': next_str,
+                            'extreme': '' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
+                        }
         except Exception as e:
-            print(f" Funding BingX error: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Funding error: {e}")
         
-        # 2. RSI через BingX
+        # 2. RSI — свечи BingX возвращают СЛОВАРИ, не списки!
         rsi_data = {}
         for coin in ['BTC', 'ETH']:
             for tf, interval in [('4H', '4h'), ('1D', '1d')]:
                 try:
-                    print(f"🔍 Запрашиваем свечи {coin} {tf}...")
-                    
                     klines_r = requests.get(
                         "https://open-api.bingx.com/openApi/swap/v2/quote/klines",
                         params={"symbol": f"{coin}-USDT", "interval": interval, "limit": 100},
                         timeout=10
                     )
-                    
-                    print(f"📡 {coin} {tf} status: {klines_r.status_code}")
-                    
                     if klines_r.status_code == 200:
                         data = klines_r.json()
-                        print(f" {coin} {tf} response: {data}")
-                        
                         if data.get('code') == 0:
                             klines = data.get('data', [])
-                            
                             if len(klines) < 15:
-                                print(f"⚠️ Мало свечей для {coin} {tf}: {len(klines)}")
                                 continue
                             
-                            # BingX кlines: [timestamp, open, high, low, close, volume]
-                            closes = [float(k[4]) for k in klines]
+                            # BingX возвращает словари! Берем 'close' по ключу
+                            closes = [float(k['close']) for k in klines]
                             
                             # Считаем RSI
                             gains, losses = [], []
                             for i in range(1, len(closes)):
                                 diff = closes[i] - closes[i-1]
                                 if diff > 0:
-                                    gains.append(diff)
-                                    losses.append(0)
+                                    gains.append(diff); losses.append(0)
                                 else:
-                                    gains.append(0)
-                                    losses.append(abs(diff))
+                                    gains.append(0); losses.append(abs(diff))
                             
                             if len(gains) < 14:
                                 continue
@@ -1285,20 +1241,13 @@ def api_derivatives_data():
                                 'signal': ' Overbought' if rsi > 70 else '🟢 Oversold' if rsi < 30 else '🟡 Neutral',
                                 'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
                             }
-                            print(f"✅ RSI {coin}_{tf} = {rsi:.1f}")
-                            
                 except Exception as e:
-                    print(f"❌ RSI error {coin} {tf}: {e}")
-                    import traceback
-                    traceback.print_exc()
+                    print(f"RSI error {coin} {tf}: {e}")
         
-        print(f"✅ Возвращаем: Funding={len(funding_data)}, RSI={len(rsi_data)}")
         return jsonify({'funding': funding_data, 'rsi': rsi_data})
         
     except Exception as e:
-        print(f"❌ Derivatives API error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Derivatives API error: {e}")
         return jsonify({"error": str(e)})
 
 @app.route('/api/check_vip', methods=['GET'])
