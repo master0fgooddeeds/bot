@@ -325,19 +325,20 @@ def bx_watch_step():
     for sid in list(BX["active"].keys()):
         s = BX["active"][sid]
         
-        # ПОЛУЧАЕМ ПОСЛЕДНИЕ 3 СВЕЧИ 1m (3 минуты истории)
+        # ДОБАВИЛИ ТОЛЬКО HEADERS И LIMIT 30, ЧТОБЫ BINANCE НЕ БЛОКИРОВАЛ
         try:
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             klines = requests.get(
                 "https://api.binance.com/api/v3/klines",
-                params={"symbol": f"{s['sym']}USDT", "interval": "1m", "limit": 3},
-                timeout=5
+                params={"symbol": f"{s['sym']}USDT", "interval": "1m", "limit": 30},
+                headers=headers,
+                timeout=10
             ).json()
             
             if not isinstance(klines, list) or len(klines) < 1:
-                print(f"️ Нет свечей для {s['sym']}")
+                print(f"⚠️ Нет свечей для {s['sym']}. Ответ: {klines}")
                 continue
                 
-            # Берём High и Low каждой свечи
             candles = []
             for k in klines:
                 candles.append({
@@ -347,39 +348,28 @@ def bx_watch_step():
                     'time': k[0]
                 })
             
-            # Используем последнюю закрытую свечу (предпоследнюю, т.к. текущая ещё формируется)
             last_candle = candles[-2] if len(candles) >= 2 else candles[-1]
-            price = last_candle['close']  # Для отображения в логах
+            price = last_candle['close']
             
             print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
-            print(f"   🕯️ Свеча: High={last_candle['high']:,.2f} | Low={last_candle['low']:,.2f}")
             
         except Exception as e:
             print(f"⚠️ Ошибка получения свечей для {s['sym']}: {e}")
             continue
         
-        buf_frac = 0.0005  # Минимальный буфер
+        buf_frac = 0.0005
         
         if s.get("status") == "pending":
             entry = s["entry_price"]
             reached, skipped_tp = False, False
             
-            # ПРОВЕРЯЕМ ПО ВСЕМ СВЕЧАМ (не только по текущей цене!)
             for candle in candles:
                 if s["dir"] == "long":
-                    # LONG: цена должна опуститься до входа
-                    if candle['low'] <= entry * (1 + buf_frac):
-                        reached = True
-                    # Но если цена улетела на TP без входа
-                    if candle['low'] >= s["tp"] * (1 - buf_frac):
-                        skipped_tp = True
+                    if candle['low'] <= entry * (1 + buf_frac): reached = True
+                    if candle['low'] >= s["tp"] * (1 - buf_frac): skipped_tp = True
                 else:
-                    # SHORT: цена должна подняться до входа
-                    if candle['high'] >= entry * (1 - buf_frac):
-                        reached = True
-                    # Но если цена улетела на TP без входа
-                    if candle['high'] <= s["tp"] * (1 + buf_frac):
-                        skipped_tp = True
+                    if candle['high'] >= entry * (1 - buf_frac): reached = True
+                    if candle['high'] <= s["tp"] * (1 + buf_frac): skipped_tp = True
             
             if skipped_tp:
                 cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
@@ -426,18 +416,15 @@ def bx_watch_step():
         elif s.get("status") == "active":
             result = None
             
-            # ПРОВЕРЯЕМ ПО ВСЕМ СВЕЧАМ — если хоть одна пробила уровень!
             for candle in candles:
                 if s["dir"] == "long":
-                    # LONG: TP если High свечи >= TP, SL если Low свечи <= SL
                     if candle['high'] >= s["tp"] * (1 - buf_frac):
                         result = "tp"
-                        break  # Нашли — выходим из цикла
+                        break
                     elif candle['low'] <= s["sl"] * (1 + buf_frac):
                         result = "sl"
                         break
                 else:
-                    # SHORT: TP если Low свечи <= TP, SL если High свечи >= SL
                     if candle['low'] <= s["tp"] * (1 + buf_frac):
                         result = "tp"
                         break
