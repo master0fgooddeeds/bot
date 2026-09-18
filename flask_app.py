@@ -348,10 +348,10 @@ def bx_watch_step():
                         'time': _time.time() * 1000
                     }]
                 else:
-                    print(f"⚠️ BingX вернул ошибку: {data}")
+                    print(f"️ BingX вернул ошибку: {data}")
                     continue
             else:
-                print(f"️ BingX HTTP {r.status_code}")
+                print(f" BingX HTTP {r.status_code}")
                 continue
                 
         except Exception as e:
@@ -409,7 +409,7 @@ def bx_watch_step():
  *STOP LOSS:* `{s['sl']:,.2f}`
 💰 *TAKE PROFIT:* `{s['tp']:,.2f}`
 
-🛡 Бот следит за SL и TP до победного конца!"""
+ Бот следит за SL и TP до победного конца!"""
                 try: 
                     tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": active_cap, "parse_mode": "Markdown", "reply_to_message_id": s.get("vip_msg")})
                 except: pass
@@ -417,15 +417,18 @@ def bx_watch_step():
         elif s.get("status") == "active":
             result = None
             
+            # ПРОВЕРЯЕМ ПО ВСЕМ СВЕЧАМ — если хоть одна пробила уровень!
             for candle in candles:
                 if s["dir"] == "long":
+                    # LONG: TP если High свечи >= TP, SL если Low свечи <= SL
                     if candle['high'] >= s["tp"] * (1 - buf_frac):
                         result = "tp"
-                        break
+                        break  # Нашли — выходим из цикла
                     elif candle['low'] <= s["sl"] * (1 + buf_frac):
                         result = "sl"
                         break
                 else:
+                    # SHORT: TP если Low свечи <= TP, SL если High свечи >= SL
                     if candle['low'] <= s["tp"] * (1 + buf_frac):
                         result = "tp"
                         break
@@ -434,8 +437,16 @@ def bx_watch_step():
                         break
                     
             if result:
-                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f}")
-                close_setup(sid, result)
+                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f} (пробой зафиксирован свечой!)")
+                print(f"📊 DEBUG: candle_high={candle.get('high')}, TP={s['tp']}, SL={s['sl']}")
+                print(f" DEBUG: Условие TP: {candle.get('high', 0)} >= {s['tp'] * (1 - buf_frac)}")
+                try:
+                    close_setup(sid, result)
+                    print(f"✅ #{sid}: Успешно закрыт через close_setup()")
+                except Exception as e:
+                    print(f"❌ #{sid}: Ошибка в close_setup(): {e}")
+                    import traceback
+                    traceback.print_exc()
 
 def bx_watch_loop():
     while True:
