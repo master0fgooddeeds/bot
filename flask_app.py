@@ -69,6 +69,7 @@ def load_stats():
             if "deposit" not in data: data["deposit"] = 10000.0
             if "balance" not in data: data["balance"] = data.get("deposit", 10000.0)
             if "pnl_usd" not in data: data["pnl_usd"] = 0.0
+            if "pnl" not in data: data["pnl"] = 0.0  # <-- ДОБАВИЛИ ЭТУ СТРОКУ!
             return data
     except: 
         return {
