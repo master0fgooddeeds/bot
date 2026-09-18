@@ -1167,14 +1167,15 @@ def api_market_data():
 
 @app.route('/api/derivatives_data')
 def api_derivatives_data():
-    """Funding Rates + RSI через BingX (работает с Railway)"""
+    """Funding Rates + RSI через BingX"""
     try:
-        # 1. FUNDING RATES через BingX
         funding_data = {}
+        
+        # 1. FUNDING RATES через BingX
         try:
             print("🔍 Запрашиваем Funding Rates с BingX...")
             
-            # Получаем все перпетуалы с BingX
+            # BingX возвращает список тикеров
             r = requests.get(
                 "https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
                 timeout=10
@@ -1182,48 +1183,61 @@ def api_derivatives_data():
             
             if r.status_code == 200:
                 data = r.json()
-                if data.get('code') == 0 and data.get('data'):
-                    tickers = data['data']
+                print(f" BingX response: {data}")
+                
+                if data.get('code') == 0:
+                    tickers = data.get('data', [])
                     print(f"📊 Получено тикеров: {len(tickers)}")
                     
-                    # Для топ-20 по объему получаем funding rate
-                    sorted_tickers = sorted(tickers, key=lambda x: float(x.get('quoteVolume', 0)), reverse=True)[:20]
+                    # Берем топ-15 по объему
+                    sorted_tickers = sorted(tickers, key=lambda x: float(x.get('quoteVolume', 0)), reverse=True)[:15]
                     
                     for item in sorted_tickers:
                         try:
-                            symbol = item['symbol'].replace('-USDT', '')
+                            # item — это словарь
+                            symbol_full = item.get('symbol', '')
+                            if not symbol_full or '-USDT' not in symbol_full:
+                                continue
                             
-                            # Запрашиваем funding rate для каждой пары
+                            symbol = symbol_full.replace('-USDT', '')
+                            
+                            # Запрашиваем funding rate
                             funding_r = requests.get(
                                 "https://open-api.bingx.com/openApi/swap/v2/quote/fundingRate",
-                                params={"symbol": item['symbol']},
+                                params={"symbol": symbol_full},
                                 timeout=5
                             )
                             
                             if funding_r.status_code == 200:
                                 funding_data_resp = funding_r.json()
-                                if funding_data_resp.get('code') == 0 and funding_data_resp.get('data'):
-                                    funding_rate = float(funding_data_resp['data']['fundingRate']) * 100
-                                    next_time = funding_data_resp['data'].get('nextFundingTime', 0)
-                                    next_str = datetime.fromtimestamp(next_time/1000).strftime('%H:%M') if next_time else '--'
-                                    
-                                    funding_data[symbol] = {
-                                        'rate': f"{funding_rate:.4f}%",
-                                        'next': next_str,
-                                        'extreme': '🔴' if funding_rate > 0.01 else '🟢' if funding_rate < -0.01 else '🟡'
-                                    }
+                                print(f"📊 Funding для {symbol}: {funding_data_resp}")
+                                
+                                if funding_data_resp.get('code') == 0:
+                                    funding_info = funding_data_resp.get('data', {})
+                                    if funding_info:
+                                        funding_rate = float(funding_info.get('fundingRate', 0)) * 100
+                                        next_time = funding_info.get('nextFundingTime', 0)
+                                        next_str = datetime.fromtimestamp(next_time/1000).strftime('%H:%M') if next_time else '--'
+                                        
+                                        funding_data[symbol] = {
+                                            'rate': f"{funding_rate:.4f}%",
+                                            'next': next_str,
+                                            'extreme': '🔴' if funding_rate > 0.01 else '🟢' if funding_rate < -0.01 else '🟡'
+                                        }
                         except Exception as e:
-                            print(f"⚠️ Ошибка funding для {symbol}: {e}")
+                            print(f"⚠️ Ошибка funding: {e}")
                             continue
         except Exception as e:
-            print(f"Funding BingX error: {e}")
+            print(f" Funding BingX error: {e}")
+            import traceback
+            traceback.print_exc()
         
-        # 2. RSI через свечи BingX
+        # 2. RSI через BingX
         rsi_data = {}
         for coin in ['BTC', 'ETH']:
             for tf, interval in [('4H', '4h'), ('1D', '1d')]:
                 try:
-                    print(f"🔍 Запрашиваем свечи {coin} {tf} с BingX...")
+                    print(f"🔍 Запрашиваем свечи {coin} {tf}...")
                     
                     klines_r = requests.get(
                         "https://open-api.bingx.com/openApi/swap/v2/quote/klines",
@@ -1231,15 +1245,20 @@ def api_derivatives_data():
                         timeout=10
                     )
                     
+                    print(f"📡 {coin} {tf} status: {klines_r.status_code}")
+                    
                     if klines_r.status_code == 200:
                         data = klines_r.json()
-                        if data.get('code') == 0 and data.get('data'):
-                            klines = data['data']
+                        print(f" {coin} {tf} response: {data}")
+                        
+                        if data.get('code') == 0:
+                            klines = data.get('data', [])
                             
                             if len(klines) < 15:
+                                print(f"⚠️ Мало свечей для {coin} {tf}: {len(klines)}")
                                 continue
                             
-                            # BingX отдает от старых к новым
+                            # BingX кlines: [timestamp, open, high, low, close, volume]
                             closes = [float(k[4]) for k in klines]
                             
                             # Считаем RSI
@@ -1247,9 +1266,11 @@ def api_derivatives_data():
                             for i in range(1, len(closes)):
                                 diff = closes[i] - closes[i-1]
                                 if diff > 0:
-                                    gains.append(diff); losses.append(0)
+                                    gains.append(diff)
+                                    losses.append(0)
                                 else:
-                                    gains.append(0); losses.append(abs(diff))
+                                    gains.append(0)
+                                    losses.append(abs(diff))
                             
                             if len(gains) < 14:
                                 continue
@@ -1265,8 +1286,11 @@ def api_derivatives_data():
                                 'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
                             }
                             print(f"✅ RSI {coin}_{tf} = {rsi:.1f}")
+                            
                 except Exception as e:
                     print(f"❌ RSI error {coin} {tf}: {e}")
+                    import traceback
+                    traceback.print_exc()
         
         print(f"✅ Возвращаем: Funding={len(funding_data)}, RSI={len(rsi_data)}")
         return jsonify({'funding': funding_data, 'rsi': rsi_data})
