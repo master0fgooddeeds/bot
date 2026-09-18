@@ -1167,55 +1167,74 @@ def api_market_data():
 
 @app.route('/api/derivatives_data')
 def api_derivatives_data():
-    """Funding Rates + RSI (через Bybit, т.к. Binance блокирует Railway)"""
+    """Funding Rates + RSI (через Bybit)"""
     try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'application/json'
+        }
+        
         # 1. FUNDING RATES через Bybit
         funding_data = {}
         try:
             r = requests.get(
                 "https://api.bybit.com/v5/market/tickers",
                 params={"category": "linear"},
+                headers=headers,
                 timeout=10
-            ).json()
+            )
             
-            if r.get("retCode") == 0 and r.get("result", {}).get("list"):
-                tickers = r["result"]["list"]
-                # Сортируем по абсолютному значению funding rate
-                sorted_tickers = sorted(
-                    tickers, 
-                    key=lambda x: abs(float(x.get('fundingRate', 0))), 
-                    reverse=True
-                )
+            # Проверяем, что вернулся JSON
+            if r.headers.get('content-type') and 'application/json' in r.headers.get('content-type'):
+                data = r.json()
                 
-                for item in sorted_tickers[:15]:
-                    symbol = item['symbol'].replace('USDT', '')
-                    rate = float(item.get('fundingRate', 0)) * 100
-                    next_funding = item.get('nextFundingTime', '')
-                    next_str = datetime.fromtimestamp(int(next_funding)/1000).strftime('%H:%M') if next_funding else '--'
+                if data.get("retCode") == 0 and data.get("result", {}).get("list"):
+                    tickers = data["result"]["list"]
+                    sorted_tickers = sorted(
+                        tickers, 
+                        key=lambda x: abs(float(x.get('fundingRate', 0))), 
+                        reverse=True
+                    )
                     
-                    funding_data[symbol] = {
-                        'rate': f"{rate:.4f}%",
-                        'next': next_str,
-                        'extreme': '🔴' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
-                    }
+                    for item in sorted_tickers[:15]:
+                        symbol = item['symbol'].replace('USDT', '')
+                        rate = float(item.get('fundingRate', 0)) * 100
+                        next_funding = item.get('nextFundingTime', '')
+                        next_str = datetime.fromtimestamp(int(next_funding)/1000).strftime('%H:%M') if next_funding else '--'
+                        
+                        funding_data[symbol] = {
+                            'rate': f"{rate:.4f}%",
+                            'next': next_str,
+                            'extreme': '' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
+                        }
+            else:
+                print(f"⚠️ Bybit вернул не JSON: {r.text[:200]}")
         except Exception as e:
             print(f"Funding Bybit error: {e}")
         
-        # 2. RSI через Bybit (считаем локально)
+        # 2. RSI через Bybit
         rsi_data = {}
-        for coin in ['BTC', 'ETH', 'SOL', 'XRP']:
+        for coin in ['BTC', 'ETH']:  # Убрали SOL и XRP для скорости
             for tf, interval in [('4H', '240'), ('1D', 'D')]:
                 try:
                     klines_r = requests.get(
                         "https://api.bybit.com/v5/market/kline",
                         params={"category": "linear", "symbol": f"{coin}USDT", "interval": interval, "limit": 100},
+                        headers=headers,
                         timeout=10
-                    ).json()
+                    )
                     
-                    if klines_r.get("retCode") != 0:
+                    # Проверяем JSON
+                    if not (klines_r.headers.get('content-type') and 'application/json' in klines_r.headers.get('content-type')):
+                        print(f"️ Bybit RSI {coin} {tf} вернул не JSON")
                         continue
                     
-                    raw_list = klines_r.get("result", {}).get("list", [])
+                    data = klines_r.json()
+                    
+                    if data.get("retCode") != 0:
+                        continue
+                    
+                    raw_list = data.get("result", {}).get("list", [])
                     if len(raw_list) < 15:
                         continue
                     
