@@ -534,36 +534,24 @@ checkLatestVideo();
             }).catch(function(err) { alert('Ошибка: ' + err.message); });
         }
                 function loadFearGreed() {
-            fetch('/api/fear_greed')
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.value) {
-                        var val = parseInt(data.value);
-                        var label = data.value_classification;
-                        var timestamp = data.timestamp * 1000;
-                        var dateStr = new Date(timestamp).toLocaleDateString('ru-RU');
+                    fetch('/api/fear_greed')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data.value) {
+                                var val = parseInt(data.value);
+                                var label = data.value_classification;
+                                var timestamp = data.timestamp * 1000;
+                                var dateStr = new Date(timestamp).toLocaleDateString('ru-RU');
 
-                        document.getElementById('fgValue').innerText = val;
-                        
-                        document.getElementById('fgLabel').innerText = label;
-                        document.getElementById('fgTime').innerText = dateStr;
-                        document.getElementById('fgBar').style.width = val + '%';
+                                // Обновляем только дату, остальное сделает спидометр
+                                document.getElementById('fgTime').innerText = dateStr;
 
-                        var color = '#ffcc00';
-                        var labelClass = 'fg-neutral';
-                        if (val <= 25) { color = '#ff3b30'; labelClass = 'fg-extreme-fear'; }
-                        else if (val <= 45) { color = '#ff9500'; labelClass = 'fg-fear'; }
-                        else if (val <= 55) { color = '#ffcc00'; labelClass = 'fg-neutral'; }
-                        else if (val <= 75) { color = '#a2e000'; labelClass = 'fg-greed'; }
-                        else { color = '#00e676'; labelClass = 'fg-extreme-greed'; }
-
-                        document.getElementById('fgBar').style.background = color;
-                        document.getElementById('fgLabel').className = labelClass;
-                        document.getElementById('fgValue').style.color = color;
-                    }
-                })
-                .catch(function(err) { console.error('FG Error:', err); });
-        }
+                                // 🚀 ВЫЗЫВАЕМ ФУНКЦИЮ ОТРИСОВКИ СПИДОМЕТРА!
+                                updateGaugeChart(val, label);
+                             }
+                         })
+                         .catch(function(err) { console.error('FG Error:', err); });
+                }
 
         function updateGaugeChart(value, label) {
     var ctx = document.getElementById('fgGauge').getContext('2d');
