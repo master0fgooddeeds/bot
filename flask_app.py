@@ -325,36 +325,37 @@ def bx_watch_step():
     for sid in list(BX["active"].keys()):
         s = BX["active"][sid]
         
-        # ДОБАВИЛИ ТОЛЬКО HEADERS И LIMIT 30, ЧТОБЫ BINANCE НЕ БЛОКИРОВАЛ
+        # ИСПОЛЬЗУЕМ BINGX ВМЕСТО BINANCE (он не блокирует Railway)
         try:
-            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-            klines = requests.get(
-                "https://api.binance.com/api/v3/klines",
-                params={"symbol": f"{s['sym']}USDT", "interval": "1m", "limit": 30},
-                headers=headers,
+            symbol = f"{s['sym'].upper()}-USDT"
+            r = requests.get(
+                "https://open-api.bingx.com/openApi/swap/v2/quote/ticker",
+                params={"symbol": symbol},
                 timeout=10
-            ).json()
+            )
             
-            if not isinstance(klines, list) or len(klines) < 1:
-                print(f"⚠️ Нет свечей для {s['sym']}. Ответ: {klines}")
+            if r.status_code == 200:
+                data = r.json()
+                if data.get('code') == 0 and data.get('data'):
+                    price = float(data['data']['lastPrice'])
+                    print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
+                    
+                    # Создаем фейковую "свечу" из текущей цены для совместимости с логикой
+                    candles = [{
+                        'high': price * 1.001,  # Чуть выше
+                        'low': price * 0.999,   # Чуть ниже
+                        'close': price,
+                        'time': _time.time() * 1000
+                    }]
+                else:
+                    print(f"⚠️ BingX вернул ошибку: {data}")
+                    continue
+            else:
+                print(f"️ BingX HTTP {r.status_code}")
                 continue
                 
-            candles = []
-            for k in klines:
-                candles.append({
-                    'high': float(k[2]),
-                    'low': float(k[3]),
-                    'close': float(k[4]),
-                    'time': k[0]
-                })
-            
-            last_candle = candles[-2] if len(candles) >= 2 else candles[-1]
-            price = last_candle['close']
-            
-            print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
-            
         except Exception as e:
-            print(f"⚠️ Ошибка получения свечей для {s['sym']}: {e}")
+            print(f"⚠️ Ошибка получения цены с BingX для {s['sym']}: {e}")
             continue
         
         buf_frac = 0.0005
@@ -372,7 +373,7 @@ def bx_watch_step():
                     if candle['high'] <= s["tp"] * (1 + buf_frac): skipped_tp = True
             
             if skipped_tp:
-                cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
+                cap = f"""️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
 
  *Причина:* Цена достигла TP, не задев вход.
  *Ожидаемый вход:* `{entry:,.2f}`
@@ -405,7 +406,7 @@ def bx_watch_step():
                 active_cap = f"""✅ *СЕТАП АКТИВИРОВАН* · {s['sym']}USDT · {s['tf']}
 
 🎯 Вход пройден! Цена: `{price:,.2f}`
-🛡 *STOP LOSS:* `{s['sl']:,.2f}`
+ *STOP LOSS:* `{s['sl']:,.2f}`
 💰 *TAKE PROFIT:* `{s['tp']:,.2f}`
 
 🛡 Бот следит за SL и TP до победного конца!"""
@@ -433,7 +434,7 @@ def bx_watch_step():
                         break
                     
             if result:
-                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f} (пробой зафиксирован свечой!)")
+                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f}")
                 close_setup(sid, result)
 
 def bx_watch_loop():
