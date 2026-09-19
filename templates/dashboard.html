@@ -409,7 +409,7 @@ checkLatestVideo();
         
         <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
             <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">️ Управление статистикой</h4>
-            <button class="btn" onclick="tg.sendData(JSON.stringify({action: 'reset_stats'})); tg.close();" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
+            <button class="btn" onclick="resetStats()" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
                  🔄 Сбросить статистику
             </button>
             <button class="btn btn-secondary" onclick="tg.showAlert(' Для установки депозита используй команду в боте:\n/set_deposit 10000\n\n(где 10000 — твоя сумма)')" style="margin-top:10px;">
