@@ -1330,6 +1330,32 @@ def api_liquidations():
         return jsonify([])
 
 
+@app.route('/api/reset_stats', methods=['POST'])
+def api_reset_stats():
+    """Сброс статистики (только для админов)"""
+    try:
+        init_data = request.headers.get('X-Telegram-Init-Data', '')
+        import urllib.parse
+        data = dict(urllib.parse.parse_qsl(init_data))
+        user = json.loads(data.get('user', '{}'))
+        user_id = user.get('id')
+        
+        if not user_id or int(user_id) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        # Сбрасываем статистику
+        with open(STATS_FILE, "w") as f:
+            json.dump({
+                "total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0,
+                "pnl": 0.0, "pnl_usd": 0.0, "deposit": 10000.0, "balance": 10000.0, "history": []
+            }, f, indent=2)
+        
+        print(f"✅ Статистика сброшена админом {user_id}")
+        return jsonify({"ok": True})
+    except Exception as e:
+        print(f"❌ Reset stats error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/check_vip', methods=['GET'])
 def check_vip():
     """Проверяет, подписан ли пользователь на VIP канал"""
