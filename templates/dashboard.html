@@ -533,6 +533,52 @@ checkLatestVideo();
                 if (userRole === 'vip' || userRole === 'admin') { document.getElementById('btnAnalyses').classList.remove('hidden'); }
             }).catch(function(err) { alert('Ошибка: ' + err.message); });
         }
+
+        // Сброс статистики
+function resetStats() {
+    if (!confirm('⚠️ ВНИМАНИЕ! Это удалит ВСЮ статистику сделок безвозвратно!\n\nТы уверен?')) return;
+    if (!confirm('🔒 ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ!\n\nСтатистика будет обнулена:\n- Все сделки удалены\n- Баланс сброшен до $10,000\n- История очищена\n\nПродолжить?')) return;
+    
+    fetch('/api/reset_stats', { 
+        method: 'POST', 
+        headers: { 'X-Telegram-Init-Data': tg.initData || '' } 
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        if (res.ok) {
+            tg.showAlert('✅ Статистика успешно сброшена!');
+            refreshData(); // Обновляем данные на экране
+        } else {
+            tg.showAlert('❌ Ошибка: ' + (res.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(function(err) {
+        tg.showAlert('❌ Ошибка соединения: ' + err.message);
+    });
+}
+
+// Вторая пасхалка: скрытая кнопка сброса
+var secretClickCount = 0;
+var secretClickTime = 0;
+
+function showSecretResetButton() {
+    var now = Date.now();
+    if (now - secretClickTime < 2000) {
+        secretClickCount++;
+        if (secretClickCount >= 7) {
+            // Показываем кнопку сброса
+            var resetBtn = document.getElementById('secretResetBtn');
+            if (resetBtn) {
+                resetBtn.classList.remove('hidden');
+                tg.showAlert('🔓 Секретная функция разблокирована!');
+            }
+            secretClickCount = 0;
+        }
+    } else {
+        secretClickCount = 1;
+    }
+    secretClickTime = now;
+}
                 function loadFearGreed() {
                     fetch('/api/fear_greed')
                         .then(function(r) { return r.json(); })
