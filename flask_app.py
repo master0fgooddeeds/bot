@@ -379,7 +379,7 @@ def bx_watch_step():
             print(f"⚠️ Ошибка получения цены с BingX для {s['sym']}: {e}")
             continue
         
-        buf_frac = 0.0005
+        buf_frac = 0.0  # Точный вход без буфера
         
         if s.get("status") == "pending":
             entry = s["entry_price"]
