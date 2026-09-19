@@ -398,23 +398,30 @@ checkLatestVideo();
     </div>
 
 <div class="card hidden" id="secretZone">
-    <h3 style="margin:0 0 10px 0;">🔥 ADMIN PANEL</h3>
-    <p style="margin:0 0 15px 0;">Полный доступ к управлению ботом</p>
+    <!-- ДОБАВЛЕН cursor:pointer и onclick для второй пасхалки -->
+    <h3 style="margin:0 0 10px 0; cursor:pointer;" onclick="showSecretResetButton()">🔥 ADMIN PANEL</h3>
+    <p style="margin:0 0 15px 0; font-size:11px; color:rgba(255,255,255,0.5);">Полный доступ к управлению ботом</p>
     
     <div class="btn-container" style="margin-top:15px;">
-        <button class="btn btn-success" onclick="showCreateForm()"> Создать разбор сделки</button>
-        <button class="btn btn-secondary" onclick="enableEditMode()">️ Редактировать сделки</button>
-        <button class="btn btn-danger" onclick="enableDeleteMode()"> Удалить сделки</button>
+        <button class="btn btn-success" onclick="showCreateForm()">✏️ Создать разбор сделки</button>
+        <button class="btn btn-secondary" onclick="enableEditMode()">⚙️ Редактировать сделки</button>
+        <button class="btn btn-danger" onclick="enableDeleteMode()">🗑️ Удалить сделки</button>
         <button class="btn btn-success" onclick="showCoinAnalysisForm()">🪙 Создать разбор монет</button>
         
         <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
-            <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">️ Управление статистикой</h4>
-            <button class="btn" onclick="resetStats()" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
-                 🔄 Сбросить статистику
-            </button>
-            <button class="btn btn-secondary" onclick="tg.showAlert(' Для установки депозита используй команду в боте:\n/set_deposit 10000\n\n(где 10000 — твоя сумма)')" style="margin-top:10px;">
+            <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">⚙️ Управление статистикой</h4>
+            
+            <button class="btn btn-secondary" onclick="tg.showAlert('💡 Для установки депозита используй команду в боте:\n/set_deposit 10000\n\n(где 10000 — твоя сумма)')" style="margin-top:10px;">
                 💰 Установить депозит
             </button>
+            
+            <!-- СКРЫТАЯ КНОПКА СБРОСА (появляется после 7 кликов по заголовку ADMIN PANEL) -->
+            <div id="secretResetBtn" class="hidden" style="margin-top:15px;">
+                <button class="btn" onclick="resetStats()" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
+                    ⚠️ СБРОСИТЬ ВСЮ СТАТИСТИКУ
+                </button>
+                <p style="font-size:11px; color:#ff3b30; margin-top:8px;">⚠️ Это действие необратимо!</p>
+            </div>
         </div>
         
         <div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:12px; color:#8e8e93;">
