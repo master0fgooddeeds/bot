@@ -44,7 +44,6 @@
         .footer .brand { background: linear-gradient(90deg, #ff6b35, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 16px; margin: 5px 0; }
         .footer p { margin: 3px 0; color: #8e8e93; font-size: 13px; }
         input, select, textarea { background: rgba(10, 10, 20, 0.8) !important; color: #fff !important; }
-                /* Цвета для Индекса Страха и Жадности */
         .fg-extreme-fear { color: #ff3b30 !important; background: rgba(255, 59, 48, 0.2) !important; }
         .fg-fear { color: #ff9500 !important; background: rgba(255, 149, 0, 0.2) !important; }
         .fg-neutral { color: #ffcc00 !important; background: rgba(255, 204, 0, 0.2) !important; }
@@ -63,82 +62,29 @@
         <div class="stat-row"><span class="stat-label">📊 Депозит:</span><span class="stat-value" id="deposit">$10,000.00</span></div>
         <div class="stat-row"><span class="stat-label">📈 PnL ($):</span><span class="stat-value" id="pnlUsd">$0.00</span></div>
         <div class="stat-row"><span class="stat-label">📈 PnL (%):</span><span class="stat-value" id="pnl">0.00%</span></div>
-        <div class="stat-row"><span class="stat-label">📊 Всего сделок:</span><span class="stat-value" id="total">0</span></div>
+        <div class="stat-row"><span class="stat-label"> Всего сделок:</span><span class="stat-value" id="total">0</span></div>
         <div class="stat-row"><span class="stat-label">🎯 Винрейт:</span><span class="stat-value" id="winrate">0%</span></div>
-        
-        <!-- Быстрые ссылки для всех -->
         <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
-            <a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="padding:10px; font-size:14px;">💬 Флудилка VIP</a>
+            <a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="padding:10px; font-size:14px;"> Флудилка VIP</a>
             <a href="https://bingx.com/ru/perpetual/BTC-USDT" target="_blank" class="btn" style="padding:10px; font-size:14px; margin-top:10px;">🔷 Торговать BTC на BingX</a>
         </div>
     </div>
 
-    <!-- ПОСЛЕДНЕЕ ВИДЕО С YOUTUBE НА ГЛАВНОЙ -->
-<div class="card hidden" id="latestVideoCard" style="border: 2px solid #ff6b35; background: rgba(255, 107, 53, 0.05);">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-        <h3 style="margin: 0; color: #ff6b35; font-size: 16px;">🎥 Свежее видео на канале!</h3>
-        <span style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">NEW</span>
+    <div class="card hidden" id="latestVideoCard" style="border: 2px solid #ff6b35; background: rgba(255, 107, 53, 0.05);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #ff6b35; font-size: 16px;">🎥 Свежее видео на канале!</h3>
+            <span style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">NEW</span>
+        </div>
+        <div id="latestVideoContent">
+            <div style="text-align: center; padding: 20px; color: #8e8e93;">Проверка...</div>
+        </div>
+        <button class="btn btn-secondary" onclick="document.getElementById('latestVideoCard').classList.add('hidden')" style="margin-top: 15px; font-size: 13px; padding: 8px;">
+            Скрыть уведомление
+        </button>
     </div>
-    
-    <div id="latestVideoContent">
-        <div style="text-align: center; padding: 20px; color: #8e8e93;">Проверка...</div>
-    </div>
-    
-    <button class="btn btn-secondary" onclick="document.getElementById('latestVideoCard').classList.add('hidden')" style="margin-top: 15px; font-size: 13px; padding: 8px;">
-        Скрыть уведомление
-    </button>
-</div>
 
-<script>
-// Функция проверки нового видео (добавь в конец скрипта)
-function checkLatestVideo() {
-    console.log('🔍 Checking for latest video...');
-    fetch('/api/youtube')
-        .then(r => {
-            console.log('📥 Latest video API response:', r.status);
-            return r.json();
-        })
-        .then(videos => {
-            console.log('📺 Latest videos:', videos);
-            if (videos && videos.length > 0) {
-                const latest = videos[0];
-                const lastViewed = localStorage.getItem('lastMtcVideoViewed');
-                
-                console.log('Latest video ID:', latest.id);
-                console.log('Last viewed:', lastViewed);
-                
-                if (lastViewed !== latest.id) {
-                    const html = `
-                        <div style="cursor:pointer;" onclick="openVideoModal('${latest.id}', '${latest.title.replace(/'/g, "\\'")}')">
-                            <img src="https://i.ytimg.com/vi/${latest.id}/mqdefault.jpg" style="width:100%; border-radius:8px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1);" onerror="this.src='https://via.placeholder.com/320x180/1a1a2e/00d4ff?text=Video'">
-                            <h4 style="margin:0 0 10px 0; color:#fff; font-size:15px; line-height:1.4;">${latest.title}</h4>
-                            <div style="display:flex; align-items:center; justify-content:space-between;">
-                                <span style="color:#8e8e93; font-size:12px;">Нажмите, чтобы посмотреть</span>
-                                <span style="background:#ff6b35; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600;">Смотреть ▶</span>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('latestVideoContent').innerHTML = html;
-                    document.getElementById('latestVideoCard').classList.remove('hidden');
-                    localStorage.setItem('lastMtcVideoViewed', latest.id);
-                    console.log('✅ Latest video card shown');
-                } else {
-                    console.log('ℹ️ Video already viewed');
-                }
-            } else {
-                console.log('⚠️ No videos found');
-            }
-        })
-        .catch(err => console.error('❌ Video check error:', err));
-}
-// Вызываем при загрузке
-checkLatestVideo();
-</script>
-        <!-- ИНДЕКС СТРАХА И ЖАДНОСТИ -->
-        <!-- ИНДЕКС СТРАХА И ЖАДНОСТИ (СПИДОМЕТР) -->
     <div class="card" id="fearGreedCard">
         <h3 style="margin-top:0; color:#ff6b35; font-size: 16px;">📊 Индекс Страха и Жадности</h3>
-    
         <div style="position: relative; height: 200px; margin: 20px 0;">
             <canvas id="fgGauge"></canvas>
             <div style="position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
@@ -146,7 +92,6 @@ checkLatestVideo();
                 <div style="font-size: 14px; color: #8e8e93; font-weight: 600;" id="fgLabelBig">Загрузка...</div>
             </div>
         </div>
-    
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
             <span style="font-size: 12px; color: #8e8e93;">Обновлено: <span id="fgTime">--</span></span>
             <span style="font-size: 11px; color: #8e8e93;">0 (Страх) → 100 (Жадность)</span>
@@ -155,7 +100,6 @@ checkLatestVideo();
 
     <div class="card" id="chartCard"><canvas id="myChart"></canvas></div>
 
-        <!-- TRADINGVIEW CHART -->
     <div class="card" id="tvChartCard">
         <h3 style="margin-top:0; color:#00d4ff;">📈 BTC/USDT Live Chart</h3>
         <div id="tradingview_widget" style="height:400px; border-radius:8px; overflow:hidden;"></div>
@@ -181,7 +125,6 @@ checkLatestVideo();
         <div id="feedList">Загрузка...</div>
     </div>
 
-        <!-- КАЛЬКУЛЯТОР РИСКА -->
     <div class="card hidden" id="calculatorCard">
         <h3 style="margin-top:0; color:#00d4ff;">🧮 Калькулятор риска</h3>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
@@ -206,8 +149,6 @@ checkLatestVideo();
                 <input type="number" id="calcTP" placeholder="68000" step="any" style="width:100%; padding:8px; border-radius:6px; border:1px solid #00e676; background:rgba(10,10,20,0.8); color:#fff; font-size:14px;">
             </div>
         </div>
-        
-        <!-- Результаты -->
         <div id="calcResults" style="background:rgba(0,212,255,0.05); border-radius:8px; padding:15px; border:1px solid rgba(0,212,255,0.2); display:none;">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                 <span style="color:#8e8e93;">Потенциальный убыток:</span>
@@ -226,11 +167,9 @@ checkLatestVideo();
                 <span id="resSize" style="color:#00d4ff; font-weight:bold;">$0.00</span>
             </div>
         </div>
-        
         <button class="btn" onclick="calculateRisk()" style="margin-top:15px; width:100%;">📊 Рассчитать</button>
     </div>
 
-        <!-- ОБЗОР РЫНКА -->
     <div class="card hidden" id="marketDataCard">
         <h3 style="margin-top:0; color:#00d4ff;">🌍 Обзор рынка (24ч)</h3>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -249,24 +188,17 @@ checkLatestVideo();
         </div>
     </div>
 
-           <!-- КАРТА ЛИКВИДАЦИЙ -->
     <div class="card hidden" id="liquidationCard">
         <h3 style="margin-top:0; color:#ff3b30;">💥 Карта ликвидаций (Live)</h3>
         <p style="font-size:12px; color:#8e8e93; margin-bottom:15px;">Реальные ликвидации с Binance (последние 50)</p>
-        
-        <!-- Фильтры -->
         <div style="display:flex; gap:10px; margin-bottom:15px;">
             <button onclick="filterLiq('all')" class="btn" style="flex:1; padding:8px; font-size:12px;">Все</button>
             <button onclick="filterLiq('LONG')" class="btn btn-danger" style="flex:1; padding:8px; font-size:12px;">LONG</button>
             <button onclick="filterLiq('SHORT')" class="btn btn-success" style="flex:1; padding:8px; font-size:12px;">SHORT</button>
         </div>
-        
-        <!-- Список ликвидаций -->
         <div id="liquidationList" style="max-height:450px; overflow-y:auto;">
             <p style="text-align:center; color:#8e8e93; padding:20px;">Загрузка...</p>
         </div>
-        
-        <!-- Статистика -->
         <div style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-radius:8px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
             <div style="text-align:center;">
                 <div style="font-size:11px; color:#8e8e93;">Ликвидаций LONG</div>
@@ -279,31 +211,23 @@ checkLatestVideo();
         </div>
     </div>
 
-        <!-- FUNDING RATES & RSI -->
     <div class="card hidden" id="derivativesCard">
         <h3 style="margin-top:0; color:#ff6b35;">📊 Funding Rates & RSI</h3>
-        
-        <!-- Funding Rates -->
         <div style="margin-bottom:20px;">
             <h4 style="color:#00d4ff; font-size:14px; margin-bottom:10px;">🔥 Экстремальный Funding</h4>
             <div id="fundingList" style="display:grid; gap:8px;">
                 <p style="color:#8e8e93; text-align:center;">Загрузка...</p>
             </div>
         </div>
-        
-        <!-- RSI -->
         <div>
             <h4 style="color:#00d4ff; font-size:14px; margin-bottom:10px;">📈 RSI Дивергенции</h4>
             <div id="rsiList" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <p style="color:#8e8e93; grid-column: 1/-1; text-align:center;">Загрузка...</p>
             </div>
         </div>
-        
-        <!-- Ссылка на полную карту ликвидаций -->
         <div style="margin-top:20px; padding:15px; background:rgba(255,59,48,0.1); border-radius:8px; text-align:center;">
             <p style="font-size:12px; color:#8e8e93; margin-bottom:10px;">️ Полная карта ликвидаций:</p>
-            <a href="https://www.coinglass.com/pro/futures/LiquidationHeatMap" target="_blank" 
-               class="btn" style="display:inline-block; padding:8px 16px; font-size:13px; text-decoration:none;">
+            <a href="https://www.coinglass.com/pro/futures/LiquidationHeatMap" target="_blank" class="btn" style="display:inline-block; padding:8px 16px; font-size:13px; text-decoration:none;">
                 Открыть Coinglass ↗
             </a>
         </div>
@@ -311,10 +235,10 @@ checkLatestVideo();
 
     <div class="btn-container">
         <button class="btn" onclick="refreshData()">🔄 Обновить данные</button>
-        <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()">📚 Разборы сделок</button>
-        <button class="btn btn-secondary" onclick="toggleYoutube()">🎥 Видео</button>
-        <button class="btn btn-secondary" onclick="toggleCoinAnalysis()">🪙 Разборы монет</button>
-        <button class="btn btn-secondary" onclick="toggleFeed()">🔥 Лента сигналов</button>
+        <button class="btn btn-secondary hidden" id="btnAnalyses" onclick="toggleAnalyses()"> Разборы сделок</button>
+        <button class="btn btn-secondary" onclick="toggleYoutube()"> Видео</button>
+        <button class="btn btn-secondary" onclick="toggleCoinAnalysis()"> Разборы монет</button>
+        <button class="btn btn-secondary" onclick="toggleFeed()"> Лента сигналов</button>
         <button class="btn btn-secondary" onclick="toggleCalculator()">🧮 Калькулятор риска</button>
         <button class="btn btn-secondary" onclick="toggleMarketData()">🌍 Обзор рынка</button>
         <button class="btn btn-secondary" onclick="toggleLiquidations()">💥 Карта ликвидаций</button>
@@ -346,7 +270,7 @@ checkLatestVideo();
             <textarea id="analysisText" rows="5" placeholder="Опиши ситуацию..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
         </div>
         <div class="btn-container" style="margin-top:15px;">
-            <button class="btn btn-success" onclick="saveAnalysis()">💾 Сохранить</button>
+            <button class="btn btn-success" onclick="saveAnalysis()"> Сохранить</button>
             <button class="btn btn-secondary" onclick="cancelCreateForm()">Отмена</button>
         </div>
     </div>
@@ -385,14 +309,14 @@ checkLatestVideo();
             </div>
             <div id="form-screenshot-tf2" class="form-screenshot-field" style="display:none;">
                 <input type="text" id="tf2Screenshot" placeholder="📎 Ссылка на скриншот" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
-                <textarea id="tf2Comment" rows="3" placeholder="💬 Комментарий..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
+                <textarea id="tf2Comment" rows="3" placeholder=" Комментарий..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
             </div>
             <div id="form-screenshot-tf3" class="form-screenshot-field" style="display:none;">
                 <input type="text" id="tf3Screenshot" placeholder="📎 Ссылка на скриншот" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
                 <textarea id="tf3Comment" rows="3" placeholder="💬 Комментарий..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
             </div>
             <div id="form-screenshot-tf4" class="form-screenshot-field" style="display:none;">
-                <input type="text" id="tf4Screenshot" placeholder="📎 Ссылка на скриншот" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+                <input type="text" id="tf4Screenshot" placeholder=" Ссылка на скриншот" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
                 <textarea id="tf4Comment" rows="3" placeholder="💬 Комментарий..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ff6b35; background:rgba(10,10,20,0.8); color:#fff; font-size:13px; box-sizing:border-box;"></textarea>
             </div>
         </div>
@@ -410,47 +334,38 @@ checkLatestVideo();
         </div>
     </div>
 
-<div class="card hidden" id="secretZone">
-    <!-- ДОБАВЛЕН cursor:pointer и onclick для второй пасхалки -->
-    <h3 style="margin:0 0 10px 0; cursor:pointer;" onclick="showSecretResetButton()">🔥 ADMIN PANEL</h3>
-    <p style="margin:0 0 15px 0; font-size:11px; color:rgba(255,255,255,0.5);">Полный доступ к управлению ботом</p>
-    
-    <div class="btn-container" style="margin-top:15px;">
-        <button class="btn btn-success" onclick="showCreateForm()">✏️ Создать разбор сделки</button>
-        <button class="btn btn-secondary" onclick="enableEditMode()">⚙️ Редактировать сделки</button>
-        <button class="btn btn-danger" onclick="enableDeleteMode()">🗑️ Удалить сделки</button>
-        <button class="btn btn-success" onclick="showCoinAnalysisForm()">🪙 Создать разбор монет</button>
-        
-        <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
-            <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">⚙️ Управление статистикой</h4>
-            
-            <button class="btn btn-secondary" onclick="tg.showAlert('💡 Для установки депозита используй команду в боте:\n/set_deposit 10000\n\n(где 10000 — твоя сумма)')" style="margin-top:10px;">
-                💰 Установить депозит
-            </button>
-            
-            <!-- СКРЫТАЯ КНОПКА СБРОСА (появляется после 7 кликов по заголовку ADMIN PANEL) -->
-            <div id="secretResetBtn" class="hidden" style="margin-top:15px;">
-                <button class="btn" onclick="resetStats()" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
-                    ⚠️ СБРОСИТЬ ВСЮ СТАТИСТИКУ
+    <div class="card hidden" id="secretZone">
+        <h3 style="margin:0 0 10px 0; cursor:pointer;" onclick="showSecretResetButton()">🔥 ADMIN PANEL</h3>
+        <p style="margin:0 0 15px 0; font-size:11px; color:rgba(255,255,255,0.5);">Полный доступ к управлению ботом</p>
+        <div class="btn-container" style="margin-top:15px;">
+            <button class="btn btn-success" onclick="showCreateForm()">✏️ Создать разбор сделки</button>
+            <button class="btn btn-secondary" onclick="enableEditMode()">⚙️ Редактировать сделки</button>
+            <button class="btn btn-danger" onclick="enableDeleteMode()">🗑️ Удалить сделки</button>
+            <button class="btn btn-success" onclick="showCoinAnalysisForm()">🪙 Создать разбор монет</button>
+            <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+                <h4 style="color:#ff6b35; font-size:14px; margin-bottom:10px;">⚙️ Управление статистикой</h4>
+                <button class="btn btn-secondary" onclick="tg.showAlert('💡 Для установки депозита используй команду в боте:\n/set_deposit 10000\n\n(где 10000 — твоя сумма)')" style="margin-top:10px;">
+                    💰 Установить депозит
                 </button>
-                <p style="font-size:11px; color:#ff3b30; margin-top:8px;">⚠️ Это действие необратимо!</p>
+                <div id="secretResetBtn" class="hidden" style="margin-top:15px;">
+                    <button class="btn" onclick="resetStats()" style="background:linear-gradient(135deg, #ff3b30 0%, #cc2a22 100%);">
+                        ⚠️ СБРОСИТЬ ВСЮ СТАТИСТИКУ
+                    </button>
+                    <p style="font-size:11px; color:#ff3b30; margin-top:8px;">️ Это действие необратимо!</p>
+                </div>
+            </div>
+            <div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:12px; color:#8e8e93;">
+                💡 Все команды доступны в Telegram боте:<br>
+                /reset_stats - сброс статистики<br>
+                /set_deposit XXXX - установить депозит<br>
+                /balance - проверить баланс<br>
+                /active - активные сетапы
             </div>
         </div>
-        
-        <div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; font-size:12px; color:#8e8e93;">
-            💡 Все команды доступны в Telegram боте:<br>
-            /reset_stats - сброс статистики<br>
-            /set_deposit XXXX - установить депозит<br>
-            /balance - проверить баланс<br>
-            /active - активные сетапы
-        </div>
+        <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
+        <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
     </div>
-    
-    <div id="editControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для редактирования:</p><div id="editList"></div></div>
-    <div id="deleteControls" class="hidden" style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.1); border-radius:8px;"><p style="margin:0 0 10px 0; font-size:14px;">Выбери для удаления:</p><div id="deleteList"></div></div>
-</div>
 
-    <!-- МОДАЛЬНОЕ ОКНО -->
     <div id="viewModal" class="modal-overlay hidden" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h2 id="modalTitle" style="margin-top:0; color:#00d4ff;">📊 Разбор сделки</h2>
@@ -465,45 +380,38 @@ checkLatestVideo();
         </div>
     </div>
 
-    <!-- ФУТЕР С ПАРТНЁРАМИ (ДОСТУПЕН ВСЕМ) -->
     <div class="footer">
         <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/logo.png" alt="MTC">
         <p class="brand">My Trading Club</p>
         <p>© 2026 MTC Platform</p>
-    
         <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px;">
             <p style="font-size: 12px; color: #8e8e93; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Наши партнеры</p>
             <a href="https://bingx.com/ru/perpetual/" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #0052ff 0%, #0033a0 100%);">🔷 Торговать на BingX</a>
             <a href="https://t.me/upscale_news_ru" target="_blank" class="btn btn-success" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px;">🚀 Upscale Prop (Новости)</a>
             <a href="https://heshhadge.com/?ysclid=mu4fgrkesk326466265" target="_blank" class="btn" style="display:block; margin: 5px 0; padding: 10px; font-size: 14px; background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%); border: 1px solid #666;"> HeadHedge Prop</a>
         </div>
-    
         <p style="font-size: 12px; opacity: 0.6;">@mtcthunter_bot</p>
     </div>
 
-    <!-- СКРИПТЫ (ВНУТРИ BODY, В САМОМ КОНЦЕ) -->
     <script>
         var tg = window.Telegram.WebApp; tg.expand();
         var userRole = 'guest', clickCount = 0, lastClickTime = 0, chartInstance = null, allAnalyses = [];
 
-                document.getElementById('logo').addEventListener('click', function() {
+        document.getElementById('logo').addEventListener('click', function() {
             var now = Date.now();
             if (now - lastClickTime < 1000) { 
                 clickCount++; 
                 if (clickCount >= 5) {
-                    // Проверяем реальную подписку через API
                     fetch('/api/check_vip', { headers: { 'X-Telegram-Init-Data': tg.initData || '' } })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         if (data.is_vip) {
-                            // Подписан: открываем админку
                             document.getElementById('secretZone').classList.remove('hidden');
                             tg.showAlert("🔓 Доступ к ADMIN PANEL разрешен!");
                         } else {
-                            // Не подписан: отказываем в доступе
-                            tg.showAlert("🔒 Доступ запрещен!\n\nДля доступа к админ-панели необходимо быть подписанным на VIP канал.");
+                            tg.showAlert(" Доступ запрещен!\n\nДля доступа к админ-панели необходимо быть подписанным на VIP канал.");
                         }
-                        clickCount = 0; // Сбрасываем счетчик в любом случае
+                        clickCount = 0;
                     })
                     .catch(function(err) {
                         console.error('VIP Check Error:', err);
@@ -516,7 +424,7 @@ checkLatestVideo();
             lastClickTime = now;
         });
 
-                function refreshData() {
+        function refreshData() {
             document.getElementById('total').innerText = 'Загрузка...';
             fetch('/api/stats', { headers: { 'X-Telegram-Init-Data': tg.initData || '' } })
             .then(function(r) { return r.json(); })
@@ -524,27 +432,19 @@ checkLatestVideo();
                 userRole = data.role || 'guest';
                 document.getElementById('total').innerText = data.total || 0;
                 document.getElementById('winrate').innerText = (data.winrate || 0) + '%';
-                
-                // Баланс и депозит
                 var balance = data.balance || 10000;
                 var deposit = data.deposit || 10000;
                 var pnlUsd = data.pnl_usd || 0;
                 var pnl = data.pnl || 0;
-                
                 document.getElementById('balance').innerText = '$' + balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 document.getElementById('deposit').innerText = '$' + deposit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                
-                // PnL в $ с цветом
                 var pnlUsdEl = document.getElementById('pnlUsd');
                 var pnlEl = document.getElementById('pnl');
                 pnlUsdEl.innerText = (pnlUsd >= 0 ? '+$' : '-$') + Math.abs(pnlUsd).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 pnlEl.innerText = (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%';
-                
-                // Цвета для прибыли/убытка
                 pnlUsdEl.style.color = pnlUsd >= 0 ? '#00e676' : '#ff3b30';
                 pnlEl.style.color = pnl >= 0 ? '#00e676' : '#ff3b30';
                 document.getElementById('balance').style.color = balance >= deposit ? '#00e676' : '#ff3b30';
-                
                 setTimeout(function() {
                     var ctx = document.getElementById('myChart').getContext('2d');
                     if (chartInstance) { chartInstance.data.datasets[0].data = [data.wins||0, data.losses||0, (data.skipped||0)+(data.expired||0)]; chartInstance.update(); }
@@ -554,90 +454,77 @@ checkLatestVideo();
             }).catch(function(err) { alert('Ошибка: ' + err.message); });
         }
 
-        // Сброс статистики
-function resetStats() {
-    if (!confirm('⚠️ ВНИМАНИЕ! Это удалит ВСЮ статистику сделок безвозвратно!\n\nТы уверен?')) return;
-    if (!confirm('🔒 ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ!\n\nСтатистика будет обнулена:\n- Все сделки удалены\n- Баланс сброшен до $10,000\n- История очищена\n\nПродолжить?')) return;
-    
-    fetch('/api/reset_stats', { 
-        method: 'POST', 
-        headers: { 'X-Telegram-Init-Data': tg.initData || '' } 
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(res) {
-        if (res.ok) {
-            tg.showAlert('✅ Статистика успешно сброшена!');
-            refreshData(); // Обновляем данные на экране
-        } else {
-            tg.showAlert('❌ Ошибка: ' + (res.error || 'Неизвестная ошибка'));
-        }
-    })
-    .catch(function(err) {
-        tg.showAlert('❌ Ошибка соединения: ' + err.message);
-    });
-}
-
-// Вторая пасхалка: скрытая кнопка сброса
-var secretClickCount = 0;
-var secretClickTime = 0;
-
-function showSecretResetButton() {
-    var now = Date.now();
-    if (now - secretClickTime < 2000) {
-        secretClickCount++;
-        if (secretClickCount >= 7) {
-            // Показываем кнопку сброса
-            var resetBtn = document.getElementById('secretResetBtn');
-            if (resetBtn) {
-                resetBtn.classList.remove('hidden');
-                tg.showAlert('🔓 Секретная функция разблокирована!');
-            }
-            secretClickCount = 0;
-        }
-    } else {
-        secretClickCount = 1;
-    }
-    secretClickTime = now;
-}
-                function loadFearGreed() {
-                    fetch('/api/fear_greed')
-                        .then(function(r) { return r.json(); })
-                        .then(function(data) {
-                            if (data.value) {
-                                var val = parseInt(data.value);
-                                var label = data.value_classification;
-                                var timestamp = data.timestamp * 1000;
-                                var dateStr = new Date(timestamp).toLocaleDateString('ru-RU');
-
-                                // Обновляем только дату, остальное сделает спидометр
-                                document.getElementById('fgTime').innerText = dateStr;
-
-                                // 🚀 ВЫЗЫВАЕМ ФУНКЦИЮ ОТРИСОВКИ СПИДОМЕТРА!
-                                updateGaugeChart(val, label);
-                             }
-                         })
-                         .catch(function(err) { console.error('FG Error:', err); });
+        function resetStats() {
+            if (!confirm('⚠️ ВНИМАНИЕ! Это удалит ВСЮ статистику сделок безвозвратно!\n\nТы уверен?')) return;
+            if (!confirm('🔒 ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ!\n\nСтатистика будет обнулена:\n- Все сделки удалены\n- Баланс сброшен до $10,000\n- История очищена\n\nПродолжить?')) return;
+            fetch('/api/reset_stats', { method: 'POST', headers: { 'X-Telegram-Init-Data': tg.initData || '' } })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    tg.showAlert('✅ Статистика успешно сброшена!');
+                    refreshData();
+                } else {
+                    tg.showAlert('❌ Ошибка: ' + (res.error || 'Неизвестная ошибка'));
                 }
+            })
+            .catch(function(err) {
+                tg.showAlert('❌ Ошибка соединения: ' + err.message);
+            });
+        }
+
+        var secretClickCount = 0;
+        var secretClickTime = 0;
+
+        function showSecretResetButton() {
+            var now = Date.now();
+            if (now - secretClickTime < 2000) {
+                secretClickCount++;
+                if (secretClickCount >= 7) {
+                    var resetBtn = document.getElementById('secretResetBtn');
+                    if (resetBtn) {
+                        resetBtn.classList.remove('hidden');
+                        tg.showAlert('🔓 Секретная функция разблокирована!');
+                    }
+                    secretClickCount = 0;
+                }
+            } else {
+                secretClickCount = 1;
+            }
+            secretClickTime = now;
+        }
+
+        function loadFearGreed() {
+            fetch('/api/fear_greed')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.value) {
+                        var val = parseInt(data.value);
+                        var label = data.value_classification;
+                        var timestamp = data.timestamp * 1000;
+                        var dateStr = new Date(timestamp).toLocaleDateString('ru-RU');
+                        document.getElementById('fgTime').innerText = dateStr;
+                        updateGaugeChart(val, label);
+                    }
+                })
+                .catch(function(err) { console.error('FG Error:', err); });
+        }
 
         function updateGaugeChart(value, label) {
             var ctx = document.getElementById('fgGauge').getContext('2d');
             if (window.fgChart) window.fgChart.destroy();
-    
             var color = '#ffcc00';
             if (value <= 25) color = '#ff3b30';
             else if (value <= 45) color = '#ff9500';
             else if (value <= 55) color = '#ffcc00';
             else if (value <= 75) color = '#a2e000';
             else color = '#00e676';
-    
             document.getElementById('fgValueBig').innerText = value;
             document.getElementById('fgValueBig').style.color = color;
             document.getElementById('fgLabelBig').innerText = label;
             document.getElementById('fgLabelBig').style.color = color;
-    
             window.fgChart = new Chart(ctx, {
-                 type: 'doughnut',
-                 data: {
+                type: 'doughnut',
+                data: {
                     labels: ['Страх', 'Текущее', 'Жадность'],
                     datasets: [{
                         data: [value, 100 - value, 0],
@@ -687,128 +574,40 @@ function showSecretResetButton() {
         function loadYoutube() {
             var list = document.getElementById('youtubeList');
             list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Загрузка...</p>';
-    
             fetch('/api/youtube')
-                .then(function(r) { 
-                     console.log('📥 YouTube API response:', r);
-                    return r.json(); 
-                })
+                .then(function(r) { return r.json(); })
                 .then(function(videos) {
-                    console.log('✅ YouTube videos:', videos);
-            
                     if (!videos || videos.length === 0) { 
                         list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Видео не найдены</p>'; 
                         return; 
                     }
-            
                     var html = '';
-                    videos.forEach(function(v, index) {
-                        // Пробуем получить ID из разных полей
+                    videos.forEach(function(v) {
                         var videoId = v.id || '';
                         if (!videoId && v.link) {
                             var match = v.link.match(/[?&]v=([^&]+)/);
                             if (match) videoId = match[1];
                             else videoId = v.link.split('/').pop();
                         }
-                
-                        console.log('Video ' + index + ':', {
-                            id: videoId,
-                            title: v.title,
-                            thumbnail: v.thumbnail
-                        });
-                
-                        // Используем стандартное превью YouTube
                         var thumbnail = 'https://i.ytimg.com/vi/' + videoId + '/mqdefault.jpg';
-                
                         html += '<div class="video-card" onclick="openVideoModal(\'' + videoId + '\', \'' + (v.title || '').replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' +
                             '<img class="video-thumb" src="' + thumbnail + '" alt="' + (v.title || 'Video') + '" loading="lazy" onerror="console.error(\'Image load error:\', this.src)">' +
                             '<div class="video-title">' + (v.title || 'Без названия') + '</div>' +
                         '</div>';
                     });
-            
-                     list.innerHTML = html;
-                    console.log('✅ YouTube rendered:', videos.length, 'videos');
+                    list.innerHTML = html;
                 })
                 .catch(function(err) { 
-                    console.error(' YouTube error:', err);
                     list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1; color:#ff3b30;">Ошибка загрузки: ' + err.message + '</p>'; 
                 });
         }
-        
+
         function openVideoModal(videoId, title) {
-    console.log('🎬 Opening video:', videoId, title);
-    
-    // Удаляем старое модальное окно если есть
-    var oldModal = document.querySelector('.video-modal-overlay');
-    if (oldModal) oldModal.remove();
-    
-    var modal = document.createElement('div');
-    modal.className = 'video-modal-overlay';
-    modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;';
-    
-    modal.innerHTML = `
-        <div style="background:#1a1a2e; border:1px solid rgba(0,212,255,0.3); border-radius:16px; padding:0; max-width:900px; width:100%; max-height:90vh; overflow:hidden; box-shadow:0 0 40px rgba(0,212,255,0.2);">
-            <div id="player-container" style="position:relative; padding-bottom:56.25%; height:0; background:#000;">
-                <div id="player" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
-            </div>
-            <div style="padding:20px; background:#1a1a2e; display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0; color:#00d4ff; font-size:16px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${title || 'Video'}</h3>
-                <button onclick="closeVideoModal()" style="margin-left:15px; padding:10px 20px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:600;">
-                    Закрыть
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Загружаем YouTube Player API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    
-    // Создаем плеер после загрузки API
-    window.onYouTubeIframeAPIReady = function() {
-        window.player = new YT.Player('player', {
-            height: '100%',
-            width: '100%',
-            videoId: videoId,
-            playerVars: {
-                'autoplay': 1,
-                'controls': 1,
-                'rel': 0,
-                'modestbranding': 1,
-                'playsinline': 1
-            },
-            events: {
-                'onReady': onPlayerReady,
-                'onStateChange': onPlayerStateChange
-            }
-        });
-    };
-    
-    console.log('✅ Modal created with YouTube Player API');
-}
-
-         function onPlayerReady(event) {
-            console.log('✅ YouTube Player ready');
-            event.target.playVideo();
-        }
-
-        function onPlayerStateChange(event) {
-            console.log('Player state:', event.data);
-        }
-
-        function closeVideoModal() {
-            console.log(' Closing video modal');
-            if (window.player) {
-                window.player.stopVideo();
-                window.player.destroy();
-            }
-            var modal = document.querySelector('.video-modal-overlay');
-            if (modal) {
-                modal.remove();
+            var youtubeUrl = 'https://www.youtube.com/watch?v=' + videoId;
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.openLink(youtubeUrl);
+            } else {
+                window.open(youtubeUrl, '_blank');
             }
         }
 
@@ -887,8 +686,8 @@ function showSecretResetButton() {
                     }
                     content += '<div style="margin-top:20px; padding:15px; background:rgba(0,212,255,0.1); border-radius:8px; border:1px solid rgba(0,212,255,0.3);">';
                     content += '<p style="margin:0 0 10px 0; color:#00d4ff; font-weight:600;">💬 Есть вопросы или не согласен?</p>';
-                    content += '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600; cursor:pointer;">💬 Обсудить во флудилке</a>';
-                    content += '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px; cursor:pointer;">📝 Написать своё мнение во флудилке</a>';
+                    content += '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn" style="display:block; text-align:center; text-decoration:none; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); color:#fff; border-radius:8px; font-weight:600; cursor:pointer;"> Обсудить во флудилке</a>';
+                    content += '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="display:block; text-align:center; text-decoration:none; padding:12px; margin-top:10px; cursor:pointer;"> Написать своё мнение во флудилке</a>';
                     content += '</div>';
                     var secretZone = document.getElementById('secretZone');
                     if (secretZone && !secretZone.classList.contains('hidden')) {
@@ -898,7 +697,7 @@ function showSecretResetButton() {
                         content += '</div>';
                     } else {
                         content += '<div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; text-align:center;">';
-                        content += '<p style="margin:0; font-size:12px; color:#8e8e93;">🔒 Админ-функции скрыты. Кликни 5 раз по логотипу для доступа.</p>';
+                        content += '<p style="margin:0; font-size:12px; color:#8e8e93;"> Админ-функции скрыты. Кликни 5 раз по логотипу для доступа.</p>';
                         content += '</div>';
                     }
                     content += '<button class="btn btn-secondary" onclick="document.querySelector(\'.modal-overlay\').remove()" style="margin-top:15px; width:100%; cursor:pointer;">Закрыть</button>';
@@ -1163,15 +962,13 @@ function showSecretResetButton() {
             if (isHidden) loadFeed();
         }
 
-                function toggleCalculator() {
+        function toggleCalculator() {
             var card = document.getElementById('calculatorCard');
             var isHidden = card.classList.contains('hidden');
-            // Скрываем остальные карточки для чистоты
             document.getElementById('analysesCard').classList.add('hidden');
             document.getElementById('youtubeCard').classList.add('hidden');
             document.getElementById('coinAnalysisCard').classList.add('hidden');
             document.getElementById('feedCard').classList.add('hidden');
-            
             card.classList.toggle('hidden');
         }
 
@@ -1181,27 +978,21 @@ function showSecretResetButton() {
             var entry = parseFloat(document.getElementById('calcEntry').value) || 0;
             var sl = parseFloat(document.getElementById('calcSL').value) || 0;
             var tp = parseFloat(document.getElementById('calcTP').value) || 0;
-
             if (deposit <= 0 || riskPercent <= 0 || entry <= 0 || sl <= 0) {
                 alert('Пожалуйста, заполни Депозит, Риск, Вход и SL');
                 return;
             }
-
             var riskAmount = deposit * (riskPercent / 100);
             var priceDiff = Math.abs(entry - sl);
             var positionSizeUsd = (riskAmount / priceDiff) * entry;
             var positionSizeCoins = riskAmount / priceDiff;
-            
             var profitPerCoin = Math.abs(tp - entry);
             var potentialProfit = positionSizeCoins * profitPerCoin;
-            
             var rr = (potentialProfit / riskAmount).toFixed(2);
-
             document.getElementById('resLoss').innerText = '-$' + riskAmount.toFixed(2);
             document.getElementById('resProfit').innerText = '+$' + potentialProfit.toFixed(2);
             document.getElementById('resRR').innerText = '1 : ' + rr;
             document.getElementById('resSize').innerText = '$' + positionSizeUsd.toFixed(2) + ' (' + positionSizeCoins.toFixed(4) + ' мон.)';
-            
             document.getElementById('calcResults').style.display = 'block';
         }
 
@@ -1232,7 +1023,7 @@ function showSecretResetButton() {
                             chartHtml +
                             '<div style="margin-top:10px;">' +
                                 '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none; margin-right:5px;">💬 Обсудить</a>' +
-                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>'
+                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
                             '</div>' +
                             '</div>';
                     }).join('');
@@ -1265,7 +1056,7 @@ function showSecretResetButton() {
             lightbox.appendChild(img);
             document.body.appendChild(lightbox);
         }
-        
+
         function autoGenerateBingXLink() {
             var symbol = document.getElementById('coinSymbol').value.toUpperCase().trim();
             if (symbol && symbol.length >= 3) {
@@ -1286,40 +1077,34 @@ function showSecretResetButton() {
             if (activeBtn) activeBtn.style.background = '#ff6b35';
         }
 
-
-                function toggleMarketData() {
+        function toggleMarketData() {
             var card = document.getElementById('marketDataCard');
             var isHidden = card.classList.contains('hidden');
-            // Скрываем остальные для чистоты
             document.getElementById('analysesCard').classList.add('hidden');
             document.getElementById('youtubeCard').classList.add('hidden');
             document.getElementById('coinAnalysisCard').classList.add('hidden');
             document.getElementById('feedCard').classList.add('hidden');
             document.getElementById('calculatorCard').classList.add('hidden');
-            
             card.classList.toggle('hidden');
             if (isHidden) loadMarketData();
         }
 
-                        function toggleLiquidations() {
+        function toggleLiquidations() {
             var card = document.getElementById('liquidationCard');
             var isHidden = card.classList.contains('hidden');
-            // Скрываем остальные
-            ['analysesCard', 'youtubeCard', 'coinAnalysisCard', 'feedCard', 
-             'calculatorCard', 'marketDataCard', 'derivativesCard'].forEach(id => {
+            ['analysesCard', 'youtubeCard', 'coinAnalysisCard', 'feedCard', 'calculatorCard', 'marketDataCard', 'derivativesCard'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             card.classList.toggle('hidden');
             if (isHidden) {
                 loadLiquidations();
-                // Автообновление каждые 10 секунд
                 window.liqInterval = setInterval(loadLiquidations, 10000);
             } else {
                 clearInterval(window.liqInterval);
             }
         }
 
-                var currentLiqFilter = 'all';
+        var currentLiqFilter = 'all';
         var allLiquidations = [];
 
         function loadLiquidations() {
@@ -1342,19 +1127,15 @@ function showSecretResetButton() {
             if (currentLiqFilter !== 'all') {
                 filtered = allLiquidations.filter(function(l) { return l.side === currentLiqFilter; });
             }
-            
             var html = '';
             var longCount = 0;
             var shortCount = 0;
-            
             filtered.forEach(function(liq) {
                 var color = liq.side === 'LONG' ? '#ff3b30' : '#00e676';
-                var emoji = liq.side === 'LONG' ? '🔴' : '🟢';
+                var emoji = liq.side === 'LONG' ? '🔴' : '';
                 var bg = liq.side === 'LONG' ? 'rgba(255,59,48,0.1)' : 'rgba(0,230,118,0.1)';
-                
                 if (liq.side === 'LONG') longCount++;
                 else shortCount++;
-                
                 html += '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin:5px 0; background:' + bg + '; border-radius:6px; border-left:3px solid ' + color + '">' +
                     '<div>' +
                         '<div style="font-weight:bold; color:#fff;">' + emoji + ' ' + liq.symbol + '</div>' +
@@ -1367,22 +1148,18 @@ function showSecretResetButton() {
                     '</div>' +
                 '</div>';
             });
-            
             if (filtered.length === 0) {
                 html = '<p style="text-align:center; color:#8e8e93; padding:20px;">Нет ликвидаций</p>';
             }
-            
             document.getElementById('liquidationList').innerHTML = html;
             document.getElementById('liqLongCount').innerText = longCount;
             document.getElementById('liqShortCount').innerText = shortCount;
         }
 
-                function toggleDerivatives() {
+        function toggleDerivatives() {
             var card = document.getElementById('derivativesCard');
             var isHidden = card.classList.contains('hidden');
-            // Скрываем остальные
-            ['analysesCard', 'youtubeCard', 'coinAnalysisCard', 'feedCard', 
-             'calculatorCard', 'marketDataCard', 'liquidationCard'].forEach(id => {
+            ['analysesCard', 'youtubeCard', 'coinAnalysisCard', 'feedCard', 'calculatorCard', 'marketDataCard', 'liquidationCard'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             card.classList.toggle('hidden');
@@ -1393,7 +1170,6 @@ function showSecretResetButton() {
             fetch('/api/derivatives_data')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    // Funding Rates
                     var fundingHtml = '';
                     if (Object.keys(data.funding).length === 0) {
                         fundingHtml = '<p style="color:#00e676; text-align:center;">✅ Нет экстремальных funding rates</p>';
@@ -1411,12 +1187,12 @@ function showSecretResetButton() {
                         }
                     }
                     document.getElementById('fundingList').innerHTML = fundingHtml;
-                    
-                    // RSI
                     var rsiHtml = '';
                     for (var pair in data.rsi) {
                         var r = data.rsi[pair];
-                        var [coin, tf] = pair.split('_');
+                        var parts = pair.split('_');
+                        var coin = parts[0];
+                        var tf = parts[1];
                         var color = r.value > 70 ? '#ff3b30' : r.value < 30 ? '#00e676' : '#ffcc00';
                         rsiHtml += '<div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:6px; text-align:center;">' +
                             '<div style="font-size:12px; color:#8e8e93;">' + coin + ' ' + tf + '</div>' +
@@ -1429,14 +1205,13 @@ function showSecretResetButton() {
                 .catch(function(err) { console.error('Derivatives Error:', err); });
         }
 
-                function loadMarketData() {
+        function loadMarketData() {
             fetch('/api/market_data')
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.market_cap) {
                         document.getElementById('mdCap').innerText = data.market_cap;
                         document.getElementById('mdBtc').innerText = data.btc_dominance;
-                        
                         var trendEl = document.getElementById('mdTrend');
                         if (data.trend === 'up') {
                             trendEl.innerText = '📈 +' + data.trend_value;
@@ -1450,12 +1225,36 @@ function showSecretResetButton() {
                 .catch(function(err) { console.error('Market Data Error:', err); });
         }
 
-        // Запуск при загрузке страницы
+        function checkLatestVideo() {
+            fetch('/api/youtube')
+                .then(function(r) { return r.json(); })
+                .then(function(videos) {
+                    if (videos && videos.length > 0) {
+                        var latest = videos[0];
+                        var lastViewed = localStorage.getItem('lastMtcVideoViewed');
+                        if (lastViewed !== latest.id) {
+                            var html = '<div style="cursor:pointer;" onclick="openVideoModal(\'' + latest.id + '\', \'' + latest.title.replace(/'/g, "\\'") + '\')">' +
+                                '<img src="https://i.ytimg.com/vi/' + latest.id + '/mqdefault.jpg" style="width:100%; border-radius:8px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1);">' +
+                                '<h4 style="margin:0 0 10px 0; color:#fff; font-size:15px; line-height:1.4;">' + latest.title + '</h4>' +
+                                '<div style="display:flex; align-items:center; justify-content:space-between;">' +
+                                    '<span style="color:#8e8e93; font-size:12px;">Нажмите, чтобы посмотреть</span>' +
+                                    '<span style="background:#ff6b35; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600;">Смотреть ▶</span>' +
+                                '</div>' +
+                            '</div>';
+                            document.getElementById('latestVideoContent').innerHTML = html;
+                            document.getElementById('latestVideoCard').classList.remove('hidden');
+                            localStorage.setItem('lastMtcVideoViewed', latest.id);
+                        }
+                    }
+                })
+                .catch(function(err) { console.error('Video check error:', err); });
+        }
+
         refreshData();
         loadFearGreed();
+        checkLatestVideo();
     </script>
 
-    <!-- TradingView Widget -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
     function initTradingView() {
@@ -1491,11 +1290,9 @@ function showSecretResetButton() {
                     { text: "1М", resolution: "M", description: "1 месяц" }
                 ]
             });
-            console.log("✅ TradingView chart loaded with full toolbar");
         } catch(e) {
-            console.error("⚠️ TradingView error:", e);
-            document.getElementById('tradingview_widget').innerHTML = 
-                '<p style="text-align:center; padding:50px; color:#8e8e93;">⚠️ График загружается...</p>';
+            console.error("TradingView error:", e);
+            document.getElementById('tradingview_widget').innerHTML = '<p style="text-align:center; padding:50px; color:#8e8e93;">⚠️ График загружается...</p>';
         }
     }
     window.addEventListener('load', function() { setTimeout(initTradingView, 1000); });
