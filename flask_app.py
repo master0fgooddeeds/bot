@@ -847,14 +847,18 @@ def make_fear_greed_gauge(value, label):
         color = '#00e676'
         label_color = 'Extreme Greed'
     
-    # Рисуем дугу (спидометр)
-    wedge = Wedge((5, 5), 4, 180, 0, width=0.8, facecolor=color, edgecolor='white', linewidth=2)
+    # Рисуем дугу (спидометр) — ИСПРАВЛЕНО: начинаем с 0 градусов (справа)
+    wedge = Wedge((5, 5), 4, 0, 180, width=0.8, facecolor=color, edgecolor='white', linewidth=2)
     ax.add_patch(wedge)
     
-    # Стрелка
-    angle = 180 - (value / 100 * 180)
-    arrow_x = 5 + 3.5 * np.cos(np.radians(angle))
-    arrow_y = 5 + 3.5 * np.sin(np.radians(angle))
+    # Серая дуга (фон)
+    bg_wedge = Wedge((5, 5), 4, 0, 180, width=0.8, facecolor='none', edgecolor='gray', linewidth=1, linestyle='--')
+    ax.add_patch(bg_wedge)
+    
+    # Стрелка — ИСПРАВЛЕНО: правильный угол
+    angle = (value / 100 * 180)  # 0-180 градусов
+    arrow_x = 5 + 3.5 * np.cos(np.radians(180 - angle))
+    arrow_y = 5 + 3.5 * np.sin(np.radians(180 - angle))
     ax.arrow(5, 5, arrow_x-5, arrow_y-5, width=0.15, color='white', length_includes_head=True, head_width=0.4, head_length=0.5)
     
     # Центральное значение
