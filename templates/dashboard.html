@@ -736,40 +736,80 @@ function showSecretResetButton() {
         }
         
         function openVideoModal(videoId, title) {
-            console.log(' Opening video:', videoId, title);
+    console.log('🎬 Opening video:', videoId, title);
     
-            // Удаляем старое модальное окно если есть
-            var oldModal = document.querySelector('.modal-overlay');
-            if (oldModal) oldModal.remove();
+    // Удаляем старое модальное окно если есть
+    var oldModal = document.querySelector('.video-modal-overlay');
+    if (oldModal) oldModal.remove();
     
-            var modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px;';
-            modal.onclick = function() { modal.remove(); };
+    var modal = document.createElement('div');
+    modal.className = 'video-modal-overlay';
+    modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;';
     
-            modal.innerHTML = `
-                <div class="modal-content" onclick="event.stopPropagation()" style="background:#1a1a2e; border:1px solid rgba(0,212,255,0.3); border-radius:16px; padding:0; max-width:900px; width:100%; max-height:90vh; overflow:hidden; box-shadow:0 0 40px rgba(0,212,255,0.2);">
-                    <div style="position:relative; padding-bottom:56.25%; height:0; background:#000;">
-                        <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" 
-                                style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen
-                                onload="console.log('✅ Video iframe loaded')"
-                                onerror="console.error('❌ Video iframe error')">
-                        </iframe>
-                    </div>
-                    <div style="padding:20px; background:#1a1a2e;">
-                        <h3 style="margin:0 0 15px 0; color:#00d4ff; font-size:18px;">${title || 'Video'}</h3>
-                        <button onclick="this.closest('.modal-overlay').remove()" 
-                                style="width:100%; padding:12px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:600;">
-                            Закрыть
-                        </button>
-                    </div>
-                </div>
-            `;
+    modal.innerHTML = `
+        <div style="background:#1a1a2e; border:1px solid rgba(0,212,255,0.3); border-radius:16px; padding:0; max-width:900px; width:100%; max-height:90vh; overflow:hidden; box-shadow:0 0 40px rgba(0,212,255,0.2);">
+            <div id="player-container" style="position:relative; padding-bottom:56.25%; height:0; background:#000;">
+                <div id="player" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+            </div>
+            <div style="padding:20px; background:#1a1a2e; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:#00d4ff; font-size:16px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${title || 'Video'}</h3>
+                <button onclick="closeVideoModal()" style="margin-left:15px; padding:10px 20px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:600;">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    `;
     
-            document.body.appendChild(modal);
-            console.log('✅ Modal created');
+    document.body.appendChild(modal);
+    
+    // Загружаем YouTube Player API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    
+    // Создаем плеер после загрузки API
+    window.onYouTubeIframeAPIReady = function() {
+        window.player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            videoId: videoId,
+            playerVars: {
+                'autoplay': 1,
+                'controls': 1,
+                'rel': 0,
+                'modestbranding': 1,
+                'playsinline': 1
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    };
+    
+    console.log('✅ Modal created with YouTube Player API');
+}
+
+         function onPlayerReady(event) {
+            console.log('✅ YouTube Player ready');
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            console.log('Player state:', event.data);
+        }
+
+        function closeVideoModal() {
+            console.log(' Closing video modal');
+            if (window.player) {
+                window.player.stopVideo();
+                window.player.destroy();
+            }
+            var modal = document.querySelector('.video-modal-overlay');
+            if (modal) {
+                modal.remove();
+            }
         }
 
         function loadCoinAnalyses() {
