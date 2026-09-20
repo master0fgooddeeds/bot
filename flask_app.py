@@ -545,11 +545,11 @@ def handle_update(up):
         if data.startswith("bx:"):
             BX["wait_link"][str(uid)] = data[3:]
             bx_save()
-            tg("sendMessage", data={"chat_id": uid, "text": "🔗 Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
+            tg("sendMessage", data={"chat_id": uid, "text": " Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
         elif data.startswith("skip:"):
             BX["pending"].pop(data[5:], None)
             bx_save()
-            tg("sendMessage", data={"chat_id": uid, "text": "❌ Пропущено."})
+            tg("sendMessage", data={"chat_id": uid, "text": " Пропущено."})
         elif data.startswith("conf:"):
             sid = data[5:]
             s = BX["active"].get(sid)
@@ -585,13 +585,13 @@ _Сетап признан неактуальным._"""
 • Винрейт: {winrate}%
 • TP: {wins} | SL: {losses}
 
-🎯 *Стратегия:* CHoCH + FVG
+ *Стратегия:* CHoCH + FVG
 ⚙️ *ТФ:* 4H → 15m, 1H → 5m
 
  Жми кнопку ниже, чтобы открыть дашборд!"""
             kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
             tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
-            tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
+            tg("sendMessage", data={"chat_id": uid, "text": "️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         elif data == "fear_greed":
             try:
                 r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
@@ -605,14 +605,14 @@ _Сетап признан неактуальным._"""
                         
                         gauge_buf = make_fear_greed_gauge(value, label)
                         
-                        caption = f"""📊 **Индекс Страха и Жадности**
+                        caption = f""" **Индекс Страха и Жадности**
 
 Значение: **{value}** ({label})
 Дата: {date_str}
 
 📉 **0-25:** Extreme Fear
 🟠 **26-45:** Fear
-⚖️ **46-55:** Neutral
+️ **46-55:** Neutral
 📈 **56-75:** Greed
 🔥 **76-100:** Extreme Greed
 
@@ -624,7 +624,7 @@ _Индекс показывает настроение рынка_"""
                             "parse_mode": "Markdown"
                         }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
             except Exception as e:
-                print(f"⚠️ Fear & Greed error: {e}")
+                print(f"️ Fear & Greed error: {e}")
                 tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
         return
 
@@ -642,7 +642,7 @@ _Индекс показывает настроение рынка_"""
                     kb = {"inline_keyboard": [
                         [{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
                         [{"text": " Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
-                        [{"text": " Fear & Greed Index", "callback_data": "fear_greed"}]
+                        [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]
                     ]}
                     welcome_text = """*Привет, Админ!*
 
@@ -688,7 +688,7 @@ _Платформа в разработке. Следим за прогресс�
                 history_text = "\n".join([f"• {h['date']} | {h['sym']} {h['tf']} {h['dir'].upper()} → **{h['result']}** ({h['pnl']}%)" for h in last_5])
                 report = f"""📊 *ОТЧЕТ MY TRADING CLUB*
 
-📈 *Всего:* {stats['total']}
+ *Всего:* {stats['total']}
  *TP:* {stats['wins']} ({win_rate:.1f}%)
  *SL:* {stats['losses']}
  *Пропуск:* {stats['skipped']}
@@ -727,14 +727,14 @@ _Платформа в разработке. Следим за прогресс�
                             
                             gauge_buf = make_fear_greed_gauge(value, label)
                             
-                            caption = f""" **Индекс Страха и Жадности**
+                            caption = f"""📊 **Индекс Страха и Жадности**
 
 Значение: **{value}** ({label})
 Дата: {date_str}
 
 📉 **0-25:** Extreme Fear
 🟠 **26-45:** Fear
-️ **46-55:** Neutral
+⚖️ **46-55:** Neutral
 📈 **56-75:** Greed
 🔥 **76-100:** Extreme Greed
 
@@ -747,7 +747,7 @@ _Индекс показывает настроение рынка_"""
                             }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
                 except Exception as e:
                     print(f"⚠️ Fear & Greed error: {e}")
-                    tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
+                    tg("sendMessage", data={"chat_id": uid, "text": "️ Не удалось получить данные"})
                 return
 
             if txt.startswith("/force_close ") and is_admin(uid):
@@ -816,6 +816,7 @@ _Индекс показывает настроение рынка_"""
                     s["id"] = sid
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
+
 def make_fear_greed_gauge(value, label):
     """Генерируем картинку со спидометром Fear & Greed"""
     import matplotlib.pyplot as plt
