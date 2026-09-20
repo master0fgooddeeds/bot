@@ -92,31 +92,44 @@
 <script>
 // Функция проверки нового видео (добавь в конец скрипта)
 function checkLatestVideo() {
+    console.log('🔍 Checking for latest video...');
     fetch('/api/youtube')
-        .then(r => r.json())
+        .then(r => {
+            console.log('📥 Latest video API response:', r.status);
+            return r.json();
+        })
         .then(videos => {
+            console.log('📺 Latest videos:', videos);
             if (videos && videos.length > 0) {
                 const latest = videos[0];
                 const lastViewed = localStorage.getItem('lastMtcVideoViewed');
                 
+                console.log('Latest video ID:', latest.id);
+                console.log('Last viewed:', lastViewed);
+                
                 if (lastViewed !== latest.id) {
                     const html = `
-                        <div style="cursor: pointer;" onclick="openVideoModal('${latest.id}', '${latest.title.replace(/'/g, "\\'")}')">
-                            <img src="${latest.thumbnail}" style="width: 100%; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);">
-                            <h4 style="margin: 0 0 10px 0; color: #fff; font-size: 15px; line-height: 1.4;">${latest.title}</h4>
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: #8e8e93; font-size: 12px;">Нажмите, чтобы посмотреть</span>
-                                <span style="background: #ff6b35; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">Смотреть ▶</span>
+                        <div style="cursor:pointer;" onclick="openVideoModal('${latest.id}', '${latest.title.replace(/'/g, "\\'")}')">
+                            <img src="https://i.ytimg.com/vi/${latest.id}/mqdefault.jpg" style="width:100%; border-radius:8px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1);" onerror="this.src='https://via.placeholder.com/320x180/1a1a2e/00d4ff?text=Video'">
+                            <h4 style="margin:0 0 10px 0; color:#fff; font-size:15px; line-height:1.4;">${latest.title}</h4>
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
+                                <span style="color:#8e8e93; font-size:12px;">Нажмите, чтобы посмотреть</span>
+                                <span style="background:#ff6b35; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600;">Смотреть ▶</span>
                             </div>
                         </div>
                     `;
                     document.getElementById('latestVideoContent').innerHTML = html;
                     document.getElementById('latestVideoCard').classList.remove('hidden');
                     localStorage.setItem('lastMtcVideoViewed', latest.id);
+                    console.log('✅ Latest video card shown');
+                } else {
+                    console.log('ℹ️ Video already viewed');
                 }
+            } else {
+                console.log('⚠️ No videos found');
             }
         })
-        .catch(err => console.error('Video check error:', err));
+        .catch(err => console.error('❌ Video check error:', err));
 }
 // Вызываем при загрузке
 checkLatestVideo();
