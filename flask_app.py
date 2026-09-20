@@ -573,12 +573,12 @@ _Сетап признан неактуальным._"""
                     except: pass
                 tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} закрыт админом"})
         elif data == "gen_vip_post":
-            stats = load_stats()
-            total = stats.get("total", 0)
-            wins = stats.get("wins", 0)
-            losses = stats.get("losses", 0)
-            winrate = round((wins / total) * 100, 1) if total > 0 else 0
-            vip_post = f"""📊 *MTC Trading Platform*
+    stats = load_stats()
+    total = stats.get("total", 0)
+    wins = stats.get("wins", 0)
+    losses = stats.get("losses", 0)
+    winrate = round((wins / total) * 100, 1) if total > 0 else 0
+    vip_post = f"""📊 *MTC Trading Platform*
 
  *Статистика:*
 • Сделок: {total}
@@ -589,9 +589,46 @@ _Сетап признан неактуальным._"""
 ⚙️ *ТФ:* 4H → 15m, 1H → 5m
 
  Жми кнопку ниже, чтобы открыть дашборд!"""
-            kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
-            tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
-            tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
+    kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+    tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
+    tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
+
+elif data == "fear_greed":
+    try:
+        r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
+        if r.status_code == 200:
+            data_fg = r.json().get('data', [])
+            if data_fg:
+                value = int(data_fg[0]['value'])
+                label = data_fg[0]['value_classification']
+                timestamp = int(data_fg[0]['timestamp'])
+                date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
+                
+                gauge_buf = make_fear_greed_gauge(value, label)
+                
+                caption = f"""📊 **Индекс Страха и Жадности**
+
+Значение: **{value}** ({label})
+Дата: {date_str}
+
+📉 **0-25:** Extreme Fear
+🟠 **26-45:** Fear
+⚖️ **46-55:** Neutral
+📈 **56-75:** Greed
+🔥 **76-100:** Extreme Greed
+
+_Индекс показывает настроение рынка_"""
+                
+                tg("sendPhoto", data={
+                    "chat_id": uid,
+                    "caption": caption,
+                    "parse_mode": "Markdown"
+                }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
+    except Exception as e:
+        print(f"⚠️ Fear & Greed error: {e}")
+        tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
+
+return
         return
 
     msg = up.get("message")
