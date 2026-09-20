@@ -1089,13 +1089,13 @@ def api_youtube():
             root = ET.fromstring(r.text)
             
             videos = []
-            # Ищем все теги entry без namespace
+            # Ищем все entry теги (без namespace)
             for entry in root.iter():
                 if entry.tag.endswith('entry'):
                     video_id = None
                     title = None
                     
-                    # Ищем videoId и title внутри entry
+                    # Ищем videoId и title
                     for child in entry.iter():
                         if child.tag.endswith('videoId'):
                             video_id = child.text
@@ -1116,7 +1116,7 @@ def api_youtube():
             print(f"✅ YouTube: найдено {len(videos)} видео")
             return jsonify(videos)
         
-        print(f"⚠️ YouTube RSS вернул статус {r.status_code}")
+        print(f"⚠️ YouTube RSS вернул {r.status_code}")
         return jsonify([])
     except Exception as e:
         print(f"❌ YouTube API error: {e}")
