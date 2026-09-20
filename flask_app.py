@@ -603,9 +603,13 @@ _Сетап признан неактуальным._"""
         is_group_chat = chat_type in ("supergroup", "group") and is_admin(uid)
 
         if is_private or is_group_chat:
-            if txt.strip() == "/start":
+             if txt.strip() == "/start":
                 if is_admin(uid):
-                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
+                    kb = {"inline_keyboard": [
+                        [{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                        [{"text": " Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
+                        [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]
+                    ]}
                     welcome_text = """*Привет, Админ!*
 
 Добро пожаловать в *MTC Trading Platform*!
