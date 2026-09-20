@@ -1079,43 +1079,48 @@ def api_stats():
 @app.route('/api/youtube', methods=['GET'])
 def api_youtube():
     try:
-        # Парсим HTML страницы НАШЕГО канала
-        url = f"https://www.youtube.com/@MyTradingClub/videos"
+        channel_id = "UCC71uNPC5AA9wFGvlPL1Iig"
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-        r = requests.get(url, headers=headers, timeout=10)
+        r = requests.get(rss_url, headers=headers, timeout=10)
         
         if r.status_code == 200:
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(r.text)
+            
+            ns = {
+                'yt': 'http://www.youtube.com/xml/schemas/2015',
+                'media': 'http://search.yahoo.com/mrss/'
+            }
+            
             videos = []
-            # Ищем все видео на странице
-            video_urls = re.findall(r'/watch\?v=([a-zA-Z0-9_-]{11})', r.text)
-            
-            # Ищем заголовки видео
-            titles = re.findall(r'"title":{"runs":\[{"text":"([^"]+)"}\]', r.text)
-            
-            # Берем первые 12 уникальных видео
-            seen = set()
-            idx = 0
-            for vid_id in video_urls:
-                if vid_id not in seen and len(vid_id) == 11:
-                    seen.add(vid_id)
-                    title = titles[idx] if idx < len(titles) else f"Видео {vid_id}"
+            for entry in root.findall('entry', ns):
+                video_id_elem = entry.find('yt:videoId', ns)
+                title_elem = entry.find('media:group/media:title', ns)
+                
+                if video_id_elem is not None and title_elem is not None:
+                    video_id = video_id_elem.text
+                    title = title_elem.text
+                    
                     videos.append({
-                        "id": vid_id,
+                        "id": video_id,
                         "title": title,
-                        "link": f"https://www.youtube.com/watch?v={vid_id}",
-                        "thumbnail": f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg"
+                        "link": f"https://www.youtube.com/watch?v={video_id}",
+                        "thumbnail": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
                     })
-                    idx += 1
+                    
                     if len(videos) >= 12:
                         break
             
+            print(f"✅ YouTube: найдено {len(videos)} видео")
             return jsonify(videos)
         
+        print(f"⚠️ YouTube RSS вернул статус {r.status_code}")
         return jsonify([])
     except Exception as e:
-        print(f"YouTube API error: {e}")
+        print(f"❌ YouTube API error: {e}")
         return jsonify([])
 
 @app.route('/api/active_setups', methods=['GET'])
