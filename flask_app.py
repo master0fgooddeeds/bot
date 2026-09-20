@@ -742,7 +742,58 @@ _Платформа в разработке. Следим за прогресс�
                     s["id"] = sid
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
-
+def make_fear_greed_gauge(value, label):
+    """Генерируем картинку со спидометром Fear & Greed"""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Wedge
+    import numpy as np
+    import io
+    
+    # Создаем фигуру
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
+    ax.axis('off')
+    
+    # Цвет в зависимости от значения
+    if value <= 25:
+        color = '#ff3b30'
+        label_color = 'Extreme Fear'
+    elif value <= 45:
+        color = '#ff9500'
+        label_color = 'Fear'
+    elif value <= 55:
+        color = '#ffcc00'
+        label_color = 'Neutral'
+    elif value <= 75:
+        color = '#a2e000'
+        label_color = 'Greed'
+    else:
+        color = '#00e676'
+        label_color = 'Extreme Greed'
+    
+    # Рисуем дугу (спидометр)
+    wedge = Wedge((5, 5), 4, 180, 0, width=0.8, facecolor=color, edgecolor='white', linewidth=2)
+    ax.add_patch(wedge)
+    
+    # Стрелка
+    angle = 180 - (value / 100 * 180)
+    arrow_x = 5 + 3.5 * np.cos(np.radians(angle))
+    arrow_y = 5 + 3.5 * np.sin(np.radians(angle))
+    ax.arrow(5, 5, arrow_x-5, arrow_y-5, width=0.15, color='white', length_includes_head=True, head_width=0.4, head_length=0.5)
+    
+    # Центральное значение
+    ax.text(5, 5, str(value), ha='center', va='center', fontsize=48, fontweight='bold', color='white')
+    ax.text(5, 3.5, label_color, ha='center', va='center', fontsize=16, fontweight='bold', color='white')
+    ax.text(5, 1.5, 'Fear & Greed Index', ha='center', va='center', fontsize=12, color='white', alpha=0.8)
+    
+    # Сохраняем
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#1a1a2e')
+    plt.close(fig)
+    buf.seek(0)
+    
+    return buf
 def tg(method, **kw):
     for attempt in range(3):
         try:
