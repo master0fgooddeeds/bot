@@ -1081,38 +1081,37 @@ def api_youtube():
     try:
         channel_id = "UCC71uNPC5AA9wFGvlPL1Iig"
         rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        r = requests.get(rss_url, headers=headers, timeout=10)
+        
+        r = requests.get(rss_url, timeout=10)
         
         if r.status_code == 200:
             import xml.etree.ElementTree as ET
             root = ET.fromstring(r.text)
             
-            ns = {
-                'yt': 'http://www.youtube.com/xml/schemas/2015',
-                'media': 'http://search.yahoo.com/mrss/'
-            }
-            
             videos = []
-            for entry in root.findall('entry', ns):
-                video_id_elem = entry.find('yt:videoId', ns)
-                title_elem = entry.find('media:group/media:title', ns)
-                
-                if video_id_elem is not None and title_elem is not None:
-                    video_id = video_id_elem.text
-                    title = title_elem.text
+            # Ищем все теги entry без namespace
+            for entry in root.iter():
+                if entry.tag.endswith('entry'):
+                    video_id = None
+                    title = None
                     
-                    videos.append({
-                        "id": video_id,
-                        "title": title,
-                        "link": f"https://www.youtube.com/watch?v={video_id}",
-                        "thumbnail": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
-                    })
+                    # Ищем videoId и title внутри entry
+                    for child in entry.iter():
+                        if child.tag.endswith('videoId'):
+                            video_id = child.text
+                        elif child.tag.endswith('title'):
+                            title = child.text
                     
-                    if len(videos) >= 12:
-                        break
+                    if video_id and title:
+                        videos.append({
+                            "id": video_id,
+                            "title": title,
+                            "link": f"https://www.youtube.com/watch?v={video_id}",
+                            "thumbnail": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
+                        })
+                        
+                        if len(videos) >= 12:
+                            break
             
             print(f"✅ YouTube: найдено {len(videos)} видео")
             return jsonify(videos)
@@ -1121,14 +1120,9 @@ def api_youtube():
         return jsonify([])
     except Exception as e:
         print(f"❌ YouTube API error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify([])
-
-@app.route('/api/active_setups', methods=['GET'])
-def api_active_setups():
-    setups = []
-    for sid, s in BX.get('active', {}).items():
-        setups.append({'id': sid, 'sym': s.get('sym'), 'tf': s.get('tf'), 'dir': s.get('dir'), 'entry_price': s.get('entry_price'), 'status': s.get('status')})
-    return jsonify(setups)
 
 @app.route('/api/analyses', methods=['GET'])
 def api_all_analyses():
