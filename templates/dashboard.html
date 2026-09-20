@@ -672,28 +672,41 @@ function showSecretResetButton() {
         }
 
         function loadYoutube() {
-            var list = document.getElementById('youtubeList');
-            list.innerHTML = 'Загрузка...';
-            fetch('/api/youtube')
-                .then(function(r) { return r.json(); })
-                .then(function(videos) {
-                    if (!videos || videos.length === 0) { 
-                        list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Видео не найдены</p>'; 
-                        return; 
-                    }
-                    list.innerHTML = videos.map(function(v) {
-                        // Извлекаем ID видео из ссылки
-                        var videoId = v.link.split('v=')[1] || v.link.split('/').pop();
+    var list = document.getElementById('youtubeList');
+    list.innerHTML = 'Загрузка...';
+    fetch('/api/youtube')
+        .then(function(r) { return r.json(); })
+        .then(function(videos) {
+            if (!videos || videos.length === 0) { 
+                list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Видео не найдены</p>'; 
+                return; 
+            }
+            
+            var html = '';
+            videos.forEach(function(v) {
+                // Пробуем получить ID из разных полей
+                var videoId = v.id || '';
+                if (!videoId && v.link) {
+                    videoId = v.link.split('v=')[1] || v.link.split('/').pop();
+                }
                 
-                        return '<div class="video-card" onclick="openVideoModal(\'' + videoId + '\', \'' + v.title.replace(/'/g, "\\'") + '\')">' +
-                            '<img class="video-thumb" src="' + v.thumbnail + '" alt="Video">' +
-                            '<div class="video-title">' + v.title + '</div>' +
-                        '</div>';
-                    }).join('');
-                }).catch(function(err) { 
-                    list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Ошибка загрузки</p>'; 
-                });
-        }
+                // Пробуем несколько форматов превью
+                var thumbnail = v.thumbnail || 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg';
+                
+                html += '<div class="video-card" onclick="openVideoModal(\'' + videoId + '\', \'' + (v.title || '').replace(/'/g, "\\'") + '\')">' +
+                    '<img class="video-thumb" src="' + thumbnail + '" alt="Video" onerror="this.src=\'https://via.placeholder.com/320x180/1a1a2e/00d4ff?text=Video\'">' +
+                    '<div class="video-title">' + (v.title || 'Без названия') + '</div>' +
+                '</div>';
+            });
+            
+            list.innerHTML = html;
+            console.log('✅ YouTube: загружено', videos.length, 'видео');
+        })
+        .catch(function(err) { 
+            console.error('❌ YouTube error:', err);
+            list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Ошибка загрузки</p>'; 
+        });
+}
         
         function openVideoModal(videoId, title) {
             var modal = document.createElement('div');
