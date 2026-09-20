@@ -672,41 +672,55 @@ function showSecretResetButton() {
         }
 
         function loadYoutube() {
-    var list = document.getElementById('youtubeList');
-    list.innerHTML = 'Загрузка...';
-    fetch('/api/youtube')
-        .then(function(r) { return r.json(); })
-        .then(function(videos) {
-            if (!videos || videos.length === 0) { 
-                list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Видео не найдены</p>'; 
-                return; 
-            }
+            var list = document.getElementById('youtubeList');
+            list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Загрузка...</p>';
+    
+            fetch('/api/youtube')
+                .then(function(r) { 
+                     console.log('📥 YouTube API response:', r);
+                    return r.json(); 
+                })
+                .then(function(videos) {
+                    console.log('✅ YouTube videos:', videos);
             
-            var html = '';
-            videos.forEach(function(v) {
-                // Пробуем получить ID из разных полей
-                var videoId = v.id || '';
-                if (!videoId && v.link) {
-                    videoId = v.link.split('v=')[1] || v.link.split('/').pop();
-                }
-                
-                // Пробуем несколько форматов превью
-                var thumbnail = v.thumbnail || 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg';
-                
-                html += '<div class="video-card" onclick="openVideoModal(\'' + videoId + '\', \'' + (v.title || '').replace(/'/g, "\\'") + '\')">' +
-                    '<img class="video-thumb" src="' + thumbnail + '" alt="Video" onerror="this.src=\'https://via.placeholder.com/320x180/1a1a2e/00d4ff?text=Video\'">' +
-                    '<div class="video-title">' + (v.title || 'Без названия') + '</div>' +
-                '</div>';
-            });
+                    if (!videos || videos.length === 0) { 
+                        list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Видео не найдены</p>'; 
+                        return; 
+                    }
             
-            list.innerHTML = html;
-            console.log('✅ YouTube: загружено', videos.length, 'видео');
-        })
-        .catch(function(err) { 
-            console.error('❌ YouTube error:', err);
-            list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1;">Ошибка загрузки</p>'; 
-        });
-}
+                    var html = '';
+                    videos.forEach(function(v, index) {
+                        // Пробуем получить ID из разных полей
+                        var videoId = v.id || '';
+                        if (!videoId && v.link) {
+                            var match = v.link.match(/[?&]v=([^&]+)/);
+                            if (match) videoId = match[1];
+                            else videoId = v.link.split('/').pop();
+                        }
+                
+                        console.log('Video ' + index + ':', {
+                            id: videoId,
+                            title: v.title,
+                            thumbnail: v.thumbnail
+                        });
+                
+                        // Используем стандартное превью YouTube
+                        var thumbnail = 'https://i.ytimg.com/vi/' + videoId + '/mqdefault.jpg';
+                
+                        html += '<div class="video-card" onclick="openVideoModal(\'' + videoId + '\', \'' + (v.title || '').replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' +
+                            '<img class="video-thumb" src="' + thumbnail + '" alt="' + (v.title || 'Video') + '" loading="lazy" onerror="console.error(\'Image load error:\', this.src)">' +
+                            '<div class="video-title">' + (v.title || 'Без названия') + '</div>' +
+                        '</div>';
+                    });
+            
+                     list.innerHTML = html;
+                    console.log('✅ YouTube rendered:', videos.length, 'videos');
+                })
+                .catch(function(err) { 
+                    console.error(' YouTube error:', err);
+                    list.innerHTML = '<p style="opacity:0.6; grid-column: 1/-1; color:#ff3b30;">Ошибка загрузки: ' + err.message + '</p>'; 
+                });
+        }
         
         function openVideoModal(videoId, title) {
             var modal = document.createElement('div');
