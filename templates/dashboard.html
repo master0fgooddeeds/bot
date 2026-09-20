@@ -603,7 +603,7 @@
         }
 
         // === ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТКРЫТИЯ ВИДЕО ВНУТРИ MINI APP ===
-        function openVideoModal(videoId, title) {
+function openVideoModal(videoId, title) {
     var oldModal = document.querySelector('.video-modal-overlay');
     if (oldModal) oldModal.remove();
 
@@ -625,37 +625,47 @@
     
     document.body.appendChild(modal);
     
+    // Сохраняем videoId для использования в callback
+    window._pendingVideoId = videoId;
+    
     // Загружаем YouTube IFrame API
     if (!window.YT) {
+        // Устанавливаем callback ПЕРЕД добавлением скрипта
+        window.onYouTubeIframeAPIReady = function() {
+            if (window._pendingVideoId) {
+                createPlayer(window._pendingVideoId);
+                window._pendingVideoId = null;
+            }
+        };
+        
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
-        document.getElementsByTagName('script')[0].parentNode.insertBefore(tag, document.getElementsByTagName('script')[0]);
-    }
-    
-    // Создаем плеер когда API готов
-    if (window.YT && window.YT.Player) {
-        createPlayer(videoId);
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     } else {
-        window.onYouTubeIframeAPIReady = function() {
-            createPlayer(videoId);
-        };
+        // API уже загружено
+        createPlayer(videoId);
     }
 }
 
 function createPlayer(videoId) {
-    window.player = new YT.Player('yt-player', {
-        height: '100%',
-        width: '100%',
-        videoId: videoId,
-        playerVars: {
-            'autoplay': 1,
-            'controls': 1,
-            'rel': 0
-        },
-        events: {
-            'onReady': onPlayerReady
-        }
-    });
+    try {
+        window.player = new YT.Player('yt-player', {
+            height: '100%',
+            width: '100%',
+            videoId: videoId,
+            playerVars: {
+                'autoplay': 1,
+                'controls': 1,
+                'rel': 0
+            },
+            events: {
+                'onReady': onPlayerReady
+            }
+        });
+    } catch(e) {
+        console.error('Error creating player:', e);
+    }
 }
 
 function onPlayerReady(event) {
@@ -664,7 +674,9 @@ function onPlayerReady(event) {
 
 function closeVideoModal() {
     if (window.player) {
-        window.player.destroy();
+        try {
+            window.player.destroy();
+        } catch(e) {}
         window.player = null;
     }
     var modal = document.getElementById('videoModal');
