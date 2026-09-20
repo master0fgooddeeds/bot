@@ -692,6 +692,45 @@ _Платформа в разработке. Следим за прогресс�
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
                         tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
+
+                        elif data == "fear_greed":
+            # Обработка кнопки Fear & Greed
+            try:
+                r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
+                if r.status_code == 200:
+                    data_fg = r.json().get('data', [])
+                    if data_fg:
+                        value = int(data_fg[0]['value'])
+                        label = data_fg[0]['value_classification']
+                        timestamp = int(data_fg[0]['timestamp'])
+                        date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
+                        
+                        # Генерируем спидометр
+                        gauge_buf = make_fear_greed_gauge(value, label)
+                        
+                        # Отправляем картинку
+                        caption = f"""📊 **Индекс Страха и Жадности**
+
+Значение: **{value}** ({label})
+Дата: {date_str}
+
+ **0-25:** Extreme Fear
+ **26-45:** Fear
+️ **46-55:** Neutral
+📈 **56-75:** Greed
+🔥 **76-100:** Extreme Greed
+
+_Индекс показывает настроение рынка_"""
+                        
+                        tg("sendPhoto", data={
+                            "chat_id": uid,
+                            "caption": caption,
+                            "parse_mode": "Markdown"
+                        }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
+                        
+            except Exception as e:
+                print(f"️ Fear & Greed error: {e}")
+                tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
                 return
 
            
