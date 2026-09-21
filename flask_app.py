@@ -533,6 +533,33 @@ def yt_watch_loop():
             print("YT WATCH LOOP:", e)
         _time.sleep(900) # Проверка каждые 15 минут
 
+def get_daily_data(coin_id):
+    try:
+        r = requests.get(f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true", timeout=5)
+        if r.status_code == 200:
+            data = r.json().get(coin_id, {})
+            return data.get('usd', 0), data.get('usd_24h_change', 0)
+    except:
+        pass
+    return 0, 0
+
+def send_vip_quote(msg):
+    keyboard = {"inline_keyboard": [[{"text": " Fear & Greed Index", "callback_data": "fear_greed"}]]}
+    tg("sendMessage", data={
+        "chat_id": "-1002026400906",
+        "message_thread_id": VIP_TOPIC,
+        "text": msg,
+        "parse_mode": "Markdown",
+        "reply_markup": keyboard
+    })
+    tg("sendMessage", data={
+        "chat_id": "-1001208487435",
+        "text": msg,
+        "parse_mode": "Markdown",
+        "reply_markup": keyboard
+    })
+
+
 def handle_update(up):
     cb = up.get("callback_query")
     if cb:
@@ -545,11 +572,11 @@ def handle_update(up):
         if data.startswith("bx:"):
             BX["wait_link"][str(uid)] = data[3:]
             bx_save()
-            tg("sendMessage", data={"chat_id": uid, "text": " Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
+            tg("sendMessage", data={"chat_id": uid, "text": "🔷 Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
         elif data.startswith("skip:"):
             BX["pending"].pop(data[5:], None)
             bx_save()
-            tg("sendMessage", data={"chat_id": uid, "text": " Пропущено."})
+            tg("sendMessage", data={"chat_id": uid, "text": "⏭ Пропущено."})
         elif data.startswith("conf:"):
             sid = data[5:]
             s = BX["active"].get(sid)
@@ -566,12 +593,11 @@ def handle_update(up):
                 s["close_result"] = "admin_cancel"
                 save_stat(s, "expired", 0.0)
                 bx_save()
-                cap = f""" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
-_Сетап признан неактуальным._"""
+                cap = f"🚫 *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Сетап признан неактуальным._"
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
-                tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} закрыт админом"})
+                tg("sendMessage", data={"chat_id": uid, "text": f"🚫 Сетап #{sid} закрыт админом"})
         elif data == "gen_vip_post":
             stats = load_stats()
             total = stats.get("total", 0)
@@ -585,13 +611,13 @@ _Сетап признан неактуальным._"""
 • Винрейт: {winrate}%
 • TP: {wins} | SL: {losses}
 
- *Стратегия:* CHoCH + FVG
+🎯 *Стратегия:* CHoCH + FVG
 ⚙️ *ТФ:* 4H → 15m, 1H → 5m
 
- Жми кнопку ниже, чтобы открыть дашборд!"""
+👇 Жми кнопку ниже, чтобы открыть дашборд!"""
             kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
             tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
-            tg("sendMessage", data={"chat_id": uid, "text": "️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
+            tg("sendMessage", data={"chat_id": uid, "text": "⚠️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         elif data == "fear_greed":
             try:
                 r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
@@ -602,29 +628,26 @@ _Сетап признан неактуальным._"""
                         label = data_fg[0]['value_classification']
                         timestamp = int(data_fg[0]['timestamp'])
                         date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
-                        
                         gauge_buf = make_fear_greed_gauge(value, label)
-                        
-                        caption = f""" **Индекс Страха и Жадности**
+                        caption = f"""📊 **Индекс Страха и Жадности**
 
 Значение: **{value}** ({label})
 Дата: {date_str}
 
-📉 **0-25:** Extreme Fear
-🟠 **26-45:** Fear
+ **0-25:** Extreme Fear
+ **26-45:** Fear
 ️ **46-55:** Neutral
 📈 **56-75:** Greed
 🔥 **76-100:** Extreme Greed
 
 _Индекс показывает настроение рынка_"""
-                        
                         tg("sendPhoto", data={
                             "chat_id": uid,
                             "caption": caption,
                             "parse_mode": "Markdown"
                         }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
             except Exception as e:
-                print(f"️ Fear & Greed error: {e}")
+                print(f"⚠️ Fear & Greed error: {e}")
                 tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
         return
 
@@ -640,8 +663,8 @@ _Индекс показывает настроение рынка_"""
             if txt.strip() == "/start":
                 if is_admin(uid):
                     kb = {"inline_keyboard": [
-                        [{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
-                        [{"text": " Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
+                        [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                        [{"text": "📝 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
                         [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]
                     ]}
                     welcome_text = """*Привет, Админ!*
@@ -662,7 +685,7 @@ _Платформа в разработке. Следим за прогресс�
                     tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 else:
                     kb = {"inline_keyboard": [
-                        [{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                        [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
                         [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]
                     ]}
                     welcome_text = """*Привет!*
@@ -688,14 +711,14 @@ _Платформа в разработке. Следим за прогресс�
                 history_text = "\n".join([f"• {h['date']} | {h['sym']} {h['tf']} {h['dir'].upper()} → **{h['result']}** ({h['pnl']}%)" for h in last_5])
                 report = f"""📊 *ОТЧЕТ MY TRADING CLUB*
 
- *Всего:* {stats['total']}
- *TP:* {stats['wins']} ({win_rate:.1f}%)
- *SL:* {stats['losses']}
- *Пропуск:* {stats['skipped']}
- *Истекло:* {stats['expired']}
- *Общий PnL:* {stats.get('pnl', 0)}%
+🎯 *Всего:* {stats['total']}
+✅ *TP:* {stats['wins']} ({win_rate:.1f}%)
+❌ *SL:* {stats['losses']}
+⏭ *Пропуск:* {stats['skipped']}
+⏳ *Истекло:* {stats['expired']}
+💰 *Общий PnL:* {stats.get('pnl', 0)}%
 
- *Последние 5:*
+📜 *Последние 5:*
 {history_text}"""
                 tg("sendMessage", data={"chat_id": uid, "text": report, "parse_mode": "Markdown"})
                 return
@@ -703,15 +726,33 @@ _Платформа в разработке. Следим за прогресс�
             if txt.strip() == "/active" and is_admin(uid):
                 active = BX.get("active", {})
                 if not active:
-                    tg("sendMessage", data={"chat_id": uid, "text": " Нет активных сетапов"})
+                    tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Нет активных сетапов"})
                 else:
                     lines = []
                     for sid, s in active.items():
                         lines.append(f"🔹 *#{sid}* · {s['sym']} {s['tf']} {s['dir'].upper()}")
                         lines.append(f"   Вход: `{s['entry_price']:,.2f}` | SL: `{s['sl']:,.2f}` | TP: `{s['tp']:,.2f}`")
                         lines.append(f"   Статус: `{s.get('status', '?')}`\n")
-                    msg_text = " *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
+                    msg_text = "📋 *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
                     tg("sendMessage", data={"chat_id": uid, "text": msg_text, "parse_mode": "Markdown"})
+                return
+
+            if txt.strip() == "/quotes" and is_admin(uid):
+                btc_p, btc_c = get_daily_data("bitcoin")
+                eth_p, eth_c = get_daily_data("ethereum")
+                sol_p, sol_c = get_daily_data("solana")
+                def fmt(p, c):
+                    sign = "🟢 +" if c >= 0 else " "
+                    return f"`{p:,.2f}$` ({sign}{c:.2f}%)"
+                msg = f"""📊 *КОТИРОВКИ НА СЕГОДНЯ*
+
+₿ *BTC:* {fmt(btc_p, btc_c)}
+♦ *ETH:* {fmt(eth_p, eth_c)}
+◎ *SOL:* {fmt(sol_p, sol_c)}
+
+_Данные предоставлены CoinGecko_"""
+                send_vip_quote(msg)
+                tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки с кнопкой Fear & Greed отправлены в каналы!"})
                 return
 
             if txt.strip() == "/fear_greed" and is_admin(uid):
@@ -724,9 +765,7 @@ _Платформа в разработке. Следим за прогресс�
                             label = data_fg[0]['value_classification']
                             timestamp = int(data_fg[0]['timestamp'])
                             date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
-                            
                             gauge_buf = make_fear_greed_gauge(value, label)
-                            
                             caption = f"""📊 **Индекс Страха и Жадности**
 
 Значение: **{value}** ({label})
@@ -739,7 +778,6 @@ _Платформа в разработке. Следим за прогресс�
 🔥 **76-100:** Extreme Greed
 
 _Индекс показывает настроение рынка_"""
-                            
                             tg("sendPhoto", data={
                                 "chat_id": uid,
                                 "caption": caption,
@@ -747,7 +785,7 @@ _Индекс показывает настроение рынка_"""
                             }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
                 except Exception as e:
                     print(f"⚠️ Fear & Greed error: {e}")
-                    tg("sendMessage", data={"chat_id": uid, "text": "️ Не удалось получить данные"})
+                    tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
                 return
 
             if txt.startswith("/force_close ") and is_admin(uid):
@@ -760,16 +798,16 @@ _Индекс показывает настроение рынка_"""
                         s["close_result"] = "admin_cancel"
                         save_stat(s, "expired", 0.0)
                         bx_save()
-                        cap = f" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
+                        cap = f"🚫 *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
                         if s.get("vip_msg"):
                             try:
                                 tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                             except:
                                 pass
-                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
+                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
-                        tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
+                        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
                 return
 
             if txt.startswith('/manual_close ') and is_admin(uid):
@@ -785,13 +823,9 @@ _Индекс показывает настроение рынка_"""
                             entry = s["entry_price"]
                             pnl_pct = (entry - manual_price) / entry * 100 if s["dir"] == "short" else (manual_price - entry) / entry * 100
                             pnl_sign = "+" if pnl_pct > 0 else ""
-                            
                             save_stat(s, "manual", pnl_pct)
                             bx_save()
-                            
-                            cap = f""" *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}
- Цена закрытия: `{manual_price:,.2f}`
-📈 Результат: {pnl_sign}{pnl_pct:.2f}%"""
+                            cap = f"🔧 *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}\n💰 Цена закрытия: `{manual_price:,.2f}`\n📈 Результат: {pnl_sign}{pnl_pct:.2f}%"
                             if s.get("vip_msg"):
                                 try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                                 except: pass
@@ -816,7 +850,6 @@ _Индекс показывает настроение рынка_"""
                     s["id"] = sid
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
-
 def make_fear_greed_gauge(value, label):
     """Генерируем картинку со спидометром Fear & Greed"""
     import matplotlib.pyplot as plt
