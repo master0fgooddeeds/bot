@@ -605,9 +605,19 @@
         // === ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТКРЫТИЯ ВИДЕО ВНУТРИ MINI APP ===
 function openVideoModal(videoId, title) {
     var url = 'https://www.youtube.com/watch?v=' + videoId;
+    
+    // Пробуем Telegram API
     if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.openLink(url);
+        try {
+            window.Telegram.WebApp.openLink(url);
+            console.log('✅ Telegram openLink вызван');
+        } catch(e) {
+            console.error('❌ Telegram openLink ошибка:', e);
+            // Фоллбэк — открываем напрямую
+            window.open(url, '_blank');
+        }
     } else {
+        // Если не Telegram — открываем в новой вкладке
         window.open(url, '_blank');
     }
 }
