@@ -873,6 +873,41 @@ def make_fear_greed_gauge(value, label):
     buf.seek(0)
     
     return buf
+
+# =============================================================================
+# 📊 УТРЕННИЕ КОТИРОВКИ
+# =============================================================================
+def get_daily_data(coin_id):
+    try:
+        r = requests.get(f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true", timeout=5)
+        if r.status_code == 200:
+            data = r.json().get(coin_id, {})
+            return data.get('usd', 0), data.get('usd_24h_change', 0)
+    except:
+        pass
+    return 0, 0
+
+def send_vip_quote(msg):
+    # Та самая кнопка Fear & Greed
+    keyboard = {"inline_keyboard": [[{"text": "📊 Fear & Greed Index", "callback_data": "fear_greed"}]]}
+    
+    # Отправка в VIP канал (с топиком)
+    tg("sendMessage", data={
+        "chat_id": "-1002026400906",
+        "message_thread_id": VIP_TOPIC,
+        "text": msg,
+        "parse_mode": "Markdown",
+        "reply_markup": keyboard
+    })
+    
+    # Отправка в MTC канал (без топика)
+    tg("sendMessage", data={
+        "chat_id": "-1001208487435",
+        "text": msg,
+        "parse_mode": "Markdown",
+        "reply_markup": keyboard
+    })
+
 def tg(method, **kw):
     for attempt in range(3):
         try:
