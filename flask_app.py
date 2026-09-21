@@ -543,21 +543,6 @@ def get_daily_data(coin_id):
         pass
     return 0, 0
 
-def send_vip_quote(msg):
-    keyboard = {"inline_keyboard": [[{"text": " Fear & Greed Index", "callback_data": "fear_greed"}]]}
-    tg("sendMessage", data={
-        "chat_id": "-1002026400906",
-        "message_thread_id": VIP_TOPIC,
-        "text": msg,
-        "parse_mode": "Markdown",
-        "reply_markup": keyboard
-    })
-    tg("sendMessage", data={
-        "chat_id": "-1001208487435",
-        "text": msg,
-        "parse_mode": "Markdown",
-        "reply_markup": keyboard
-    })
 
 
 def handle_update(up):
