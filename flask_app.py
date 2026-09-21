@@ -975,7 +975,7 @@ def base_sym(symbol):
 def tv():
     try:
         data = request.get_json(force=True, silent=True) or {}
-        print(f"📥 ПОЛУЧЕН СИГНАЛ ОТ TRADINGVIEW: {data}") # <-- Это покажет нам точные данные
+        print(f"📥 ПОЛУЧЕН СИГНАЛ ОТ TRADINGVIEW: {data}")
         
         text = data.get("text", "")
         kind = data.get("kind", "")
@@ -994,7 +994,6 @@ def tv():
         if kind == "choch":
             sym = base_sym(data.get("symbol")) or "BTC"
             
-            # БЕЗОПАСНОЕ ПРЕОБРАЗОВАНИЕ ЦЕНЫ (заменяем запятую на точку, если TV ее прислал)
             level_raw = data.get("level")
             level = None
             if level_raw:
@@ -1004,20 +1003,27 @@ def tv():
                     print(f"⚠️ Не удалось преобразовать уровень в число: {level_raw}")
             
             tf_raw = str(data.get("tf", "60"))
-            # Расширенная карта таймфреймов на все случаи
             tf_map = {"240": "4H", "60": "1H", "15": "15m", "5": "5m", "D": "D", "1H": "1H", "4H": "4H", "1D": "D"}
             tf = tf_map.get(tf_raw, "1H")
             
-            # Более надежное определение направления (учитывает регистр)
             text_upper = text.upper()
             direction = "long" if ("БЫЧИЙ" in text_upper or "LONG" in text_upper or "BUY" in text_upper) else "short"
             
-            # Отправляем сообщение в канал
+            # === ПРОВЕРКА НА ДУБЛИКАТЫ ===
+            for sid, s in list(BX["pending"].items()) + list(BX["active"].items()):
+                if s.get("sym") == sym and s.get("tf") == tf and s.get("dir") == direction:
+                    if level and s.get("level"):
+                        # Допуск 0.1% на уровень
+                        if abs(s["level"] - level) / level < 0.001:
+                            print(f"⚠️ ДУБЛИКАТ! Сетап #{sid} уже существует с таким же уровнем {level}")
+                            send_text_safe(tg_base, text)
+                            return "ok"
+            # === КОНЕЦ ПРОВЕРКИ ===
+            
             send_text_safe(tg_base, text)
             
-            # Создаем сетап
             sid = new_pending(sym, tf, direction, level)
-            kb = {"inline_keyboard": [[{"text": f"🔷 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
+            kb = {"inline_keyboard": [[{"text": f"🔷 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": " Пропустить", "callback_data": f"skip:{sid}"}]]}
             admin_msg = f"*НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
             for aid in ADMIN_IDS:
                 tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": json.dumps(kb)})
