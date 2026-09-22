@@ -530,7 +530,6 @@ def send_vip_quote(msg):
         ]
     }
     
-    # Отправка в VIP канал
     tg("sendMessage", data={
         "chat_id": "-1002026400906",
         "message_thread_id": VIP_TOPIC,
@@ -539,7 +538,6 @@ def send_vip_quote(msg):
         "reply_markup": keyboard
     })
     
-    # Отправка в MTC канал
     tg("sendMessage", data={
         "chat_id": "-1001208487435",
         "text": msg,
