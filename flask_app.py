@@ -513,6 +513,31 @@ def yt_watch_loop():
             print("YT WATCH LOOP:", e)
         _time.sleep(900) # Проверка каждые 15 минут
 
+def send_vip_quote(msg):
+    keyboard = {
+        "inline_keyboard": [
+            [{"text": "📊 Fear & Greed Index", "callback_data": "fear_greed"}]
+        ]
+    }
+    
+    # Отправка в VIP канал
+    tg("sendMessage", data={
+        "chat_id": "-1002026400906",
+        "message_thread_id": VIP_TOPIC,
+        "text": msg,
+        "parse_mode": "Markdown",
+        "reply_markup": keyboard
+    })
+    
+    # Отправка в MTC канал
+    tg("sendMessage", data={
+        "chat_id": "-1001208487435",
+        "text": msg,
+        "parse_mode": "Markdown",
+        "reply_markup": keyboard
+    })
+
+
 def handle_update(up):
     cb = up.get("callback_query")
     if cb:
