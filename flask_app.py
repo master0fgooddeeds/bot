@@ -815,6 +815,9 @@ def tg(method, **kw):
         try:
             session = requests.Session()
             url = f"https://api.telegram.org/bot{TOKEN}/{method}"
+            # 🔧 МАГИЯ: если есть 'data' и нет 'files', используем 'json=' для правильной отправки кнопок
+            if 'data' in kw and 'files' not in kw:
+                kw['json'] = kw.pop('data')
             r = session.post(url, **kw, timeout=10)
             return r.json()
         except Exception as e:
