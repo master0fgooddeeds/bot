@@ -19,6 +19,7 @@ LAST = {"text": None, "ts": 0.0}
 ADMIN_IDS = []
 
 # --- YOUTUBE НАСТРОЙКИ ---
+# ВСТАВЬ СЮДА СВОЙ CHANNEL ID (начинается с UC)
 YT_CHANNEL_ID = "UCC71uNPC5AA9wFGvlPL1Iig"
 YT_LAST_FILE = "/app/data/yt_last.json"
 
@@ -30,6 +31,7 @@ COIN_ANALYSIS_FILE = DATA_DIR + "/coin_analyses.json"
 BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
+    import os
     try:
         if not os.path.exists(SETUPS_FILE):
             with open(SETUPS_FILE, "w") as f:
@@ -53,6 +55,7 @@ def bx_save():
         print("BX SAVE FAIL:", e)
 
 def load_stats():
+    import os
     try:
         if not os.path.exists(STATS_FILE):
             with open(STATS_FILE, "w") as f:
@@ -62,10 +65,10 @@ def load_stats():
                 }, f)
         with open(STATS_FILE, "r") as f: 
             data = json.load(f)
+            # Миграция для старых файлов: добавляем поля, если их нет
             if "deposit" not in data: data["deposit"] = 10000.0
             if "balance" not in data: data["balance"] = data.get("deposit", 10000.0)
             if "pnl_usd" not in data: data["pnl_usd"] = 0.0
-            if "pnl" not in data: data["pnl"] = 0.0
             return data
     except: 
         return {
@@ -74,13 +77,13 @@ def load_stats():
         }
 
 def load_analyses():
+    import os
     try:
         if not os.path.exists(ANALYSES_FILE):
             with open(ANALYSES_FILE, "w") as f:
                 json.dump({}, f)
         with open(ANALYSES_FILE, "r") as f: return json.load(f)
     except: return {}
-
 def save_stat(setup, result, pnl):
     stats = load_stats()
     stats["total"] += 1
@@ -90,15 +93,22 @@ def save_stat(setup, result, pnl):
     elif result == "skipped_tp": stats["skipped"] += 1
     elif result in ["expired", "admin_cancel"]: stats["expired"] += 1
     
+    # PnL в процентах
     stats["pnl"] = round(stats["pnl"] + pnl, 2)
+    
+    # PnL в долларах (от текущего баланса)
     pnl_usd = stats["balance"] * (pnl / 100)
     stats["pnl_usd"] = round(stats["pnl_usd"] + pnl_usd, 2)
     stats["balance"] = round(stats["balance"] + pnl_usd, 2)
     
     stats["history"].append({
         "date": datetime.now().strftime("%d.%m.%Y %H:%M"), 
-        "sym": setup["sym"], "tf": setup["tf"], "dir": setup["dir"], 
-        "result": status_text, "pnl": round(pnl, 2), "pnl_usd": round(pnl_usd, 2)
+        "sym": setup["sym"], 
+        "tf": setup["tf"], 
+        "dir": setup["dir"], 
+        "result": status_text, 
+        "pnl": round(pnl, 2),
+        "pnl_usd": round(pnl_usd, 2)
     })
     
     if len(stats["history"]) > 1000:
@@ -125,6 +135,7 @@ def delete_analysis(setup_id):
 def get_all_analyses(): return load_analyses()
 
 def load_coin_analyses():
+    import os
     try:
         if not os.path.exists(COIN_ANALYSIS_FILE):
             with open(COIN_ANALYSIS_FILE, "w") as f:
@@ -171,7 +182,7 @@ def fetch_admins_from_group():
         if r.json().get("ok"):
             ADMIN_IDS = [m["user"]["id"] for m in r.json()["result"] if m["status"] in ("creator", "administrator") and not m["user"].get("is_bot")]
             print(f"👑 Загружено админов: {len(ADMIN_IDS)}")
-    except Exception as e: print("⚠️ Не подтянул админов:", e)
+    except Exception as e: print("️ Не подтянул админов:", e)
 
 bx_load()
 fetch_admins_from_group()
@@ -233,8 +244,8 @@ def post_setup_to_vip(s, link, sl, tp, entry_price):
 
 🎯 *Вход:* `{entry_price:,.2f}`
 🛡 *SL:* `{sl:,.2f}`
-💰 *TP:* `{tp:,.2f}`
-⚖️ *R:R:* 1:{rr:.1f}
+ *TP:* `{tp:,.2f}`
+ *R:R:* 1:{rr:.1f}
 
 👉 [Перейти на BingX]({link})
 
@@ -255,7 +266,7 @@ _Если цена не дойдет до входа — сетап будет �
             for aid in ADMIN_IDS:
                 tg("sendMessage", data={"chat_id": aid, "text": f"❌ Ошибка публикации сетапа {s['id']} в VIP:\n{r}"})
     except Exception as e:
-        print(f"⚠️ КРИТИЧЕСКАЯ ОШИБКА: {e}")
+        print(f" КРИТИЧЕСКАЯ ОШИБКА: {e}")
         import traceback
         traceback.print_exc()
         for aid in ADMIN_IDS:
@@ -264,95 +275,117 @@ _Если цена не дойдет до входа — сетап будет �
     bx_save()
     print(f"✅ Сетап {s['id']} сохранен в active\n{'='*50}\n")
 
+    # --- СОХРАНЯЕМ В ЛЕНТУ МИНИ-АППА ---
     feed_file = DATA_DIR + "/miniapp_feed.json"
     try:
         if os.path.exists(feed_file):
             with open(feed_file, "r") as f: feed = json.load(f)
         else: feed = []
+        
         feed.insert(0, {
-            "id": s["id"], "sym": s["sym"], "dir": s["dir"],
-            "entry": s["entry_price"], "sl": s["sl"], "tp": s["tp"],
-            "chart": s.get("chart_image", ""), "time": _time.time()
+            "id": s["id"],
+            "sym": s["sym"],
+            "dir": s["dir"],
+            "entry": s["entry_price"],
+            "sl": s["sl"],
+            "tp": s["tp"],
+            "chart": s.get("chart_image", ""),
+            "time": _time.time()
         })
+        
         with open(feed_file, "w") as f: json.dump(feed[:30], f, indent=2)
     except Exception as e: 
         print("⚠️ Ошибка сохранения в ленту:", e)
 
 def close_setup(sid, result):
     s = BX["active"].pop(sid, None)
-    if not s: 
-        print(f"⚠️ Сетап #{sid} не найден в active")
-        return
-    
+    if not s: return
     s["status"] = "closed"
     s["close_result"] = result
-    head = {"tp": "🎯 TP ВЗЯТ", "sl": "🛑 SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО", "skipped_tp": "⏭️ АННУЛИРОВАН"}.get(result, "ЗАКРЫТ")
+    head = {"tp": "🎯 TP ВЗЯТ", "sl": " SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
     entry = s.get("entry_price", 0)
     exit_price = s["tp"] if result == "tp" else s["sl"]
     pnl_pct = ((exit_price - entry) / entry * 100) if s["dir"] == "long" else ((entry - exit_price) / entry * 100)
     pnl_sign = "+" if pnl_pct > 0 else ""
     cap = f"""{head} · {s['sym']}USDT · {s['tf']}
-⏱ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
-📈 Результат: {pnl_sign}{pnl_pct:.2f}%
-🛡 SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
-    
+ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
+📊 Результат: {pnl_sign}{pnl_pct:.2f}%
+ SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
     if s.get("vip_msg"):
-        try:
-            tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
-            print(f"✅ #{sid}: Сообщение в VIP отредактировано")
-        except Exception as e:
-            print(f"⚠️ #{sid}: Не удалось отредактировать сообщение в VIP: {e}")
-            try:
-                tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"⚠️ {cap}", "parse_mode": "Markdown"})
-            except Exception as e2:
-                print(f"❌ #{sid}: Ошибка отправки нового сообщения: {e2}")
-    
-    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"⚠️ {cap}", "parse_mode": "Markdown"})
-    
+        try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
+        except: pass
+    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
     for aid in ADMIN_IDS:
-        tg("sendMessage", data={"chat_id": aid, "text": f"⚠️ Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
-    
+        tg("sendMessage", data={"chat_id": aid, "text": f" Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
     save_stat(s, result, pnl_pct)
     bx_save()
-    print(f"✅ #{sid}: Успешно закрыт и сохранен в статистику")
 
 def bx_watch_step():
     now = _time.time()
     for sid in list(BX["active"].keys()):
         s = BX["active"][sid]
+        
+        # ПОЛУЧАЕМ ПОСЛЕДНИЕ 3 СВЕЧИ 1m (3 минуты истории)
         try:
-            symbol = f"{s['sym'].upper()}-USDT"
-            r = requests.get("https://open-api.bingx.com/openApi/swap/v2/quote/ticker", params={"symbol": symbol}, timeout=10)
-            if r.status_code == 200:
-                data = r.json()
-                if data.get('code') == 0 and data.get('data'):
-                    price = float(data['data']['lastPrice'])
-                    print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
-                    candles = [{'high': price * 1.001, 'low': price * 0.999, 'close': price, 'time': _time.time() * 1000}]
-                else:
-                    continue
-            else:
+            klines = requests.get(
+                "https://api.binance.com/api/v3/klines",
+                params={"symbol": f"{s['sym']}USDT", "interval": "1m", "limit": 3},
+                timeout=5
+            ).json()
+            
+            if not isinstance(klines, list) or len(klines) < 1:
+                print(f"️ Нет свечей для {s['sym']}")
                 continue
+                
+            # Берём High и Low каждой свечи
+            candles = []
+            for k in klines:
+                candles.append({
+                    'high': float(k[2]),
+                    'low': float(k[3]),
+                    'close': float(k[4]),
+                    'time': k[0]
+                })
+            
+            # Используем последнюю закрытую свечу (предпоследнюю, т.к. текущая ещё формируется)
+            last_candle = candles[-2] if len(candles) >= 2 else candles[-1]
+            price = last_candle['close']  # Для отображения в логах
+            
+            print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
+            print(f"   🕯️ Свеча: High={last_candle['high']:,.2f} | Low={last_candle['low']:,.2f}")
+            
         except Exception as e:
-            print(f"⚠️ Ошибка получения цены с BingX для {s['sym']}: {e}")
+            print(f"⚠️ Ошибка получения свечей для {s['sym']}: {e}")
             continue
         
-        buf_frac = 0.0
+        buf_frac = 0.0005  # Минимальный буфер
+        
         if s.get("status") == "pending":
             entry = s["entry_price"]
             reached, skipped_tp = False, False
+            
+            # ПРОВЕРЯЕМ ПО ВСЕМ СВЕЧАМ (не только по текущей цене!)
             for candle in candles:
                 if s["dir"] == "long":
-                    if candle['low'] <= entry * (1 + buf_frac): reached = True
-                    if candle['low'] >= s["tp"] * (1 - buf_frac): skipped_tp = True
+                    # LONG: цена должна опуститься до входа
+                    if candle['low'] <= entry * (1 + buf_frac):
+                        reached = True
+                    # Но если цена улетела на TP без входа
+                    if candle['low'] >= s["tp"] * (1 - buf_frac):
+                        skipped_tp = True
                 else:
-                    if candle['high'] >= entry * (1 - buf_frac): reached = True
-                    if candle['high'] <= s["tp"] * (1 + buf_frac): skipped_tp = True
+                    # SHORT: цена должна подняться до входа
+                    if candle['high'] >= entry * (1 - buf_frac):
+                        reached = True
+                    # Но если цена улетела на TP без входа
+                    if candle['high'] <= s["tp"] * (1 + buf_frac):
+                        skipped_tp = True
             
             if skipped_tp:
-                cap = f"""⏭️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
-⚠️ *Причина:* Цена достигла TP, не задев вход.
-🎯 *Ожидаемый вход:* `{entry:,.2f}`
+                cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
+
+ *Причина:* Цена достигла TP, не задев вход.
+ *Ожидаемый вход:* `{entry:,.2f}`
 📍 *Текущая цена:* `{price:,.2f}`"""
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
@@ -368,9 +401,9 @@ def bx_watch_step():
                     s["asked_extend"] = True
                     bx_save()
                     kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": "❌ Закрыть", "callback_data": f"cncl:{sid}"}]]}
-                    admin_msg = f"⏰ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\nВремя вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
+                    admin_msg = f" *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏰ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
                     for aid in ADMIN_IDS:
-                        tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": kb})
+                        tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                     print(f"⏳ Сетап {sid} ждёт решения админа")
                 continue
                 
@@ -385,22 +418,26 @@ def bx_watch_step():
 🛡 *STOP LOSS:* `{s['sl']:,.2f}`
 💰 *TAKE PROFIT:* `{s['tp']:,.2f}`
 
-🤖 Бот следит за SL и TP до победного конца!"""
+🛡 Бот следит за SL и TP до победного конца!"""
                 try: 
                     tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": active_cap, "parse_mode": "Markdown", "reply_to_message_id": s.get("vip_msg")})
                 except: pass
                 
         elif s.get("status") == "active":
             result = None
+            
+            # ПРОВЕРЯЕМ ПО ВСЕМ СВЕЧАМ — если хоть одна пробила уровень!
             for candle in candles:
                 if s["dir"] == "long":
+                    # LONG: TP если High свечи >= TP, SL если Low свечи <= SL
                     if candle['high'] >= s["tp"] * (1 - buf_frac):
                         result = "tp"
-                        break
+                        break  # Нашли — выходим из цикла
                     elif candle['low'] <= s["sl"] * (1 + buf_frac):
                         result = "sl"
                         break
                 else:
+                    # SHORT: TP если Low свечи <= TP, SL если High свечи >= SL
                     if candle['low'] <= s["tp"] * (1 + buf_frac):
                         result = "tp"
                         break
@@ -410,13 +447,7 @@ def bx_watch_step():
                     
             if result:
                 print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f} (пробой зафиксирован свечой!)")
-                try:
-                    close_setup(sid, result)
-                    print(f"✅ #{sid}: Успешно закрыт через close_setup()")
-                except Exception as e:
-                    print(f"❌ #{sid}: Ошибка в close_setup(): {e}")
-                    import traceback
-                    traceback.print_exc()
+                close_setup(sid, result)
 
 def bx_watch_loop():
     while True:
@@ -424,6 +455,7 @@ def bx_watch_loop():
         except Exception as e: print("WATCH LOOP:", e)
         _time.sleep(60)
 
+# --- YOUTUBE AUTOPOSTER ---
 def get_last_yt_video():
     try:
         if os.path.exists(YT_LAST_FILE):
@@ -438,13 +470,14 @@ def save_last_yt_video(vid):
 
 def check_youtube_feed():
     if YT_CHANNEL_ID == "UCC71uNPC5AA9wFGvlPL1Iig" or not YT_CHANNEL_ID.startswith("UC"):
-        return
+        return # Не запускаем, если ID не вставлен
     try:
         rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL_ID}"
         r = requests.get(rss_url, timeout=10)
         if r.status_code == 200:
             xml_text = r.text
             vid_match = re.search(r'<yt:videoId>(.*?)</yt:videoId>', xml_text)
+            # Гибкая регулярка: ловит и с CDATA, и без
             title_match = re.search(r'<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>', xml_text)
             link_match = re.search(r'<link rel="alternate" href="(.*?)"/>', xml_text)
             
@@ -452,10 +485,12 @@ def check_youtube_feed():
                 new_vid = vid_match.group(1)
                 title = title_match.group(1)
                 link = link_match.group(1)
+                
                 last_vid = get_last_yt_video()
                 if not last_vid:
-                    save_last_yt_video(new_vid)
+                    save_last_yt_video(new_vid) # Первый запуск, просто запоминаем
                     return
+                
                 if new_vid != last_vid:
                     save_last_yt_video(new_vid)
                     msg = f"""🎥 *НОВОЕ ВИДЕО НА КАНАЛЕ!*
@@ -476,66 +511,7 @@ def yt_watch_loop():
             check_youtube_feed()
         except Exception as e:
             print("YT WATCH LOOP:", e)
-        _time.sleep(900)
-
-# =============================================================================
-# 📊 УТРЕННИЕ КОТИРОВКИ
-# =============================================================================
-def get_daily_data(coin_id):
-    try:
-        r = requests.get(f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true", timeout=5)
-        if r.status_code == 200:
-            data = r.json().get(coin_id, {})
-            return data.get('usd', 0), data.get('usd_24h_change', 0)
-    except:
-        pass
-    return 0, 0
-
-def send_vip_quote(msg):
-    keyboard = {"inline_keyboard": [[{"text": "📊 Fear & Greed Index", "callback_data": "fear_greed"}]]}
-    tg("sendMessage", data={
-        "chat_id": "-1002026400906",
-        "message_thread_id": VIP_TOPIC,
-        "text": msg,
-        "parse_mode": "Markdown",
-        "reply_markup": keyboard
-    })
-    tg("sendMessage", data={
-        "chat_id": "-1001208487435",
-        "text": msg,
-        "parse_mode": "Markdown",
-        "reply_markup": keyboard
-    })
-
-# =============================================================================
-# 🔧 ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ (АВТОМАТИЧЕСКИ ЧИНИТ КНОПКИ)
-# =============================================================================
-def tg(method, **kw):
-    for attempt in range(3):
-        try:
-            session = requests.Session()
-            url = f"https://api.telegram.org/bot{TOKEN}/{method}"
-            
-            # 🔧 МАГИЯ: Если нет файлов, используем json= вместо data=
-            # Это гарантирует, что словари (включая reply_markup) корректно превратятся в JSON с двойными кавычками!
-            if 'files' not in kw and 'data' in kw:
-                kw['json'] = kw.pop('data')
-                
-            r = session.post(url, **kw, timeout=10)
-            return r.json()
-        except Exception as e:
-            if attempt < 2: _time.sleep(2)
-    return {"ok": False}
-
-@app.route("/tg_webhook", methods=["POST"])
-def tg_webhook():
-    try:
-        update = request.get_json()
-        if update: handle_update(update)
-        return "ok"
-    except Exception as e:
-        print(f"WEBHOOK ERR: {e}")
-        return "ok"
+        _time.sleep(900) # Проверка каждые 15 минут
 
 def handle_update(up):
     cb = up.get("callback_query")
@@ -549,11 +525,11 @@ def handle_update(up):
         if data.startswith("bx:"):
             BX["wait_link"][str(uid)] = data[3:]
             bx_save()
-            tg("sendMessage", data={"chat_id": uid, "text": "🔷 Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
+            tg("sendMessage", data={"chat_id": uid, "text": "🔗 Вставь ссылку BingX, а следующей строкой ВХОД, SL и TP:\nhttps://...\n79000 78000 81000"})
         elif data.startswith("skip:"):
             BX["pending"].pop(data[5:], None)
             bx_save()
-            tg("sendMessage", data={"chat_id": uid, "text": "⏭ Пропущено."})
+            tg("sendMessage", data={"chat_id": uid, "text": "❌ Пропущено."})
         elif data.startswith("conf:"):
             sid = data[5:]
             s = BX["active"].get(sid)
@@ -570,11 +546,12 @@ def handle_update(up):
                 s["close_result"] = "admin_cancel"
                 save_stat(s, "expired", 0.0)
                 bx_save()
-                cap = f"🚫 *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Сетап признан неактуальным._"
+                cap = f""" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
+_Сетап признан неактуальным._"""
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
-                tg("sendMessage", data={"chat_id": uid, "text": f"🚫 Сетап #{sid} закрыт админом"})
+                tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} закрыт админом"})
         elif data == "gen_vip_post":
             stats = load_stats()
             total = stats.get("total", 0)
@@ -583,7 +560,7 @@ def handle_update(up):
             winrate = round((wins / total) * 100, 1) if total > 0 else 0
             vip_post = f"""📊 *MTC Trading Platform*
 
-📈 *Статистика:*
+ *Статистика:*
 • Сделок: {total}
 • Винрейт: {winrate}%
 • TP: {wins} | SL: {losses}
@@ -591,41 +568,10 @@ def handle_update(up):
 🎯 *Стратегия:* CHoCH + FVG
 ⚙️ *ТФ:* 4H → 15m, 1H → 5m
 
-👇 Жми кнопку ниже, чтобы открыть дашборд!"""
-            kb = {"inline_keyboard": [[{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
-            tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": kb})
-            tg("sendMessage", data={"chat_id": uid, "text": "⚠️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
-        elif data == "fear_greed":
-            try:
-                r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
-                if r.status_code == 200:
-                    data_fg = r.json().get('data', [])
-                    if data_fg:
-                        value = int(data_fg[0]['value'])
-                        label = data_fg[0]['value_classification']
-                        timestamp = int(data_fg[0]['timestamp'])
-                        date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
-                        gauge_buf = make_fear_greed_gauge(value, label)
-                        caption = f"""📊 **Индекс Страха и Жадности**
-
-Значение: **{value}** ({label})
-Дата: {date_str}
-
-📉 **0-25:** Extreme Fear
-🟠 **26-45:** Fear
-⚖️ **46-55:** Neutral
-📈 **56-75:** Greed
-🔥 **76-100:** Extreme Greed
-
-_Индекс показывает настроение рынка_"""
-                        tg("sendPhoto", data={
-                            "chat_id": uid,
-                            "caption": caption,
-                            "parse_mode": "Markdown"
-                        }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
-            except Exception as e:
-                print(f"⚠️ Fear & Greed error: {e}")
-                tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
+ Жми кнопку ниже, чтобы открыть дашборд!"""
+            kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+            tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
+            tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         return
 
     msg = up.get("message")
@@ -639,11 +585,7 @@ _Индекс показывает настроение рынка_"""
         if is_private or is_group_chat:
             if txt.strip() == "/start":
                 if is_admin(uid):
-                    kb = {"inline_keyboard": [
-                        [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
-                        [{"text": "📝 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
-                        [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]
-                    ]}
+                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
                     welcome_text = """*Привет, Админ!*
 
 Добро пожаловать в *MTC Trading Platform*!
@@ -655,16 +597,12 @@ _Индекс показывает настроение рынка_"""
 
 📊 *Используй кнопки ниже:*
 • "Открыть Дашборд" — твой личный кабинет
-• "Сгенерировать пост для VIP" — создай красивый пост
-• "Fear & Greed Index" — индекс страха и жадности
+• "Сгенерировать пост для VIP" — создай красивый пост для пересылки в канал
 
 _Платформа в разработке. Следим за прогрессом!_"""
-                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
+                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 else:
-                    kb = {"inline_keyboard": [
-                        [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
-                        [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]
-                    ]}
+                    kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
                     welcome_text = """*Привет!*
 
 Добро пожаловать в *MTC Trading Platform*!
@@ -675,7 +613,7 @@ _Платформа в разработке. Следим за прогресс�
 • Аналитику рынка
 
 Жми кнопку ниже, чтобы открыть дашборд!"""
-                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
+                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 return
 
             if txt.strip() == "/stats" and is_admin(uid):
@@ -688,14 +626,14 @@ _Платформа в разработке. Следим за прогресс�
                 history_text = "\n".join([f"• {h['date']} | {h['sym']} {h['tf']} {h['dir'].upper()} → **{h['result']}** ({h['pnl']}%)" for h in last_5])
                 report = f"""📊 *ОТЧЕТ MY TRADING CLUB*
 
-🎯 *Всего:* {stats['total']}
-✅ *TP:* {stats['wins']} ({win_rate:.1f}%)
-❌ *SL:* {stats['losses']}
-⏭ *Пропуск:* {stats['skipped']}
-⏳ *Истекло:* {stats['expired']}
-💰 *Общий PnL:* {stats.get('pnl', 0)}%
+📈 *Всего:* {stats['total']}
+🟢 *TP:* {stats['wins']} ({win_rate:.1f}%)
+ *SL:* {stats['losses']}
+ *Пропуск:* {stats['skipped']}
+ *Истекло:* {stats['expired']}
+ *Общий PnL:* {stats.get('pnl', 0)}%
 
-📜 *Последние 5:*
+ *Последние 5:*
 {history_text}"""
                 tg("sendMessage", data={"chat_id": uid, "text": report, "parse_mode": "Markdown"})
                 return
@@ -703,66 +641,15 @@ _Платформа в разработке. Следим за прогресс�
             if txt.strip() == "/active" and is_admin(uid):
                 active = BX.get("active", {})
                 if not active:
-                    tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Нет активных сетапов"})
+                    tg("sendMessage", data={"chat_id": uid, "text": "📭 Нет активных сетапов"})
                 else:
                     lines = []
                     for sid, s in active.items():
                         lines.append(f"🔹 *#{sid}* · {s['sym']} {s['tf']} {s['dir'].upper()}")
                         lines.append(f"   Вход: `{s['entry_price']:,.2f}` | SL: `{s['sl']:,.2f}` | TP: `{s['tp']:,.2f}`")
                         lines.append(f"   Статус: `{s.get('status', '?')}`\n")
-                    msg_text = "📋 *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
+                    msg_text = " *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
                     tg("sendMessage", data={"chat_id": uid, "text": msg_text, "parse_mode": "Markdown"})
-                return
-
-            if txt.strip() == "/quotes" and is_admin(uid):
-                btc_p, btc_c = get_daily_data("bitcoin")
-                eth_p, eth_c = get_daily_data("ethereum")
-                sol_p, sol_c = get_daily_data("solana")
-                def fmt(p, c):
-                    sign = "🟢 +" if c >= 0 else "🔴 "
-                    return f"`{p:,.2f}$` ({sign}{c:.2f}%)"
-                msg = f"""📊 *КОТИРОВКИ НА СЕГОДНЯ*
-
-₿ *BTC:* {fmt(btc_p, btc_c)}
-♦ *ETH:* {fmt(eth_p, eth_c)}
-◎ *SOL:* {fmt(sol_p, sol_c)}
-
-_Данные предоставлены CoinGecko_"""
-                send_vip_quote(msg)
-                tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки с кнопкой Fear & Greed отправлены в каналы!"})
-                return
-
-            if txt.strip() == "/fear_greed" and is_admin(uid):
-                try:
-                    r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
-                    if r.status_code == 200:
-                        data_fg = r.json().get('data', [])
-                        if data_fg:
-                            value = int(data_fg[0]['value'])
-                            label = data_fg[0]['value_classification']
-                            timestamp = int(data_fg[0]['timestamp'])
-                            date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
-                            gauge_buf = make_fear_greed_gauge(value, label)
-                            caption = f"""📊 **Индекс Страха и Жадности**
-
-Значение: **{value}** ({label})
-Дата: {date_str}
-
-📉 **0-25:** Extreme Fear
-🟠 **26-45:** Fear
-⚖️ **46-55:** Neutral
-📈 **56-75:** Greed
-🔥 **76-100:** Extreme Greed
-
-_Индекс показывает настроение рынка_"""
-                            tg("sendPhoto", data={
-                                "chat_id": uid,
-                                "caption": caption,
-                                "parse_mode": "Markdown"
-                            }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
-                except Exception as e:
-                    print(f"⚠️ Fear & Greed error: {e}")
-                    tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
                 return
 
             if txt.startswith("/force_close ") and is_admin(uid):
@@ -775,17 +662,19 @@ _Индекс показывает настроение рынка_"""
                         s["close_result"] = "admin_cancel"
                         save_stat(s, "expired", 0.0)
                         bx_save()
-                        cap = f"🚫 *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
+                        cap = f" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
                         if s.get("vip_msg"):
                             try:
                                 tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                             except:
                                 pass
-                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"⚠️ {cap}", "parse_mode": "Markdown"})
+                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
-                        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
+                        tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
                 return
+
+           
 
             if txt.startswith('/manual_close ') and is_admin(uid):
                 parts = txt.split()
@@ -800,19 +689,25 @@ _Индекс показывает настроение рынка_"""
                             entry = s["entry_price"]
                             pnl_pct = (entry - manual_price) / entry * 100 if s["dir"] == "short" else (manual_price - entry) / entry * 100
                             pnl_sign = "+" if pnl_pct > 0 else ""
+                            
                             save_stat(s, "manual", pnl_pct)
                             bx_save()
-                            cap = f"🔧 *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}\n💰 Цена закрытия: `{manual_price:,.2f}`\n📈 Результат: {pnl_sign}{pnl_pct:.2f}%"
+                            
+                            cap = f""" *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}
+📊 Цена закрытия: `{manual_price:,.2f}`
+📈 Результат: {pnl_sign}{pnl_pct:.2f}%"""
                             if s.get("vip_msg"):
                                 try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                                 except: pass
-                            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"⚠️ {cap}", "parse_mode": "Markdown"})
+                            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
                             tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную @ {manual_price:,.2f}\nPnL: {pnl_sign}{pnl_pct:.2f}%"})
                         else:
                             tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
                     except ValueError:
                         tg("sendMessage", data={"chat_id": uid, "text": "❌ Неверная цена. Формат: /manual_close ID ЦЕНА"})
                 return
+
+
 
         if is_admin(uid) and str(uid) in BX.get("wait_link", {}):
             sid = BX["wait_link"].pop(str(uid))
@@ -828,53 +723,26 @@ _Индекс показывает настроение рынка_"""
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
 
-def make_fear_greed_gauge(value, label):
-    import matplotlib.pyplot as plt
-    from matplotlib.patches import Wedge
-    import numpy as np
-    import io
-    
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.axis('off')
-    
-    if value <= 25:
-        color = '#ff3b30'
-        label_color = 'Extreme Fear'
-    elif value <= 45:
-        color = '#ff9500'
-        label_color = 'Fear'
-    elif value <= 55:
-        color = '#ffcc00'
-        label_color = 'Neutral'
-    elif value <= 75:
-        color = '#a2e000'
-        label_color = 'Greed'
-    else:
-        color = '#00e676'
-        label_color = 'Extreme Greed'
-    
-    wedge = Wedge((5, 5), 4, 0, 180, width=0.8, facecolor=color, edgecolor='white', linewidth=2)
-    ax.add_patch(wedge)
-    
-    bg_wedge = Wedge((5, 5), 4, 0, 180, width=0.8, facecolor='none', edgecolor='gray', linewidth=1, linestyle='--')
-    ax.add_patch(bg_wedge)
-    
-    angle = (value / 100 * 180)
-    arrow_x = 5 + 3.5 * np.cos(np.radians(180 - angle))
-    arrow_y = 5 + 3.5 * np.sin(np.radians(180 - angle))
-    ax.arrow(5, 5, arrow_x-5, arrow_y-5, width=0.15, color='white', length_includes_head=True, head_width=0.4, head_length=0.5)
-    
-    ax.text(5, 5, str(value), ha='center', va='center', fontsize=48, fontweight='bold', color='white')
-    ax.text(5, 3.5, label_color, ha='center', va='center', fontsize=16, fontweight='bold', color='white')
-    ax.text(5, 1.5, 'Fear & Greed Index', ha='center', va='center', fontsize=12, color='white', alpha=0.8)
-    
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#1a1a2e')
-    plt.close(fig)
-    buf.seek(0)
-    return buf
+def tg(method, **kw):
+    for attempt in range(3):
+        try:
+            session = requests.Session()
+            url = f"https://api.telegram.org/bot{TOKEN}/{method}"
+            r = session.post(url, **kw, timeout=10)
+            return r.json()
+        except Exception as e:
+            if attempt < 2: _time.sleep(2)
+    return {"ok": False}
+
+@app.route("/tg_webhook", methods=["POST"])
+def tg_webhook():
+    try:
+        update = request.get_json()
+        if update: handle_update(update)
+        return "ok"
+    except Exception as e:
+        print(f"WEBHOOK ERR: {e}")
+        return "ok"
 
 def normalize_chat(raw):
     s = str(raw)
@@ -957,7 +825,7 @@ def base_sym(symbol):
 def tv():
     try:
         data = request.get_json(force=True, silent=True) or {}
-        print(f"📥 ПОЛУЧЕН СИГНАЛ ОТ TRADINGVIEW: {data}")
+        print(f"📥 ПОЛУЧЕН СИГНАЛ ОТ TRADINGVIEW: {data}") # <-- Это покажет нам точные данные
         
         text = data.get("text", "")
         kind = data.get("kind", "")
@@ -976,6 +844,7 @@ def tv():
         if kind == "choch":
             sym = base_sym(data.get("symbol")) or "BTC"
             
+            # БЕЗОПАСНОЕ ПРЕОБРАЗОВАНИЕ ЦЕНЫ (заменяем запятую на точку, если TV ее прислал)
             level_raw = data.get("level")
             level = None
             if level_raw:
@@ -985,27 +854,23 @@ def tv():
                     print(f"⚠️ Не удалось преобразовать уровень в число: {level_raw}")
             
             tf_raw = str(data.get("tf", "60"))
+            # Расширенная карта таймфреймов на все случаи
             tf_map = {"240": "4H", "60": "1H", "15": "15m", "5": "5m", "D": "D", "1H": "1H", "4H": "4H", "1D": "D"}
             tf = tf_map.get(tf_raw, "1H")
             
+            # Более надежное определение направления (учитывает регистр)
             text_upper = text.upper()
             direction = "long" if ("БЫЧИЙ" in text_upper or "LONG" in text_upper or "BUY" in text_upper) else "short"
             
-            for sid, s in list(BX["pending"].items()) + list(BX["active"].items()):
-                if s.get("sym") == sym and s.get("tf") == tf and s.get("dir") == direction:
-                    if level and s.get("level"):
-                        if abs(s["level"] - level) / level < 0.001:
-                            print(f"⚠️ ДУБЛИКАТ! Сетап #{sid} уже существует с таким же уровнем {level}")
-                            send_text_safe(tg_base, text)
-                            return "ok"
-            
+            # Отправляем сообщение в канал
             send_text_safe(tg_base, text)
             
+            # Создаем сетап
             sid = new_pending(sym, tf, direction, level)
-            kb = {"inline_keyboard": [[{"text": f"🔷 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "⏭ Пропустить", "callback_data": f"skip:{sid}"}]]}
+            kb = {"inline_keyboard": [[{"text": f"🔷 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
             admin_msg = f"*НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
             for aid in ADMIN_IDS:
-                tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": kb})
+                tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": json.dumps(kb)})
             
             print(f"✅ CHoCH #{sid} успешно создан: {sym} {tf} {direction.upper()} (Level: {level})")
             return "ok"
@@ -1025,11 +890,12 @@ def setup_webhook():
         r = tg("setWebhook", data={"url": WEBHOOK_URL, "allowed_updates": ["message", "callback_query"], "max_connections": 40})
         if r.get("ok"): print("✅ Webhook установлен!")
         else: print(f"⚠️ Ошибка webhook: {r}")
-    except Exception as e: print(f"⚠️ Webhook error: {e}")
+    except Exception as e: print(f"️ Webhook error: {e}")
 
 @app.route('/dashboard')
 def dashboard_page():
     return render_template('dashboard.html')
+
 
 @app.route('/api/stats', methods=['GET'])
 def api_stats():
@@ -1045,49 +911,74 @@ def api_stats():
     balance = stats.get("balance", 10000.0)
     winrate = round((wins / total) * 100, 1) if total > 0 else 0
     return jsonify({
-        "role": "admin", "total": total, "wins": wins, "losses": losses, 
-        "skipped": skipped, "expired": expired, "winrate": winrate, 
-        "pnl": pnl, "pnl_usd": pnl_usd, "deposit": deposit, "balance": balance,
-        "history": stats.get("history", []), "active_setups_count": len(BX.get('active', {}))
+        "role": "admin", 
+        "total": total, 
+        "wins": wins, 
+        "losses": losses, 
+        "skipped": skipped, 
+        "expired": expired, 
+        "winrate": winrate, 
+        "pnl": pnl,
+        "pnl_usd": pnl_usd,
+        "deposit": deposit,
+        "balance": balance,
+        "history": stats.get("history", []), 
+        "active_setups_count": len(BX.get('active', {}))
     })
 
 @app.route('/api/youtube', methods=['GET'])
 def api_youtube():
     try:
-        channel_id = "UCC71uNPC5AA9wFGvlPL1Iig"
-        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
-        r = requests.get(rss_url, timeout=10)
+        # Парсим HTML страницы НАШЕГО канала
+        url = f"https://www.youtube.com/@MyTradingClub/videos"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        r = requests.get(url, headers=headers, timeout=10)
+        
         if r.status_code == 200:
-            import xml.etree.ElementTree as ET
-            root = ET.fromstring(r.text)
             videos = []
-            for entry in root.iter():
-                if entry.tag.endswith('entry'):
-                    video_id = None
-                    title = None
-                    for child in entry.iter():
-                        if child.tag.endswith('videoId'): video_id = child.text
-                        elif child.tag.endswith('title'): title = child.text
-                    if video_id and title:
-                        videos.append({
-                            "id": video_id, "title": title,
-                            "link": f"https://www.youtube.com/watch?v={video_id}",
-                            "thumbnail": f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
-                        })
-                        if len(videos) >= 12: break
-            print(f"✅ YouTube: найдено {len(videos)} видео")
+            # Ищем все видео на странице
+            video_urls = re.findall(r'/watch\?v=([a-zA-Z0-9_-]{11})', r.text)
+            
+            # Ищем заголовки видео
+            titles = re.findall(r'"title":{"runs":\[{"text":"([^"]+)"}\]', r.text)
+            
+            # Берем первые 12 уникальных видео
+            seen = set()
+            idx = 0
+            for vid_id in video_urls:
+                if vid_id not in seen and len(vid_id) == 11:
+                    seen.add(vid_id)
+                    title = titles[idx] if idx < len(titles) else f"Видео {vid_id}"
+                    videos.append({
+                        "id": vid_id,
+                        "title": title,
+                        "link": f"https://www.youtube.com/watch?v={vid_id}",
+                        "thumbnail": f"https://img.youtube.com/vi/{vid_id}/mqdefault.jpg"
+                    })
+                    idx += 1
+                    if len(videos) >= 12:
+                        break
+            
             return jsonify(videos)
-        print(f"⚠️ YouTube RSS вернул {r.status_code}")
+        
         return jsonify([])
     except Exception as e:
-        print(f"❌ YouTube API error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"YouTube API error: {e}")
         return jsonify([])
+
+@app.route('/api/active_setups', methods=['GET'])
+def api_active_setups():
+    setups = []
+    for sid, s in BX.get('active', {}).items():
+        setups.append({'id': sid, 'sym': s.get('sym'), 'tf': s.get('tf'), 'dir': s.get('dir'), 'entry_price': s.get('entry_price'), 'status': s.get('status')})
+    return jsonify(setups)
 
 @app.route('/api/analyses', methods=['GET'])
 def api_all_analyses():
-    return jsonify(list(get_all_analyses().values()))
+    analyses = get_all_analyses()
+    return jsonify(list(analyses.values()))
 
 @app.route('/api/analysis/<setup_id>', methods=['GET', 'POST', 'DELETE'])
 def api_analysis(setup_id):
@@ -1113,36 +1004,56 @@ def api_analysis(setup_id):
                 "tf": setup.get('tf') if setup else data.get('tf'),
                 "direction": setup.get('dir') if setup else data.get('direction'),
                 "entry": setup.get('entry_price') if setup else data.get('entry'),
-                "exit": data.get('exit'), "result": data.get('result'), "pnl": data.get('pnl'),
-                "analysis_text": data.get('analysis_text', ''), "chart_image": data.get('chart_image', ''),
-                "created_by": int(admin_uid), "created_at": _time.time(), "views": 0
+                "exit": data.get('exit'),
+                "result": data.get('result'),
+                "pnl": data.get('pnl'),
+                "analysis_text": data.get('analysis_text', ''),
+                "chart_image": data.get('chart_image', ''),
+                "created_by": int(admin_uid),
+                "created_at": _time.time(),
+                "views": 0
             }
             save_analysis(setup_id, analysis_data)
             return jsonify({"ok": True, "setup_id": setup_id})
+        
         elif request.method == 'DELETE':
-            if delete_analysis(setup_id): return jsonify({"ok": True})
+            if delete_analysis(setup_id):
+                return jsonify({"ok": True})
             return jsonify({"error": "Not found"}), 404
 
 @app.route('/api/coin_analysis', methods=['GET', 'POST'])
 def api_coin_analysis():
-    if request.method == 'GET': return jsonify(load_coin_analyses())
+    if request.method == 'GET':
+        return jsonify(load_coin_analyses())
+    
     if request.method == 'POST':
         data = request.json
         admin_uid = data.get('admin_uid')
         if not admin_uid or int(admin_uid) not in ADMIN_IDS:
             return jsonify({"error": "Unauthorized"}), 403
+        
         analysis_id = data.get('id') or str(_time.time())
         analysis_data = {
-            "id": analysis_id, "symbol": data.get('symbol', ''),
-            "tf1_link": data.get('tf1_link', ''), "tf2_link": data.get('tf2_link', ''),
-            "tf3_link": data.get('tf3_link', ''), "tf4_link": data.get('tf4_link', ''),
+            "id": analysis_id,
+            "symbol": data.get('symbol', ''),
+            "tf1_link": data.get('tf1_link', ''),
+            "tf2_link": data.get('tf2_link', ''),
+            "tf3_link": data.get('tf3_link', ''),
+            "tf4_link": data.get('tf4_link', ''),
             "chart_image": data.get('chart_image', ''),
-            "tf1_screenshot": data.get('tf1_screenshot', ''), "tf2_screenshot": data.get('tf2_screenshot', ''),
-            "tf3_screenshot": data.get('tf3_screenshot', ''), "tf4_screenshot": data.get('tf4_screenshot', ''),
-            "tf1_comment": data.get('tf1_comment', ''), "tf2_comment": data.get('tf2_comment', ''),
-            "tf3_comment": data.get('tf3_comment', ''), "tf4_comment": data.get('tf4_comment', ''),
-            "description": data.get('description', ''), "bingx_link": data.get('bingx_link', ''),
-            "created_by": int(admin_uid), "created_at": _time.time(), "updated_at": _time.time()
+            "tf1_screenshot": data.get('tf1_screenshot', ''),
+            "tf2_screenshot": data.get('tf2_screenshot', ''),
+            "tf3_screenshot": data.get('tf3_screenshot', ''),
+            "tf4_screenshot": data.get('tf4_screenshot', ''),
+            "tf1_comment": data.get('tf1_comment', ''),
+            "tf2_comment": data.get('tf2_comment', ''),
+            "tf3_comment": data.get('tf3_comment', ''),
+            "tf4_comment": data.get('tf4_comment', ''),
+            "description": data.get('description', ''),
+            "bingx_link": data.get('bingx_link', ''),
+            "created_by": int(admin_uid),
+            "created_at": _time.time(),
+            "updated_at": _time.time()
         }
         save_coin_analysis(analysis_id, analysis_data)
         return jsonify({"ok": True, "id": analysis_id})
@@ -1154,7 +1065,8 @@ def api_coin_analysis_item(analysis_id):
         admin_uid = data.get('admin_uid')
         if not admin_uid or int(admin_uid) not in ADMIN_IDS:
             return jsonify({"error": "Unauthorized"}), 403
-        if delete_coin_analysis(analysis_id): return jsonify({"ok": True})
+        if delete_coin_analysis(analysis_id):
+            return jsonify({"ok": True})
         return jsonify({"error": "Not found"}), 404
     
     if request.method == 'PUT':
@@ -1162,8 +1074,11 @@ def api_coin_analysis_item(analysis_id):
         admin_uid = data.get('admin_uid')
         if not admin_uid or int(admin_uid) not in ADMIN_IDS:
             return jsonify({"error": "Unauthorized"}), 403
+        
         existing = get_coin_analysis(analysis_id)
-        if not existing: return jsonify({"error": "Not found"}), 404
+        if not existing:
+            return jsonify({"error": "Not found"}), 404
+        
         existing.update({
             "symbol": data.get('symbol', existing.get('symbol')),
             "tf1_link": data.get('tf1_link', existing.get('tf1_link')),
@@ -1176,8 +1091,8 @@ def api_coin_analysis_item(analysis_id):
         })
         save_coin_analysis(analysis_id, existing)
         return jsonify({"ok": True})
-
 def parse_upscale_news():
+    """Парсим анонсы с канала Upscale News"""
     try:
         url = "https://t.me/s/upscale_news_ru"
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
@@ -1189,43 +1104,60 @@ def parse_upscale_news():
             for msg in soup.find_all('div', class_='tgme_widget_message_text')[:10]:
                 text = msg.get_text().strip()
                 if text and len(text) > 20:
-                    announcements.append({"source": "Upscale News", "title": text[:300], "url": "https://t.me/upscale_news_ru", "time": _time.time()})
+                    announcements.append({
+                        "source": "Upscale News",
+                        "title": text[:300],
+                        "url": "https://t.me/upscale_news_ru",
+                        "time": _time.time()
+                    })
             return announcements
     except Exception as e:
-        print(f"⚠️ Ошибка парсинга Upscale News: {e}")
+        print(f" Ошибка парсинга Upscale News: {e}")
     return []
 
 @app.route('/api/upscale_news')
 def api_upscale_news():
-    return jsonify(parse_upscale_news())
+    """API для получения анонсов Upscale"""
+    announcements = parse_upscale_news()
+    return jsonify(announcements)
 
 @app.route('/api/miniapp_feed', methods=['GET'])
 def api_miniapp_feed():
+    """Возвращает активные сетапы для ленты мини-аппа напрямую из памяти"""
     setups = []
     active_setups = BX.get('active', {})
+    
     for sid, s in active_setups.items():
+        # Показываем только те, что в работе или ожидают входа
         if s.get('status') in ['pending', 'active']:
             setups.append({
-                'id': sid, 'sym': s.get('sym', 'N/A'), 'dir': s.get('dir', 'long'),
-                'entry': s.get('entry_price', 'N/A'), 'sl': s.get('sl', 'N/A'),
-                'tp': s.get('tp', 'N/A'), 'chart': s.get('chart_image', s.get('chart', ''))
+                'id': sid,
+                'sym': s.get('sym', 'N/A'),
+                'dir': s.get('dir', 'long'),
+                'entry': s.get('entry_price', 'N/A'),
+                'sl': s.get('sl', 'N/A'),
+                'tp': s.get('tp', 'N/A'),
+                'chart': s.get('chart_image', s.get('chart', ''))
             })
+    
     return jsonify(setups)
 
 @app.route('/api/fear_greed')
 def api_fear_greed():
+    """Получаем Индекс Страха и Жадности"""
     try:
         r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
         if r.status_code == 200:
             data = r.json().get('data', [])
-            if data: return jsonify(data[0])
+            if data:
+                return jsonify(data[0])
         return jsonify({"error": "Failed to fetch"})
     except Exception as e:
         print(f"Fear & Greed API error: {e}")
         return jsonify({"error": str(e)})
-
 @app.route('/api/market_data')
 def api_market_data():
+    """Получаем общий обзор рынка с CoinGecko"""
     try:
         r = requests.get("https://api.coingecko.com/api/v3/global", timeout=5)
         if r.status_code == 200:
@@ -1233,8 +1165,9 @@ def api_market_data():
             market_cap = data.get('total_market_cap', {}).get('usd', 0)
             btc_dominance = data.get('market_cap_percentage', {}).get('btc', 0)
             market_cap_change = data.get('market_cap_change_percentage_24h_usd', 0)
+            
             return jsonify({
-                "market_cap": f"${market_cap / 1e12:.2f}T",
+                "market_cap": f"${market_cap / 1e12:.2f}T", # В триллионах
                 "btc_dominance": f"{btc_dominance:.1f}%",
                 "trend": "up" if market_cap_change > 0 else "down",
                 "trend_value": f"{abs(market_cap_change):.2f}%"
@@ -1246,133 +1179,128 @@ def api_market_data():
 
 @app.route('/api/derivatives_data')
 def api_derivatives_data():
+    """Funding Rates + Ликвидации + RSI"""
     try:
+        # 1. Funding Rates с Binance
+        funding_r = requests.get("https://fapi.binance.com/fapi/v1/premiumIndex", timeout=5)
         funding_data = {}
-        try:
-            r = requests.get("https://open-api.bingx.com/openApi/swap/v2/quote/premiumIndex", timeout=10)
-            if r.status_code == 200:
-                data = r.json()
-                if data.get('code') == 0:
-                    items = data.get('data', [])
-                    sorted_items = sorted(items, key=lambda x: abs(float(x.get('lastFundingRate', 0))), reverse=True)
-                    for item in sorted_items[:15]:
-                        symbol = item.get('symbol', '').replace('-USDT', '')
-                        if not symbol: continue
-                        rate = float(item.get('lastFundingRate', 0)) * 100
-                        next_time = item.get('nextFundingTime', 0)
-                        next_str = datetime.fromtimestamp(next_time/1000).strftime('%H:%M') if next_time else '--'
-                        funding_data[symbol] = {
-                            'rate': f"{rate:.4f}%", 'next': next_str,
-                            'extreme': '🟢' if rate < -0.01 else ('🔴' if rate > 0.01 else '🟡')
-                        }
-        except Exception as e: print(f"Funding error: {e}")
+        if funding_r.status_code == 200:
+            for item in funding_r.json()[:10]:  # Топ-10 по funding
+                symbol = item['symbol'].replace('USDT', '')
+                rate = float(item['lastFundingRate']) * 100
+                if abs(rate) > 0.005:  # Показываем только экстремальные (>0.005%)
+                    funding_data[symbol] = {
+                        'rate': f"{rate:.4f}%",
+                        'next': datetime.fromtimestamp(int(item['nextFundingTime']/1000)).strftime('%H:%M'),
+                        'extreme': '🔴' if rate > 0.01 else '🟢' if rate < -0.01 else '🟡'
+                    }
         
+        # 2. RSI для BTC и ETH на 4H и 1D
         rsi_data = {}
         for coin in ['BTC', 'ETH']:
             for tf, interval in [('4H', '4h'), ('1D', '1d')]:
                 try:
-                    klines_r = requests.get("https://open-api.bingx.com/openApi/swap/v2/quote/klines", params={"symbol": f"{coin}-USDT", "interval": interval, "limit": 100}, timeout=10)
-                    if klines_r.status_code == 200:
-                        data = klines_r.json()
-                        if data.get('code') == 0:
-                            klines = data.get('data', [])
-                            if len(klines) < 15: continue
-                            closes = [float(k['close']) for k in klines]
-                            gains, losses = [], []
-                            for i in range(1, len(closes)):
-                                diff = closes[i] - closes[i-1]
-                                if diff > 0: gains.append(diff); losses.append(0)
-                                else: gains.append(0); losses.append(abs(diff))
-                            if len(gains) < 14: continue
-                            avg_gain = sum(gains[-14:]) / 14
-                            avg_loss = sum(losses[-14:]) / 14
-                            rs = avg_gain / avg_loss if avg_loss > 0 else 0
-                            rsi = 100 - (100 / (1 + rs))
-                            rsi_data[f'{coin}_{tf}'] = {
-                                'value': round(rsi, 1),
-                                'signal': '🔴 Overbought' if rsi > 70 else ('🟢 Oversold' if rsi < 30 else '🟡 Neutral'),
-                                'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
-                            }
-                except Exception as e: print(f"RSI error {coin} {tf}: {e}")
-        return jsonify({'funding': funding_data, 'rsi': rsi_data})
+                    klines = requests.get(
+                        f"https://api.binance.com/api/v3/klines",
+                        params={'symbol': f'{coin}USDT', 'interval': interval, 'limit': 100},
+                        timeout=5
+                    ).json()
+                    closes = [float(k[4]) for k in klines]
+                    # Считаем RSI
+                    gains = []
+                    losses = []
+                    for i in range(1, len(closes)):
+                        diff = closes[i] - closes[i-1]
+                        if diff > 0:
+                            gains.append(diff)
+                            losses.append(0)
+                        else:
+                            gains.append(0)
+                            losses.append(abs(diff))
+                    avg_gain = sum(gains[-14:]) / 14
+                    avg_loss = sum(losses[-14:]) / 14
+                    rs = avg_gain / avg_loss if avg_loss > 0 else 0
+                    rsi = 100 - (100 / (1 + rs))
+                    rsi_data[f'{coin}_{tf}'] = {
+                        'value': round(rsi, 1),
+                        'signal': '🔴 Overbought' if rsi > 70 else '🟢 Oversold' if rsi < 30 else '🟡 Neutral',
+                        'divergence': 'possible' if (rsi > 70 and coin == 'BTC') else 'none'
+                    }
+                except:
+                    pass
+        
+        return jsonify({
+            'funding': funding_data,
+            'rsi': rsi_data
+        })
     except Exception as e:
         print(f"Derivatives API error: {e}")
         return jsonify({"error": str(e)})
 
 @app.route('/api/liquidations')
 def api_liquidations():
+    """Получаем данные о ликвидациях с Binance"""
     try:
-        r = requests.get("https://open-api.bingx.com/openApi/swap/v2/quote/ticker", timeout=10)
+        # Binance API для ликвидаций (последние 50)
+        r = requests.get("https://fapi.binance.com/fapi/v1/allForceOrders?limit=50", timeout=5)
         if r.status_code == 200:
             data = r.json()
-            if data.get('code') == 0:
-                tickers = data.get('data', [])
-                sorted_tickers = sorted(tickers, key=lambda x: abs(float(x.get('priceChangePercent', 0))), reverse=True)[:50]
-                liq_data = []
-                for item in sorted_tickers:
-                    symbol = item.get('symbol', '').replace('-USDT', '')
-                    if not symbol: continue
-                    price = float(item.get('lastPrice', 0))
-                    pct = float(item.get('priceChangePercent', 0))
-                    volume = float(item.get('quoteVolume', 0))
-                    liq_data.append({
-                        'symbol': symbol, 'side': 'LONG' if pct < 0 else 'SHORT',
-                        'price': price, 'qty': 0, 'value': volume,
-                        'time': datetime.now().strftime('%H:%M:%S')
-                    })
-                return jsonify(liq_data)
+            liq_data = []
+            for order in data:
+                liq_data.append({
+                    'symbol': order['symbol'].replace('USDT', ''),
+                    'side': 'LONG' if order['side'] == 'SELL' else 'SHORT',  # LONG ликвидация = продажа
+                    'price': float(order['price']),
+                    'qty': float(order['origQty']),
+                    'value': float(order['price']) * float(order['origQty']),
+                    'time': datetime.fromtimestamp(order['time']/1000).strftime('%H:%M:%S')
+                })
+            return jsonify(liq_data)
         return jsonify([])
     except Exception as e:
         print(f"Liquidations API error: {e}")
         return jsonify([])
 
-@app.route('/api/reset_stats', methods=['POST'])
-def api_reset_stats():
-    try:
-        init_data = request.headers.get('X-Telegram-Init-Data', '')
-        import urllib.parse
-        data = dict(urllib.parse.parse_qsl(init_data))
-        user = json.loads(data.get('user', '{}'))
-        user_id = user.get('id')
-        if not user_id or int(user_id) not in ADMIN_IDS:
-            return jsonify({"error": "Unauthorized"}), 403
-        with open(STATS_FILE, "w") as f:
-            json.dump({"total": 0, "wins": 0, "losses": 0, "skipped": 0, "expired": 0, "pnl": 0.0, "pnl_usd": 0.0, "deposit": 10000.0, "balance": 10000.0, "history": []}, f, indent=2)
-        print(f"✅ Статистика сброшена админом {user_id}")
-        return jsonify({"ok": True})
-    except Exception as e:
-        print(f"❌ Reset stats error: {e}")
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/api/check_vip', methods=['GET'])
 def check_vip():
+    """Проверяет, подписан ли пользователь на VIP канал"""
     init_data = request.headers.get('X-Telegram-Init-Data', '')
     try:
         import urllib.parse
         data = dict(urllib.parse.parse_qsl(init_data))
         user = json.loads(data.get('user', '{}'))
         user_id = user.get('id')
-        if not user_id: return jsonify({"is_vip": False})
-        r = requests.get(f"https://api.telegram.org/bot{TOKEN}/getChatMember", params={"chat_id": CHAT, "user_id": user_id}, timeout=5)
+        
+        if not user_id:
+            return jsonify({"is_vip": False})
+        
+        # Запрашиваем статус участника в Telegram API (используем CHAT как VIP канал)
+        r = requests.get(
+            f"https://api.telegram.org/bot{TOKEN}/getChatMember", 
+            params={"chat_id": CHAT, "user_id": user_id},
+            timeout=5
+        )
         res = r.json()
+        
         if res.get("ok"):
             status = res["result"]["status"]
-            if status in ["member", "administrator", "creator"]: return jsonify({"is_vip": True})
+            # member, administrator, creator - всё это считается активной подпиской
+            if status in ["member", "administrator", "creator"]:
+                return jsonify({"is_vip": True})
+                
         return jsonify({"is_vip": False})
     except Exception as e:
         print(f"Check VIP error: {e}")
         return jsonify({"is_vip": False})
 
+
 if __name__ == "__main__":
     import os
     import threading
     
+    # 🚀 ЗАПУСКАЕМ ЦИКЛ СЛЕЖКИ ЗА ЦЕНАМИ В ОТДЕЛЬНОМ ПОТОКЕ!
     threading.Thread(target=bx_watch_loop, daemon=True).start()
     print("✅ Цикл слежки за сетапами запущен! Бот следит за TP/SL.")
-    
-    # 🔧 УСТАНАВЛИВАЕМ ВЕБХУК ПРИ ЗАПУСКЕ!
-    setup_webhook()
-    print("✅ Webhook установлен! Бот готов принимать сообщения.")
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
