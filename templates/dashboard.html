@@ -1238,28 +1238,42 @@ function openVideoModal(videoId, title) {
         }
 
         function checkLatestVideo() {
+            console.log('🔍 Проверка свежего видео...');
+    
             fetch('/api/youtube')
-                .then(function(r) { return r.json(); })
+                .then(function(r) { 
+                    console.log('📥 Ответ API YouTube, статус:', r.status);
+                    return r.json(); 
+                })
                 .then(function(videos) {
+                    console.log('📺 Получены видео с бэкенда:', videos);
+            
                     if (videos && videos.length > 0) {
                         var latest = videos[0];
-                        var lastViewed = localStorage.getItem('lastMtcVideoViewed');
-                        if (lastViewed !== latest.id) {
-                            var html = '<div style="cursor:pointer;" onclick="openVideoModal(\'' + latest.id + '\', \'' + latest.title.replace(/'/g, "\\'") + '\')">' +
-                                '<img src="https://i.ytimg.com/vi/' + latest.id + '/mqdefault.jpg" style="width:100%; border-radius:8px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1);">' +
-                                '<h4 style="margin:0 0 10px 0; color:#fff; font-size:15px; line-height:1.4;">' + latest.title + '</h4>' +
-                                '<div style="display:flex; align-items:center; justify-content:space-between;">' +
-                                    '<span style="color:#8e8e93; font-size:12px;">Нажмите, чтобы посмотреть</span>' +
-                                    '<span style="background:#ff6b35; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600;">Смотреть ▶</span>' +
-                                '</div>' +
-                            '</div>';
-                            document.getElementById('latestVideoContent').innerHTML = html;
-                            document.getElementById('latestVideoCard').classList.remove('hidden');
-                            localStorage.setItem('lastMtcVideoViewed', latest.id);
-                        }
+                
+                        var html = '<div style="cursor:pointer;" onclick="openVideoModal(\'' + latest.id + '\', \'' + latest.title.replace(/'/g, "\\'") + '\')">' +
+                            '<img src="https://i.ytimg.com/vi/' + latest.id + '/mqdefault.jpg" style="width:100%; border-radius:8px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.1);">' +
+                            '<h4 style="margin:0 0 10px 0; color:#fff; font-size:15px; line-height:1.4;">' + latest.title + '</h4>' +
+                            '<div style="display:flex; align-items:center; justify-content:space-between;">' +
+                                '<span style="color:#8e8e93; font-size:12px;">Нажмите, чтобы посмотреть</span>' +
+                                '<span style="background:#ff6b35; color:#fff; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600;">Смотреть ▶</span>' +
+                            '</div>' +
+                        '</div>';
+                
+                        document.getElementById('latestVideoContent').innerHTML = html;
+                        document.getElementById('latestVideoCard').classList.remove('hidden');
+                        console.log('✅ Карточка свежего видео успешно показана!');
+                    } else {
+                        console.log('⚠️ API вернул пустой список видео');
+                        document.getElementById('latestVideoContent').innerHTML = '<div style="text-align: center; padding: 20px; color: #8e8e93;">Пока нет видео на канале</div>';
+                        document.getElementById('latestVideoCard').classList.remove('hidden');
                     }
                 })
-                .catch(function(err) { console.error('Video check error:', err); });
+                .catch(function(err) { 
+                    console.error('❌ Ошибка при загрузке видео:', err); 
+                    document.getElementById('latestVideoContent').innerHTML = '<div style="text-align: center; padding: 20px; color: #ff3b30;">Ошибка загрузки видео</div>';
+                    document.getElementById('latestVideoCard').classList.remove('hidden');
+                });
         }
 
         refreshData();
