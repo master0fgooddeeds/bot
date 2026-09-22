@@ -606,18 +606,19 @@
 function openVideoModal(videoId, title) {
     var url = 'https://www.youtube.com/watch?v=' + videoId;
     
-    // Пробуем Telegram API
     if (window.Telegram && window.Telegram.WebApp) {
-        try {
-            window.Telegram.WebApp.openLink(url);
-            console.log('✅ Telegram openLink вызван');
-        } catch(e) {
-            console.error('❌ Telegram openLink ошибка:', e);
-            // Фоллбэк — открываем напрямую
-            window.open(url, '_blank');
+        // Для нативных приложений Telegram
+        window.Telegram.WebApp.openLink(url);
+        console.log('✅ Telegram openLink вызван');
+        
+        // Для веб-версии — открываем в новой вкладке с задержкой
+        if (window.location.href.includes('web.telegram.org')) {
+            setTimeout(function() {
+                window.open(url, '_blank');
+            }, 500);
         }
     } else {
-        // Если не Telegram — открываем в новой вкладке
+        // Если не Telegram — просто открываем в новой вкладке
         window.open(url, '_blank');
     }
 }
