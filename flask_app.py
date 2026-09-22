@@ -513,6 +513,16 @@ def yt_watch_loop():
             print("YT WATCH LOOP:", e)
         _time.sleep(900) # Проверка каждые 15 минут
 
+def get_daily_data(coin_id):
+    try:
+        r = requests.get(f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true", timeout=5)
+        if r.status_code == 200:
+            data = r.json().get(coin_id, {})
+            return data.get('usd', 0), data.get('usd_24h_change', 0)
+    except:
+        pass
+    return 0, 0
+
 def send_vip_quote(msg):
     keyboard = {
         "inline_keyboard": [
