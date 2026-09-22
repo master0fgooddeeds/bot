@@ -683,7 +683,7 @@ _Платформа в разработке. Следим за прогресс�
 • Аналитику рынка
 
 Жми кнопку ниже, чтобы открыть дашборд!"""
-                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
+                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
                 return
 
             if txt.strip() == "/stats" and is_admin(uid):
