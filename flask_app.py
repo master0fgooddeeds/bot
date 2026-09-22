@@ -585,10 +585,13 @@ _Сетап признан неактуальным._"""
         if is_private or is_group_chat:
             if txt.strip() == "/start":
                 kb = {"inline_keyboard": [
-                    [{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
-                    [{"text": " Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
-                    [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]  # <-- ДОБАВЛЕНО!
+                    [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                    [{"text": "📝 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
+                    [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]
                 ]}
+                
+                if is_admin(uid):
+                    welcome_text = """*Привет, Админ!*
 
 Добро пожаловать в *MTC Trading Platform*!
 
@@ -599,12 +602,11 @@ _Сетап признан неактуальным._"""
 
 📊 *Используй кнопки ниже:*
 • "Открыть Дашборд" — твой личный кабинет
-• "Сгенерировать пост для VIP" — создай красивый пост для пересылки в канал
+• "Сгенерировать пост для VIP" — создай красивый пост
+• "Fear & Greed Index" — индекс страха и жадности
 
 _Платформа в разработке. Следим за прогрессом!_"""
-                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
                 else:
-                    kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
                     welcome_text = """*Привет!*
 
 Добро пожаловать в *MTC Trading Platform*!
@@ -615,7 +617,8 @@ _Платформа в разработке. Следим за прогресс�
 • Аналитику рынка
 
 Жми кнопку ниже, чтобы открыть дашборд!"""
-                    tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
+                
+                tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
                 return
 
             if txt.strip() == "/stats" and is_admin(uid):
