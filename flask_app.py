@@ -677,6 +677,27 @@ _Платформа в разработке. Следим за прогресс�
                     tg("sendMessage", data={"chat_id": uid, "text": msg_text, "parse_mode": "Markdown"})
                 return
 
+            if txt.strip() == "/quotes" and is_admin(uid):
+                btc_p, btc_c = get_daily_data("bitcoin")
+                eth_p, eth_c = get_daily_data("ethereum")
+                sol_p, sol_c = get_daily_data("solana")
+                
+                def fmt(p, c):
+                    sign = "🟢 +" if c >= 0 else "🔴 "
+                    return f"`{p:,.2f}$` ({sign}{c:.2f}%)"
+                
+                msg = f"""📊 *КОТИРОВКИ НА СЕГОДНЯ*
+
+₿ *BTC:* {fmt(btc_p, btc_c)}
+♦ *ETH:* {fmt(eth_p, eth_c)}
+◎ *SOL:* {fmt(sol_p, sol_c)}
+
+_Данные предоставлены CoinGecko_"""
+                
+                send_vip_quote(msg)
+                tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки с кнопкой Fear & Greed отправлены в каналы!"})
+                return
+
             if txt.startswith("/force_close ") and is_admin(uid):
                 parts = txt.split()
                 if len(parts) >= 2:
