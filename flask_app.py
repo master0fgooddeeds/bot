@@ -727,21 +727,86 @@ _Платформа в разработке. Следим за прогресс�
                 return
 
             if txt.strip() == "/quotes" and is_admin(uid):
+                # Криптовалюты
                 btc_p, btc_c = get_daily_data("bitcoin")
                 eth_p, eth_c = get_daily_data("ethereum")
                 sol_p, sol_c = get_daily_data("solana")
+                bnb_p, bnb_c = get_daily_data("binancecoin")
+                xrp_p, xrp_c = get_daily_data("ripple")
+                doge_p, doge_c = get_daily_data("dogecoin")
+                ada_p, ada_c = get_daily_data("cardano")
                 
-                def fmt(p, c):
+                # Золото
+                gold_p, gold_c = get_daily_data("gold")
+                
+                # Курсы валют (USD/RUB и USD/EUR)
+                try:
+                    rates = requests.get("https://api.exchangerate-api.com/v4/latest/USD", timeout=5).json()
+                    usd_rub = rates["rates"]["RUB"]
+                    usd_eur = rates["rates"]["EUR"]
+                    usd_rub_change = "+0.00%"  # Заглушка, можно добавить реальные изменения
+                    usd_eur_change = "+0.00%"
+                except:
+                    usd_rub, usd_eur = 0, 0
+                    usd_rub_change, usd_eur_change = "N/A", "N/A"
+                
+                # Общая капитализация рынка
+                try:
+                    global_data = requests.get("https://api.coingecko.com/api/v3/global", timeout=5).json()["data"]
+                    total_cap = global_data["total_market_cap"]["usd"]
+                    btc_dominance = global_data["market_cap_percentage"]["btc"]
+                    market_change = global_data.get("market_cap_change_percentage_24h_usd", 0)
+                except:
+                    total_cap, btc_dominance, market_change = 0, 0, 0
+                
+                # Индекс страха и жадности
+                try:
+                    fng_data = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5).json()["data"][0]
+                    fng_value = fng_data["value"]
+                    fng_label = fng_data["value_classification"]
+                except:
+                    fng_value, fng_label = 0, "N/A"
+                
+                def fmt_crypto(p, c):
                     sign = "🟢 +" if c >= 0 else "🔴 "
-                    return f"`{p:,.2f}$` ({sign}{c:.2f}%)"
+                    return f"`{p:>10,.0f}$` ({sign}{abs(c):>5.2f}%)"
                 
-                msg = f"""📊 *КОТИРОВКИ НА СЕГОДНЯ*
+                def fmt_small(p, c):
+                    sign = "🟢 +" if c >= 0 else " "
+                    return f"`{p:>10,.2f}$` ({sign}{abs(c):>5.2f}%)"
+                
+                def fmt_rate(val, change):
+                    return f"`{val:>12.2f}` ({change})"
+                
+                msg = f""" **КОТИРОВКИ НА СЕГОДНЯ**
+📅 {datetime.now().strftime('%d.%m.%Y %H:%M')}
 
-₿ *BTC:* {fmt(btc_p, btc_c)}
-♦ *ETH:* {fmt(eth_p, eth_c)}
-◎ *SOL:* {fmt(sol_p, sol_c)}
+💎 *КРИПТОВАЛЮТЫ:*
+  ₿ BTC: {fmt_crypto(btc_p, btc_c)}
+  ♦ ETH: {fmt_crypto(eth_p, eth_c)}
+  ◎ SOL: {fmt_crypto(sol_p, sol_c)}
+  🟡 BNB: {fmt_crypto(bnb_p, bnb_c)}
+  ✕ XRP: {fmt_small(xrp_p, xrp_c)}
+  🐕 DOGE: {fmt_small(doge_p, doge_c)}
+   ADA: {fmt_crypto(ada_p, ada_c)}
 
-_Данные предоставлены CoinGecko_"""
+💱 *ВАЛЮТЫ:*
+  USD/RUB: {fmt_rate(usd_rub, usd_rub_change)}
+  USD/EUR: {fmt_rate(usd_eur, usd_eur_change)}
+
+ *РЫНОК:*
+  Total Cap: `{total_cap/1e9:>8.1f} B$` ({'🟢 +' if market_change > 0 else '🔴 '}{abs(market_change):.2f}%)
+  BTC Dom: `{btc_dominance:.1f}%`
+  Strategy: `{fng_value}` ({fng_label})
+
+🥇 *ЗОЛОТО:*
+  🏆 Gold: {fmt_crypto(gold_p, gold_c)}
+
+_Данные: CoinGecko, Alternative.me_"""
+                
+                send_vip_quote(msg)
+                tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки отправлены!"})
+                return
                 
                 send_vip_quote(msg)
                 tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки с кнопкой Fear & Greed отправлены в каналы!"})
