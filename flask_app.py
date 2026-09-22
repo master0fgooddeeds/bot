@@ -612,10 +612,26 @@ _Индекс показывает настроение рынка_"""
             except Exception as e:
                 print(f"⚠️ Fear & Greed error: {e}")
                 tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
+                
+        elif data == "gen_vip_post":
+            stats = load_stats()
+            total = stats.get("total", 0)
+            wins = stats.get("wins", 0)
+            losses = stats.get("losses", 0)
+            winrate = round((wins / total) * 100, 1) if total > 0 else 0
+            vip_post = f"""📊 *MTC Trading Platform*
 
- Жми кнопку ниже, чтобы открыть дашборд!"""
-            kb = {"inline_keyboard": [[{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
-            tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": json.dumps(kb)})
+📈 *Статистика:*
+• Сделок: {total}
+• Винрейт: {winrate}%
+• TP: {wins} | SL: {losses}
+
+🎯 *Стратегия:* CHoCH + FVG
+⚙️ *ТФ:* 4H → 15m, 1H → 5m
+
+👇 Жми кнопку ниже, чтобы открыть дашборд!"""
+            kb = {"inline_keyboard": [[{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
+            tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": kb})
             tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         return
 
