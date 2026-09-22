@@ -892,6 +892,44 @@ def make_chart(df, title="BTC/USD", level=None):
     buf.seek(0)
     return buf
 
+def make_fear_greed_gauge(value, label):
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Wedge
+    import numpy as np
+    import io
+    
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
+    ax.axis('off')
+    
+    if value <= 25:
+        color, label_color = '#ff3b30', 'Extreme Fear'
+    elif value <= 45:
+        color, label_color = '#ff9500', 'Fear'
+    elif value <= 55:
+        color, label_color = '#ffcc00', 'Neutral'
+    elif value <= 75:
+        color, label_color = '#a2e000', 'Greed'
+    else:
+        color, label_color = '#00e676', 'Extreme Greed'
+    
+    ax.add_patch(Wedge((5, 5), 4, 0, 180, width=0.8, facecolor=color, edgecolor='white', linewidth=2))
+    ax.add_patch(Wedge((5, 5), 4, 0, 180, width=0.8, facecolor='none', edgecolor='gray', linewidth=1, linestyle='--'))
+    
+    angle = (value / 100 * 180)
+    ax.arrow(5, 5, 3.5 * np.cos(np.radians(180 - angle)), 3.5 * np.sin(np.radians(180 - angle)), width=0.15, color='white', length_includes_head=True, head_width=0.4, head_length=0.5)
+    
+    ax.text(5, 5, str(value), ha='center', va='center', fontsize=48, fontweight='bold', color='white')
+    ax.text(5, 3.5, label_color, ha='center', va='center', fontsize=16, fontweight='bold', color='white')
+    ax.text(5, 1.5, 'Fear & Greed Index', ha='center', va='center', fontsize=12, color='white', alpha=0.8)
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#1a1a2e')
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+
 def send_text_safe(base, text):
     chunks = [text[i:i+4000] for i in range(0, max(len(text), 1), 4000)] or [""]
     for c in chunks:
