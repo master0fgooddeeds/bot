@@ -584,9 +584,11 @@ _Сетап признан неактуальным._"""
 
         if is_private or is_group_chat:
             if txt.strip() == "/start":
-                if is_admin(uid):
-                    kb = {"inline_keyboard": [[{"text": "📊 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}], [{"text": "📢 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}]]}
-                    welcome_text = """*Привет, Админ!*
+                kb = {"inline_keyboard": [
+                    [{"text": " Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                    [{"text": " Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
+                    [{"text": "📈 Fear & Greed Index", "callback_data": "fear_greed"}]  # <-- ДОБАВЛЕНО!
+                ]}
 
 Добро пожаловать в *MTC Trading Platform*!
 
