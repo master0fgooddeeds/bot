@@ -804,9 +804,7 @@ _Платформа в разработке. Следим за прогресс�
 
 _Данные: CoinGecko, Alternative.me_"""
                 
-                send_vip_quote(msg)
-                tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки отправлены!"})
-                return
+                
                 
                 send_vip_quote(msg)
                 tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки с кнопкой Fear & Greed отправлены в каналы!"})
