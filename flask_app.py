@@ -1069,7 +1069,7 @@ def tv():
             kb = {"inline_keyboard": [[{"text": f"🔷 BingX · {sym}USDT", "url": f"https://bingx.com/ru/perpetual/{sym}-USDT"}], [{"text": "✅ Сетап готов", "callback_data": f"bx:{sid}"}, {"text": "❌ Пропустить", "callback_data": f"skip:{sid}"}]]}
             admin_msg = f"*НОВЫЙ CHoCH СИГНАЛ*\n\n{text}\n\n_Создай сетап и отправь боту: ссылку, вход, SL и TP_"
             for aid in ADMIN_IDS:
-                tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": json.dumps(kb)})
+                tg("sendMessage", data={"chat_id": aid, "parse_mode": "Markdown", "text": admin_msg, "reply_markup": kb})
             
             print(f"✅ CHoCH #{sid} успешно создан: {sym} {tf} {direction.upper()} (Level: {level})")
             return "ok"
