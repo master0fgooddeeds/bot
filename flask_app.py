@@ -579,12 +579,12 @@ def handle_update(up):
                 s["close_result"] = "admin_cancel"
                 save_stat(s, "expired", 0.0)
                 bx_save()
-                cap = f""" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
+                cap = f"""🚫 *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}
 _Сетап признан неактуальным._"""
                 if s.get("vip_msg"):
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
-                tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} закрыт админом"})
+                tg("sendMessage", data={"chat_id": uid, "text": f"🚫 Сетап #{sid} закрыт админом"})
         elif data == "fear_greed":
             try:
                 r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
@@ -621,11 +621,8 @@ _Индекс показывает настроение рынка_"""
                             send_data["message_thread_id"] = message_thread_id
                         tg("sendPhoto", data=send_data, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
             except Exception as e:
-                print(f"️ Fear & Greed error: {e}")
+                print(f"⚠️ Fear & Greed error: {e}")
                 tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
-                
-        elif data == "gen_vip_post":
-                
         elif data == "gen_vip_post":
             stats = load_stats()
             total = stats.get("total", 0)
@@ -634,15 +631,15 @@ _Индекс показывает настроение рынка_"""
             winrate = round((wins / total) * 100, 1) if total > 0 else 0
             vip_post = f"""📊 *MTC Trading Platform*
 
-📈 *Статистика:*
+ *Статистика:*
 • Сделок: {total}
 • Винрейт: {winrate}%
 • TP: {wins} | SL: {losses}
 
 🎯 *Стратегия:* CHoCH + FVG
-⚙️ *ТФ:* 4H → 15m, 1H → 5m
+️ *ТФ:* 4H → 15m, 1H → 5m
 
-👇 Жми кнопку ниже, чтобы открыть дашборд!"""
+ Жми кнопку ниже, чтобы открыть дашборд!"""
             kb = {"inline_keyboard": [[{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
             tg("sendMessage", data={"chat_id": uid, "text": vip_post, "parse_mode": "Markdown", "reply_markup": kb})
             tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
@@ -707,12 +704,12 @@ _Платформа в разработке. Следим за прогресс�
 
 📈 *Всего:* {stats['total']}
 🟢 *TP:* {stats['wins']} ({win_rate:.1f}%)
- *SL:* {stats['losses']}
- *Пропуск:* {stats['skipped']}
- *Истекло:* {stats['expired']}
+🔴 *SL:* {stats['losses']}
+⏭ *Пропуск:* {stats['skipped']}
+⏳ *Истекло:* {stats['expired']}
  *Общий PnL:* {stats.get('pnl', 0)}%
 
- *Последние 5:*
+📜 *Последние 5:*
 {history_text}"""
                 tg("sendMessage", data={"chat_id": uid, "text": report, "parse_mode": "Markdown"})
                 return
@@ -727,12 +724,11 @@ _Платформа в разработке. Следим за прогресс�
                         lines.append(f"🔹 *#{sid}* · {s['sym']} {s['tf']} {s['dir'].upper()}")
                         lines.append(f"   Вход: `{s['entry_price']:,.2f}` | SL: `{s['sl']:,.2f}` | TP: `{s['tp']:,.2f}`")
                         lines.append(f"   Статус: `{s.get('status', '?')}`\n")
-                    msg_text = " *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
+                    msg_text = "📋 *АКТИВНЫЕ СЕТАПЫ:*\n\n" + "\n".join(lines)
                     tg("sendMessage", data={"chat_id": uid, "text": msg_text, "parse_mode": "Markdown"})
                 return
 
             if txt.strip() == "/quotes" and is_admin(uid):
-                # Криптовалюты
                 btc_p, btc_c = get_daily_data("bitcoin")
                 eth_p, eth_c = get_daily_data("ethereum")
                 sol_p, sol_c = get_daily_data("solana")
@@ -740,22 +736,18 @@ _Платформа в разработке. Следим за прогресс�
                 xrp_p, xrp_c = get_daily_data("ripple")
                 doge_p, doge_c = get_daily_data("dogecoin")
                 ada_p, ada_c = get_daily_data("cardano")
-                
-                # Золото
                 gold_p, gold_c = get_daily_data("gold")
                 
-                # Курсы валют (USD/RUB и USD/EUR)
                 try:
                     rates = requests.get("https://api.exchangerate-api.com/v4/latest/USD", timeout=5).json()
                     usd_rub = rates["rates"]["RUB"]
                     usd_eur = rates["rates"]["EUR"]
-                    usd_rub_change = "+0.00%"  # Заглушка, можно добавить реальные изменения
+                    usd_rub_change = "+0.00%"
                     usd_eur_change = "+0.00%"
                 except:
                     usd_rub, usd_eur = 0, 0
                     usd_rub_change, usd_eur_change = "N/A", "N/A"
                 
-                # Общая капитализация рынка
                 try:
                     global_data = requests.get("https://api.coingecko.com/api/v3/global", timeout=5).json()["data"]
                     total_cap = global_data["total_market_cap"]["usd"]
@@ -764,7 +756,6 @@ _Платформа в разработке. Следим за прогресс�
                 except:
                     total_cap, btc_dominance, market_change = 0, 0, 0
                 
-                # Индекс страха и жадности
                 try:
                     fng_data = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5).json()["data"][0]
                     fng_value = fng_data["value"]
@@ -783,7 +774,7 @@ _Платформа в разработке. Следим за прогресс�
                 def fmt_rate(val, change):
                     return f"`{val:>12.2f}` ({change})"
                 
-                msg = f""" **КОТИРОВКИ НА СЕГОДНЯ**
+                msg = f"""📊 **КОТИРОВКИ НА СЕГОДНЯ**
 📅 {datetime.now().strftime('%d.%m.%Y %H:%M')}
 
 💎 *КРИПТОВАЛЮТЫ:*
@@ -799,17 +790,15 @@ _Платформа в разработке. Следим за прогресс�
   USD/RUB: {fmt_rate(usd_rub, usd_rub_change)}
   USD/EUR: {fmt_rate(usd_eur, usd_eur_change)}
 
- *РЫНОК:*
+📊 *РЫНОК:*
   Total Cap: `{total_cap/1e9:>8.1f} B$` ({'🟢 +' if market_change > 0 else '🔴 '}{abs(market_change):.2f}%)
   BTC Dom: `{btc_dominance:.1f}%`
   Strategy: `{fng_value}` ({fng_label})
 
 🥇 *ЗОЛОТО:*
-  🏆 Gold: {fmt_crypto(gold_p, gold_c)}
+   Gold: {fmt_crypto(gold_p, gold_c)}
 
 _Данные: CoinGecko, Alternative.me_"""
-                
-                
                 
                 send_vip_quote(msg)
                 tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки с кнопкой Fear & Greed отправлены в каналы!"})
@@ -834,10 +823,8 @@ _Данные: CoinGecko, Alternative.me_"""
                         tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🎛 {cap}", "parse_mode": "Markdown"})
                         tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную"})
                     else:
-                        tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} не найден"})
+                        tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
                 return
-
-           
 
             if txt.startswith('/manual_close ') and is_admin(uid):
                 parts = txt.split()
@@ -852,25 +839,21 @@ _Данные: CoinGecko, Alternative.me_"""
                             entry = s["entry_price"]
                             pnl_pct = (entry - manual_price) / entry * 100 if s["dir"] == "short" else (manual_price - entry) / entry * 100
                             pnl_sign = "+" if pnl_pct > 0 else ""
-                            
                             save_stat(s, "manual", pnl_pct)
                             bx_save()
-                            
-                            cap = f""" *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}
+                            cap = f"""🔧 *РУЧНОЕ ЗАКРЫТИЕ* · {s['sym']}USDT · {s['tf']}
 📊 Цена закрытия: `{manual_price:,.2f}`
 📈 Результат: {pnl_sign}{pnl_pct:.2f}%"""
                             if s.get("vip_msg"):
                                 try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                                 except: pass
-                            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
+                            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"⚠️ {cap}", "parse_mode": "Markdown"})
                             tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап #{sid} закрыт вручную @ {manual_price:,.2f}\nPnL: {pnl_sign}{pnl_pct:.2f}%"})
                         else:
                             tg("sendMessage", data={"chat_id": uid, "text": f"❌ Сетап #{sid} не найден"})
                     except ValueError:
                         tg("sendMessage", data={"chat_id": uid, "text": "❌ Неверная цена. Формат: /manual_close ID ЦЕНА"})
                 return
-
-
 
         if is_admin(uid) and str(uid) in BX.get("wait_link", {}):
             sid = BX["wait_link"].pop(str(uid))
@@ -885,7 +868,6 @@ _Данные: CoinGecko, Alternative.me_"""
                     s["id"] = sid
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
-
 def tg(method, **kw):
     for attempt in range(3):
         try:
