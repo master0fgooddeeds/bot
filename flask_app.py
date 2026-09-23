@@ -728,6 +728,7 @@ _Индекс показывает настроение рынка_"""
     if msg:
         uid = msg["from"]["id"]
         txt = msg.get("text", "")
+        track_user(uid, action="message")
         chat_type = msg.get("chat", {}).get("type")
         is_private = chat_type == "private"
         is_group_chat = chat_type in ("supergroup", "group") and is_admin(uid)
