@@ -585,21 +585,21 @@ _Сетап признан неактуальным._"""
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
                 tg("sendMessage", data={"chat_id": uid, "text": f" Сетап #{sid} закрыт админом"})
-        elif data == "fear_greed":
-            try:
-                r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
-                if r.status_code == 200:
-                    data_fg = r.json().get('data', [])
-                    if data_fg:
-                        value = int(data_fg[0]['value'])
-                        label = data_fg[0]['value_classification']
-                        timestamp = int(data_fg[0]['timestamp'])
-                        date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
-                        
-                        # Генерируем картинку спидометра
-                        gauge_buf = make_fear_greed_gauge(value, label)
-                        
-                        caption = f"""📊 **Индекс Страха и Жадности**
+elif data == "fear_greed":
+    try:
+        r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
+        if r.status_code == 200:
+            data_fg = r.json().get('data', [])
+            if data_fg:
+                value = int(data_fg[0]['value'])
+                label = data_fg[0]['value_classification']
+                timestamp = int(data_fg[0]['timestamp'])
+                date_str = datetime.fromtimestamp(timestamp).strftime('%d.%m.%Y')
+                
+                # Генерируем картинку спидометра
+                gauge_buf = make_fear_greed_gauge(value, label)
+                
+                caption = f"""📊 **Индекс Страха и Жадности**
 
 Значение: **{value}** ({label})
 Дата: {date_str}
@@ -611,15 +611,28 @@ _Сетап признан неактуальным._"""
 🔥 **76-100:** Extreme Greed
 
 _Индекс показывает настроение рынка_"""
-                        
-                        tg("sendPhoto", data={
-                            "chat_id": uid,
-                            "caption": caption,
-                            "parse_mode": "Markdown"
-                        }, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
-            except Exception as e:
-                print(f"⚠️ Fear & Greed error: {e}")
-                tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
+                
+                # 🔧 БЕРЕМ ID ЧАТА ГДЕ БЫЛА НАЖАТА КНОПКА
+                chat_id = cb.get("message", {}).get("chat", {}).get("id")
+                if not chat_id:
+                    chat_id = uid  # Если не удалось получить, отправляем в личку
+                
+                # Проверяем есть ли message_thread_id (для топиков в каналах)
+                send_data = {
+                    "chat_id": chat_id,
+                    "caption": caption,
+                    "parse_mode": "Markdown"
+                }
+                
+                # Если кнопка была в топике канала, добавляем message_thread_id
+                message_thread_id = cb.get("message", {}).get("message_thread_id")
+                if message_thread_id:
+                    send_data["message_thread_id"] = message_thread_id
+                
+                tg("sendPhoto", data=send_data, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
+    except Exception as e:
+        print(f"⚠️ Fear & Greed error: {e}")
+        tg("sendMessage", data={"chat_id": uid, "text": "⚠️ Не удалось получить данные"})
                 
         elif data == "gen_vip_post":
             stats = load_stats()
