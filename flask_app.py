@@ -883,6 +883,26 @@ _Данные: CoinGecko, Alternative.me_"""
                 send_vip_quote(msg)
                 tg("sendMessage", data={"chat_id": uid, "text": "✅ Котировки с кнопкой Fear & Greed отправлены в каналы!"})
                 return
+                
+            if txt.strip() == "/users" and is_admin(uid):
+                report = get_users_report()
+                msg = f"""👥 **СТАТИСТИКА ПОЛЬЗОВАТЕЛЕЙ**
+
+📊 **Всего уникальных:** {report['total']}
+
+📈 **Активные:**
+• Сегодня: {report['daily']}
+• За неделю: {report['weekly']}
+• За месяц: {report['monthly']}
+
+🔘 **Популярные кнопки:**"""
+                
+                sorted_buttons = sorted(report['buttons'].items(), key=lambda x: x[1], reverse=True)[:10]
+                for btn, count in sorted_buttons:
+                    msg += f"\n• {btn}: {count}"
+                
+                tg("sendMessage", data={"chat_id": uid, "text": msg, "parse_mode": "Markdown"})
+                return
 
             if txt.startswith("/force_close ") and is_admin(uid):
                 parts = txt.split()
