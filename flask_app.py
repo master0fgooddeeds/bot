@@ -629,6 +629,7 @@ def handle_update(up):
     if cb:
         uid = cb["from"]["id"]
         data = cb.get("data", "")
+        track_user(uid, action=f"button:{data}")
         if not is_admin(uid):
             tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "Не твои кнопки 😼"})
             return
