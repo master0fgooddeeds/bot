@@ -28,6 +28,7 @@ SETUPS_FILE = DATA_DIR + "/bingx_setups.json"
 STATS_FILE = DATA_DIR + "/trading_stats.json"
 ANALYSES_FILE = DATA_DIR + "/analyses.json"
 COIN_ANALYSIS_FILE = DATA_DIR + "/coin_analyses.json"
+USERS_FILE = DATA_DIR + "/users_stats.json"
 BX = {"pending": {}, "active": {}, "wait_link": {}, "seq": 1}
 
 def bx_load():
