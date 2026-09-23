@@ -547,6 +547,83 @@ def send_vip_quote(msg):
     })
 
 
+def load_users_stats():
+    import os
+    try:
+        if not os.path.exists(USERS_FILE):
+            with open(USERS_FILE, "w") as f:
+                json.dump({"all_users": [], "daily": {}, "weekly": {}, "monthly": {}, "button_clicks": {}}, f)
+        with open(USERS_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {"all_users": [], "daily": {}, "weekly": {}, "monthly": {}, "button_clicks": {}}
+
+def save_users_stats(data):
+    try:
+        with open(USERS_FILE, "w") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        print(f"⚠️ Ошибка сохранения users_stats: {e}")
+
+def track_user(uid, action="message"):
+    """Отслеживает уникального пользователя и его действия"""
+    stats = load_users_stats()
+    
+    # Добавляем в общий список (если еще нет)
+    if uid not in stats["all_users"]:
+        stats["all_users"].append(uid)
+        print(f"✅ Новый пользователь: {uid}")
+    
+    # Считаем по периодам
+    today = datetime.now().strftime("%Y-%m-%d")
+    week = datetime.now().strftime("%Y-W%U")
+    month = datetime.now().strftime("%Y-%m")
+    
+    if today not in stats["daily"]:
+        stats["daily"][today] = []
+    if uid not in stats["daily"][today]:
+        stats["daily"][today].append(uid)
+    
+    if week not in stats["weekly"]:
+        stats["weekly"][week] = []
+    if uid not in stats["weekly"][week]:
+        stats["weekly"][week].append(uid)
+    
+    if month not in stats["monthly"]:
+        stats["monthly"][month] = []
+    if uid not in stats["monthly"][month]:
+        stats["monthly"][month].append(uid)
+    
+    # Считаем клики по кнопкам
+    if action not in stats["button_clicks"]:
+        stats["button_clicks"][action] = 0
+    stats["button_clicks"][action] += 1
+    
+    save_users_stats(stats)
+    return stats
+
+def get_users_report():
+    """Возвращает отчет по пользователям"""
+    stats = load_users_stats()
+    total = len(stats["all_users"])
+    
+    today = datetime.now().strftime("%Y-%m-%d")
+    week = datetime.now().strftime("%Y-W%U")
+    month = datetime.now().strftime("%Y-%m")
+    
+    daily_active = len(stats["daily"].get(today, []))
+    weekly_active = len(stats["weekly"].get(week, []))
+    monthly_active = len(stats["monthly"].get(month, []))
+    
+    return {
+        "total": total,
+        "daily": daily_active,
+        "weekly": weekly_active,
+        "monthly": monthly_active,
+        "buttons": stats["button_clicks"]
+    }
+
+
 def handle_update(up):
     cb = up.get("callback_query")
     if cb:
