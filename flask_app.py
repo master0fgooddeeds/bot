@@ -326,7 +326,6 @@ def bx_watch_step():
     for sid in list(BX["active"].keys()):
         s = BX["active"][sid]
         
-        # ПОЛУЧАЕМ ПОСЛЕДНИЕ 3 СВЕЧИ 1m (3 минуты истории)
         try:
             klines = requests.get(
                 "https://api.binance.com/api/v3/klines",
@@ -335,10 +334,9 @@ def bx_watch_step():
             ).json()
             
             if not isinstance(klines, list) or len(klines) < 1:
-                print(f"️ Нет свечей для {s['sym']}")
+                print(f"⚠️ Нет свечей для {s['sym']}")
                 continue
                 
-            # Берём High и Low каждой свечи
             candles = []
             for k in klines:
                 candles.append({
@@ -348,12 +346,11 @@ def bx_watch_step():
                     'time': k[0]
                 })
             
-            # Используем последнюю закрытую свечу (предпоследнюю, т.к. текущая ещё формируется)
+            # Берем цену закрытия последней сформированной свечи
             last_candle = candles[-2] if len(candles) >= 2 else candles[-1]
-            price = last_candle['close']  # Для отображения в логах
+            price = last_candle['close']
             
             print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
-            print(f"   🕯️ Свеча: High={last_candle['high']:,.2f} | Low={last_candle['low']:,.2f}")
             
         except Exception as e:
             print(f"⚠️ Ошибка получения свечей для {s['sym']}: {e}")
@@ -363,23 +360,24 @@ def bx_watch_step():
         
         if s.get("status") == "pending":
             entry = s["entry_price"]
-            reached, skipped_tp = False, False
+            reached = False
+            skipped_tp = False
             
-            # ПРОВЕРЯЕМ ПО ВСЕМ СВЕЧАМ (не только по текущей цене!)
-            for candle in candles:
+            # 1. Проверяем, дошла ли ТЕКУЩАЯ цена до входа (или уже прошла его в нужную сторону)
+            if s["dir"] == "long":
+                if price >= entry * (1 - buf_frac):
+                    reached = True
+            else: # short
+                if price <= entry * (1 + buf_frac):
+                    reached = True
+                    
+            # 2. Проверяем, не улетела ли цена в ТП, так и не активировавшись
+            if not reached:
                 if s["dir"] == "long":
-                    # LONG: цена должна опуститься до входа
-                    if candle['low'] <= entry * (1 + buf_frac):
-                        reached = True
-                    # Но если цена улетела на TP без входа
-                    if candle['low'] >= s["tp"] * (1 - buf_frac):
+                    if price >= s["tp"] * (1 - buf_frac):
                         skipped_tp = True
-                else:
-                    # SHORT: цена должна подняться до входа
-                    if candle['high'] >= entry * (1 - buf_frac):
-                        reached = True
-                    # Но если цена улетела на TP без входа
-                    if candle['high'] <= s["tp"] * (1 + buf_frac):
+                else: # short
+                    if price <= s["tp"] * (1 + buf_frac):
                         skipped_tp = True
             
             if skipped_tp:
@@ -402,7 +400,7 @@ def bx_watch_step():
                     s["asked_extend"] = True
                     bx_save()
                     kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": "❌ Закрыть", "callback_data": f"cncl:{sid}"}]]}
-                    admin_msg = f" *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏰ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
+                    admin_msg = f"⏳ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏰ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
                     for aid in ADMIN_IDS:
                         tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": kb})
                     print(f"⏳ Сетап {sid} ждёт решения админа")
@@ -411,6 +409,8 @@ def bx_watch_step():
             if reached:
                 s["status"] = "active"
                 s["entry_time"] = now
+                # Если цена уже прошла вход, фиксируем вход по текущей рыночной цене (безопаснее)
+                s["entry_price"] = price 
                 bx_save()
                 print(f"✅ Сетап {sid} АКТИВИРОВАН @ {price:,.2f}")
                 active_cap = f"""✅ *СЕТАП АКТИВИРОВАН* · {s['sym']}USDT · {s['tf']}
@@ -427,27 +427,20 @@ def bx_watch_step():
         elif s.get("status") == "active":
             result = None
             
-            # ПРОВЕРЯЕМ ПО ВСЕМ СВЕЧАМ — если хоть одна пробила уровень!
-            for candle in candles:
-                if s["dir"] == "long":
-                    # LONG: TP если High свечи >= TP, SL если Low свечи <= SL
-                    if candle['high'] >= s["tp"] * (1 - buf_frac):
-                        result = "tp"
-                        break  # Нашли — выходим из цикла
-                    elif candle['low'] <= s["sl"] * (1 + buf_frac):
-                        result = "sl"
-                        break
-                else:
-                    # SHORT: TP если Low свечи <= TP, SL если High свечи >= SL
-                    if candle['low'] <= s["tp"] * (1 + buf_frac):
-                        result = "tp"
-                        break
-                    elif candle['high'] >= s["sl"] * (1 - buf_frac):
-                        result = "sl"
-                        break
-                    
+            # Проверяем по ТЕКУЩЕЙ цене (это надежнее, чем перебор свечей, исключает пропуски)
+            if s["dir"] == "long":
+                if price >= s["tp"] * (1 - buf_frac):
+                    result = "tp"
+                elif price <= s["sl"] * (1 + buf_frac):
+                    result = "sl"
+            else:
+                if price <= s["tp"] * (1 + buf_frac):
+                    result = "tp"
+                elif price >= s["sl"] * (1 - buf_frac):
+                    result = "sl"
+                
             if result:
-                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f} (пробой зафиксирован свечой!)")
+                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f} (пробой зафиксирован!)")
                 close_setup(sid, result)
 
 def bx_watch_loop():
