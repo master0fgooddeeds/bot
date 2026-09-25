@@ -1461,6 +1461,88 @@ def api_miniapp_feed():
     
     return jsonify(setups)
 
+
+@app.route('/api/create_user_setup', methods=['POST'])
+def create_user_setup():
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        sym = data.get('sym', '').upper()
+        direction = data.get('dir', '').lower()
+        entry = float(data.get('entry', 0))
+        sl = float(data.get('sl', 0))
+        tp = float(data.get('tp', 0))
+        comment = data.get('comment', '')
+        
+        # --- ПРОВЕРКИ ---
+        
+        # 1. Базовая валидация цен
+        if entry <= 0 or sl <= 0 or tp <= 0:
+            return jsonify({"error": "Цены должны быть положительными"}), 400
+            
+        # 2. Проверка логики LONG/SHORT
+        if direction == 'long' and sl >= entry:
+            return jsonify({"error": "Для LONG стоп-лосс должен быть ниже цены входа"}), 400
+        if direction == 'short' and sl <= entry:
+            return jsonify({"error": "Для SHORT стоп-лосс должен быть выше цены входа"}), 400
+            
+        # 3. Проверка соотношения Риск/Прибыль (R:R от 1:0.5 до 1:10)
+        risk = abs(entry - sl)
+        reward = abs(tp - entry)
+        if risk == 0:
+            return jsonify({"error": "Расстояние до стоп-лосса не может быть нулевым"}), 400
+            
+        rr = reward / risk
+        if rr < 0.5 or rr > 10:
+            return jsonify({"error": "Соотношение Риск/Прибыль (R:R) должно быть от 1:0.5 до 1:10"}), 400
+            
+        # 4. 🔥 ПРОВЕРКА ССЫЛОК (Только TradingView!)
+        is_valid, error_msg = validate_setup_links(comment)
+        if not is_valid:
+            return jsonify({"error": error_msg}), 400
+            
+        # 5. Проверка лимита (максимум 3 активных сетапа на пользователя)
+        # (Здесь позже добавим проверку по user_id в базе данных)
+        
+        # --- СОХРАНЕНИЕ ---
+        # Пока просто сохраняем в отдельный JSON файл
+        user_setups_file = DATA_DIR + "/user_setups.json"
+        try:
+            if os.path.exists(user_setups_file):
+                with open(user_setups_file, "r") as f:
+                    setups = json.load(f)
+            else:
+                setups = []
+                
+            new_setup = {
+                "id": f"usr_{int(_time.time())}",
+                "user_id": user_id,
+                "sym": sym,
+                "dir": direction,
+                "entry": entry,
+                "sl": sl,
+                "tp": tp,
+                "comment": comment,
+                "created_at": _time.time(),
+                "expires_at": _time.time() + (24 * 3600), # Живет 24 часа
+                "status": "pending"
+            }
+            
+            setups.append(new_setup)
+            
+            with open(user_setups_file, "w") as f:
+                json.dump(setups, f, indent=2)
+                
+            return jsonify({"ok": True, "setup_id": new_setup["id"]})
+            
+        except Exception as e:
+            print(f"Ошибка сохранения пользовательского сетапа: {e}")
+            return jsonify({"error": "Ошибка сервера при сохранении"}), 500
+            
+    except Exception as e:
+        print(f"Ошибка валидации сетапа: {e}")
+        return jsonify({"error": "Неверный формат данных"}), 400
+
 @app.route('/api/fear_greed')
 def api_fear_greed():
     """Получаем Индекс Страха и Жадности"""
