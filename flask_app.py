@@ -617,6 +617,46 @@ def get_users_report():
     }
 
 
+import re
+from urllib.parse import urlparse
+
+def validate_setup_links(text):
+    """
+    Жесткая проверка ссылок. 
+    Разрешены ТОЛЬКО ссылки на TradingView.
+    """
+    if not text:
+        return True, "OK"
+    
+    # 1. Нормализация текста (убираем невидимые символы и попытки обхода)
+    # Zero-width spaces, которые используют для склеивания ссылок
+    text = text.replace('\u200b', '').replace('\u200c', '').replace('\u200d', '').replace('\ufeff', '')
+    # Исправление замененных букв (hxxp -> http)
+    text = text.replace('hxxp', 'http').replace('hXXp', 'http').replace('hтtp', 'http')
+    
+    # 2. Ищем все URL в тексте
+    urls = re.findall(r'https?://\S+', text)
+    
+    if not urls:
+        return True, "OK" # Если ссылок нет вообще — пропускаем
+        
+    # 3. Проверяем каждую ссылку
+    for url in urls:
+        try:
+            # Очищаем URL от знаков препинания в конце (.,;:!?)
+            url = url.rstrip('.,;:!?')
+            parsed = urlparse(url)
+            domain = parsed.netloc.lower().replace('www.', '')
+            
+            #  ЖЕСТКОЕ ПРАВИЛО: только TradingView
+            if domain != 'tradingview.com':
+                return False, f"Разрешены только ссылки на TradingView! Обнаружен запрещенный домен: {domain}"
+                
+        except Exception:
+            return False, "Некорректный формат ссылки"
+            
+    return True, "OK"
+
 def handle_update(up):
     cb = up.get("callback_query")
     if cb:
