@@ -658,9 +658,9 @@ def validate_setup_links(text):
     return True, "OK"
 
 def handle_update(up):
-    # 🔥 СУПЕР-ОТЛАДКА: Печатаем ВСЁ, что приходит от Telegram
+    # 🔥 СУПЕР-ОТЛАДКА
     print("="*60)
-    print(f"📥 ПОЛУЧЕНО ОБНОВЛЕНИЕ: {json.dumps(up, indent=2, ensure_ascii=False)[:500]}...") # Первые 500 символов, чтобы не засорять лог
+    print(f"📥 ПОЛУЧЕНО ОБНОВЛЕНИЕ")
     print("="*60)
 
     cb = up.get("callback_query")
@@ -670,22 +670,21 @@ def handle_update(up):
         
         print(f"🔘 НАЖАТА КНОПКА!")
         print(f"   👤 User ID: {uid}")
-        print(f"   📦 Data: '{data}'")
+        print(f"    Data: '{data}'")
         print(f"   👑 Текущие ADMIN_IDS: {ADMIN_IDS}")
         print(f"   🛡️ is_admin({uid}) = {uid in ADMIN_IDS}")
 
-        # Отслеживаем в любом случае, даже если не админ (чтобы видеть активность)
         try:
             track_user(uid, action=f"button:{data}")
         except Exception as e:
             print(f"⚠️ Ошибка в track_user: {e}")
 
         if not is_admin(uid):
-            print(f"⛔ ОТКАЗ: Пользователь {uid} не является админом! Отправляем 'Не твои кнопки'")
+            print(f" ОТКАЗ: Пользователь {uid} не является админом!")
             tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "Не твои кнопки 😼"})
             return
 
-        print(f"✅ ДОСТУП РАЗРЕШЕН! Начинаем обработку data='{data}'...")
+        print(f"✅ ДОСТУП РАЗРЕШЕН! Обработка data='{data}'...")
         tg("answerCallbackQuery", data={"callback_query_id": cb["id"], "text": "ok"})
         
         if data.startswith("bx:"):
@@ -719,7 +718,7 @@ _Сетап признан неактуальным._"""
                     except: pass
                 tg("sendMessage", data={"chat_id": uid, "text": f"🚫 Сетап #{sid} закрыт админом"})
         elif data == "fear_greed":
-            print("   🔄 Запускаем логику fear_greed...")
+            print("   🔄 Запускаем fear_greed...")
             try:
                 r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=5)
                 if r.status_code == 200:
@@ -754,16 +753,16 @@ _Индекс показывает настроение рынка_"""
                         if message_thread_id:
                             send_data["message_thread_id"] = message_thread_id
                         
-                        print(f"   📤 Отправляем фото в chat_id={chat_id}...")
+                        print(f"   📤 Отправляем фото...")
                         res = tg("sendPhoto", data=send_data, files={"photo": ("fear_greed.png", gauge_buf, "image/png")})
-                        print(f"   📬 Ответ Telegram: {res}")
+                        print(f"   📬 Ответ: {res}")
             except Exception as e:
-                print(f"❌ КРИТИЧЕСКАЯ ОШИБКА в fear_greed: {e}")
+                print(f"❌ ОШИБКА в fear_greed: {e}")
                 import traceback
                 traceback.print_exc()
-                tg("sendMessage", data={"chat_id": uid, "text": f"⚠️ Не удалось получить данные: {e}"})
+                tg("sendMessage", data={"chat_id": uid, "text": f"⚠️ Ошибка: {e}"})
         elif data == "gen_vip_post":
-            print("   🔄 Запускаем логику gen_vip_post...")
+            print("   🔄 Запускаем gen_vip_post...")
             stats = load_stats()
             total = stats.get("total", 0)
             wins = stats.get("wins", 0)
@@ -777,7 +776,7 @@ _Индекс показывает настроение рынка_"""
 • TP: {wins} | SL: {losses}
 
 🎯 *Стратегия:* CHoCH + FVG
-️ *ТФ:* 4H → 15m, 1H → 5m
+ *ТФ:* 4H → 15m, 1H → 5m
 
  Жми кнопку ниже, чтобы открыть дашборд!"""
             kb = {"inline_keyboard": [[{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}]]}
@@ -785,7 +784,54 @@ _Индекс показывает настроение рынка_"""
             tg("sendMessage", data={"chat_id": uid, "text": "ℹ️ *Это сообщение можно переслать в VIP-канал!*\n\nПросто зажми сообщение и выбери 'Переслать'.", "parse_mode": "Markdown"})
         return
 
+    # ========== ОБРАБОТКА СООБЩЕНИЙ ==========
+    msg = up.get("message")
+    if msg:
+        uid = msg["from"]["id"]
+        txt = msg.get("text", "")
+        track_user(uid, action="message")
+        chat_type = msg.get("chat", {}).get("type")
+        is_private = chat_type == "private"
+        is_group_chat = chat_type in ("supergroup", "group") and is_admin(uid)
 
+        if is_private or is_group_chat:
+            if txt.strip() == "/start":
+                kb = {"inline_keyboard": [
+                    [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                    [{"text": "📝 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
+                    [{"text": " Fear & Greed Index", "callback_data": "fear_greed"}]
+                ]}
+                
+                if is_admin(uid):
+                    welcome_text = """*Привет, Админ!*
+
+Добро пожаловать в *MTC Trading Platform*!
+
+🎯 *Возможности платформы:*
+• Сигналы CHoCH + FVG в реальном времени
+• Автоматический анализ рынка
+• Статистика и аналитика сделок
+
+ *Используй кнопки ниже:*
+• "Открыть Дашборд" — твой личный кабинет
+• "Сгенерировать пост для VIP" — создай красивый пост
+• "Fear & Greed Index" — индекс страха и жадности
+
+_Платформа в разработке. Следим за прогрессом!_"""
+                else:
+                    welcome_text = """*Привет!*
+
+Добро пожаловать в *MTC Trading Platform*!
+
+Здесь ты найдёшь:
+• Актуальную статистику сделок
+• Разборы сигналов
+• Аналитику рынка
+
+Жми кнопку ниже, чтобы открыть дашборд!"""
+                
+                tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
+                return
 
             if txt.strip() == "/stats" and is_admin(uid):
                 stats = load_stats()
@@ -797,10 +843,10 @@ _Индекс показывает настроение рынка_"""
                 history_text = "\n".join([f"• {h['date']} | {h['sym']} {h['tf']} {h['dir'].upper()} → **{h['result']}** ({h['pnl']}%)" for h in last_5])
                 report = f"""📊 *ОТЧЕТ MY TRADING CLUB*
 
-📈 *Всего:* {stats['total']}
+ *Всего:* {stats['total']}
 🟢 *TP:* {stats['wins']} ({win_rate:.1f}%)
 🔴 *SL:* {stats['losses']}
-⏭ *Пропуск:* {stats['skipped']}
+ *Пропуск:* {stats['skipped']}
 ⏳ *Истекло:* {stats['expired']}
  *Общий PnL:* {stats.get('pnl', 0)}%
 
@@ -859,7 +905,7 @@ _Индекс показывает настроение рынка_"""
                     fng_value, fng_label = 0, "N/A"
                 
                 def fmt_crypto(p, c):
-                    sign = "🟢 +" if c >= 0 else "🔴 "
+                    sign = " +" if c >= 0 else " "
                     return f"`{p:>10,.0f}$` ({sign}{abs(c):>5.2f}%)"
                 
                 def fmt_small(p, c):
@@ -886,7 +932,7 @@ _Индекс показывает настроение рынка_"""
   USD/EUR: {fmt_rate(usd_eur, usd_eur_change)}
 
 📊 *РЫНОК:*
-  Total Cap: `{total_cap/1e9:>8.1f} B$` ({'🟢 +' if market_change > 0 else '🔴 '}{abs(market_change):.2f}%)
+  Total Cap: `{total_cap/1e9:>8.1f} B$` ({'🟢 +' if market_change > 0 else ' '}{abs(market_change):.2f}%)
   BTC Dom: `{btc_dominance:.1f}%`
   Strategy: `{fng_value}` ({fng_label})
 
