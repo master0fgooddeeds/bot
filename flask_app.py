@@ -893,6 +893,54 @@ _Сетап признан неактуальным._"""
                     try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
                     except: pass
                 tg("sendMessage", data={"chat_id": uid, "text": f"🚫 Сетап #{sid} закрыт админом"})
+
+        elif data.startswith("approve_setup:"):
+            setup_id = data[14:]
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM user_setups WHERE id = ?", (setup_id,))
+            row = cursor.fetchone()
+            if row:
+                # Обновляем статус
+                cursor.execute("UPDATE user_setups SET status = 'approved' WHERE id = ?", (setup_id,))
+                conn.commit()
+                
+                # Формируем сообщение для канала (можно доработать до постинга в VIP)
+                dir_emoji = "🟢" if row['dir'] == "long" else "🔴"
+                cap = f"""{dir_emoji} *СЕТАП ОТ АВТОРА* · {row['sym']}USDT
+
+👤 Трейдер: {row['user_name']}
+🎯 Вход: `{row['entry']}`
+🛡 SL: `{row['sl']}` | 💰 TP: `{row['tp']}`
+🔗 График: {row['tv_link']}
+
+_Сетап прошел модерацию и добавлен в ленту!_"""
+                
+                # Отправляем в канал (опционально, или просто обновляем статус для Mini App)
+                tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": cap, "parse_mode": "Markdown"})
+                
+                tg("editMessageText", data={
+                    "chat_id": cb["message"]["chat"]["id"],
+                    "message_id": cb["message"]["message_id"],
+                    "text": f"✅ Сетап {setup_id} ОДОБРЕН и опубликован!"
+                })
+            conn.close()
+            
+        elif data.startswith("reject_setup:"):
+            setup_id = data[13:]
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE user_setups SET status = 'rejected' WHERE id = ?", (setup_id,))
+            conn.commit()
+            conn.close()
+            
+            tg("editMessageText", data={
+                "chat_id": cb["message"]["chat"]["id"],
+                "message_id": cb["message"]["message_id"],
+                "text": f"❌ Сетап {setup_id} ОТКЛОНЕН."
+            })
+            # Тут можно добавить отправку уведомления пользователю о причине отказа
+        
         elif data == "fear_greed":
             print("   🔄 Запускаем fear_greed...")
             try:
