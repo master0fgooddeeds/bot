@@ -768,16 +768,16 @@ from urllib.parse import urlparse
 
 
 def get_user_trust_level(user_id):
-    """Определяет уровень доверия пользователя на основе его истории в SQLite"""
+    """Определяет уровень доверия пользователя на основе ЕГО истории"""
     conn = get_db()
     cursor = conn.cursor()
     
-    # Считаем общие успешные сделки (TP)
-    cursor.execute("SELECT COUNT(*) FROM trade_history WHERE result = 'TP'")
+    # Считаем успешные сделки КОНКРЕТНОГО пользователя
+    cursor.execute("SELECT COUNT(*) FROM trade_history WHERE user_id = ? AND result = 'TP'", (user_id,))
     wins = cursor.fetchone()[0]
     
-    # Считаем общее количество сделок для винрейта
-    cursor.execute("SELECT COUNT(*) FROM trade_history WHERE result IN ('TP', 'SL', 'manual')")
+    # Считаем общее количество сделок пользователя
+    cursor.execute("SELECT COUNT(*) FROM trade_history WHERE user_id = ? AND result IN ('TP', 'SL', 'manual')", (user_id,))
     total_trades = cursor.fetchone()[0]
     
     conn.close()
@@ -788,9 +788,9 @@ def get_user_trust_level(user_id):
     if wins >= 10 and winrate >= 60:
         return {"level": 2, "name": "Alpha", "badge": "🥇", "color": "#ffd700", "can_use_stars": True}
     elif wins >= 3:
-        return {"level": 1, "name": "Трейдер", "badge": "🥈", "color": "#c0c0c0", "can_use_stars": False}
+        return {"level": 1, "name": "Трейдер", "badge": "", "color": "#c0c0c0", "can_use_stars": False}
     else:
-        return {"level": 0, "name": "Новичок", "badge": "🥉", "color": "#cd7f32", "can_use_stars": False}
+        return {"level": 0, "name": "Новичок", "badge": "", "color": "#cd7f32", "can_use_stars": False}
 
 def validate_setup_links(text):
     """
