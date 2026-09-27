@@ -389,21 +389,73 @@ def close_setup(sid, result):
     if not s: return
     s["status"] = "closed"
     s["close_result"] = result
-    head = {"tp": "🎯 TP ВЗЯТ", "sl": " SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
+    head = {"tp": "🎯 TP ВЗЯТ", "sl": "🛑 SL СРАБОТАЛ", "exp": "⏳ ИСТЕК", "admin_cancel": "❌ ОТМЕНЕНО"}.get(result, "ЗАКРЫТ")
     entry = s.get("entry_price", 0)
     exit_price = s["tp"] if result == "tp" else s["sl"]
     pnl_pct = ((exit_price - entry) / entry * 100) if s["dir"] == "long" else ((entry - exit_price) / entry * 100)
     pnl_sign = "+" if pnl_pct > 0 else ""
-    cap = f"""{head} · {s['sym']}USDT · {s['tf']}
- В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
+    
+    # --- ГЕНЕРАЦИЯ PnL-КАРТОЧКИ ---
+    try:
+        # Получаем винрейт из SQLite
+        try:
+            stats = get_stats_for_api()
+            winrate = stats.get('winrate', 0.0)
+        except:
+            winrate = 0.0
+        
+        # Рассчитываем PnL в USD для конкретной сделки
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('SELECT balance FROM global_stats WHERE id = 1')
+            row = cursor.fetchone()
+            balance = row['balance'] if row else 10000.0
+            conn.close()
+            pnl_usd_val = round(balance * (pnl_pct / 100), 2)
+        except:
+            pnl_usd_val = 0.0
+        
+        img_buf = make_pnl_card(s['sym'], s['dir'], result, pnl_pct, pnl_usd_val, winrate)
+        
+        cap = f"""{head} · {s['sym']}USDT · {s['tf']}
+⏱ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
+📊 Результат: {pnl_sign}{pnl_pct:.2f}% (${pnl_usd_val:+,.2f})
+
+📲 _Сохрани и поделись этим результатом!_"""
+        
+        # Редактируем старое сообщение в канале
+        if s.get("vip_msg"):
+            try: 
+                tg("editMessageCaption", data={
+                    "chat_id": s["vip_chat"], 
+                    "message_id": s["vip_msg"], 
+                    "caption": f"{head} · {s['sym']}USDT\nРезультат: {pnl_sign}{pnl_pct:.2f}%", 
+                    "parse_mode": "Markdown"
+                })
+            except: pass
+        
+        # Отправляем НОВОЕ сообщение с картинкой в VIP канал
+        tg("sendPhoto", data={
+            "chat_id": CHAT, 
+            "message_thread_id": VIP_TOPIC, 
+            "caption": cap, 
+            "parse_mode": "Markdown"
+        }, files={"photo": ("pnl_card.png", img_buf, "image/png")})
+        
+    except Exception as e:
+        print(f"⚠️ Ошибка генерации PnL картинки: {e}")
+        # Fallback на текст
+        cap = f"""{head} · {s['sym']}USDT · {s['tf']}
+⏱ В работе: {(_time.time() - s.get('entry_time', s['created'])) / 3600:.1f} ч
 📊 Результат: {pnl_sign}{pnl_pct:.2f}%
- SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
-    if s.get("vip_msg"):
-        try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
-        except: pass
-    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f" {cap}", "parse_mode": "Markdown"})
+🛡 SL: {s['sl']:,.2f} | 💰 TP: {s['tp']:,.2f}"""
+        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"📊 {cap}", "parse_mode": "Markdown"})
+
+    # Уведомление админам и сохранение в БД
     for aid in ADMIN_IDS:
-        tg("sendMessage", data={"chat_id": aid, "text": f" Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
+        tg("sendMessage", data={"chat_id": aid, "text": f"⚙️ Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
+    
     save_stat(s, result, pnl_pct)
     bx_save()
 
