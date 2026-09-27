@@ -179,7 +179,9 @@ def load_analyses():
                 json.dump({}, f)
         with open(ANALYSES_FILE, "r") as f: return json.load(f)
     except: return {}
-def save_stat(setup, result, pnl):
+
+
+def save_stat(setup, result, pnl, user_id=0):  ← добавь параметр
     stats = load_stats()
     stats["total"] += 1
     status_text = {"tp": "TP", "sl": "SL", "skipped_tp": "Пропуск", "expired": "Истек", "admin_cancel": "Отмена", "manual": "Ручное"}.get(result, "Неизвестно")
@@ -211,6 +213,18 @@ def save_stat(setup, result, pnl):
     
     with open(STATS_FILE, "w") as f: 
         json.dump(stats, f, indent=2)
+    
+    # ← ДОБАВИТЬ ЗАПИСЬ В БД С user_id
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO trade_history (setup_id, user_id, date, sym, tf, dir, result, pnl, pnl_usd)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (setup.get('id', ''), user_id, datetime.now().strftime("%d.%m.%Y %H:%M"), 
+          setup.get('sym', ''), setup.get('tf', ''), setup.get('dir', ''), 
+          result, round(pnl, 2), round(pnl_usd, 2)))
+    conn.commit()
+    conn.close()
 
 def save_analysis(setup_id, data):
     analyses = load_analyses()
