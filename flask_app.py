@@ -932,7 +932,7 @@ _Индекс показывает настроение рынка_"""
         is_private = chat_type == "private"
         is_group_chat = chat_type in ("supergroup", "group") and is_admin(uid)
 
-             if txt.strip().startswith("/start"):
+            if txt.strip().startswith("/start"):
                 # 1. Проверяем наличие Deep Link аргумента
                 parts = txt.strip().split(" ")
                 deep_link_arg = parts[1] if len(parts) > 1 else None
