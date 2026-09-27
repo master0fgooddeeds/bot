@@ -993,9 +993,7 @@ _Платформа в разработке. Следим за прогресс�
                 tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
                 return
                 
-                tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
-                return
-
+             
 Добро пожаловать в *MTC Trading Platform*!
 
 🎯 *Возможности платформы:*
