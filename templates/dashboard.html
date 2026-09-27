@@ -383,6 +383,46 @@
         </div>
     </div>
 
+    <div class="card hidden" id="userCreateFormCard">
+        <h3 style="margin-top:0; color:#00e676;">📝 Предложить сетап</h3>
+        <p style="font-size:12px; color:#8e8e93; margin-bottom:15px;">Ваш сетап пройдет быструю проверку админом перед публикацией в ленте.</p>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+            <div>
+                <label style="font-size:12px; color:#8e8e93;">Монета (напр. BTC)</label>
+                <input type="text" id="userSym" placeholder="BTC" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff;">
+            </div>
+            <div>
+                <label style="font-size:12px; color:#8e8e93;">Направление</label>
+                <select id="userDir" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff;">
+                    <option value="long">LONG 🟢</option>
+                    <option value="short">SHORT 🔴</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:12px; color:#8e8e93;">Цена входа</label>
+                <input type="number" id="userEntry" placeholder="65000" step="any" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff;">
+            </div>
+            <div>
+                <label style="font-size:12px; color:#8e8e93;">Стоп-лосс (SL)</label>
+                <input type="number" id="userSL" placeholder="64000" step="any" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ff3b30; background:rgba(10,10,20,0.8); color:#fff;">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label style="font-size:12px; color:#8e8e93;">Тейк-профит (TP)</label>
+                <input type="number" id="userTP" placeholder="68000" step="any" style="width:100%; padding:10px; border-radius:8px; border:1px solid #00e676; background:rgba(10,10,20,0.8); color:#fff;">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label style="font-size:12px; color:#8e8e93;">Ссылка на TradingView (обязательно)</label>
+                <input type="text" id="userTVLink" placeholder="https://www.tradingview.com/chart/..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff;">
+            </div>
+        </div>
+        
+        <div class="btn-container" style="margin-top:15px;">
+            <button class="btn btn-success" onclick="submitUserSetup()">🚀 Отправить на модерацию</button>
+            <button class="btn btn-secondary" onclick="hideUserCreateForm()">Отмена</button>
+        </div>
+    </div>
+    
     <div class="footer">
         <img src="https://raw.githubusercontent.com/master0fgooddeeds/bot/main/logo.png" alt="MTC">
         <p class="brand">My Trading Club</p>
