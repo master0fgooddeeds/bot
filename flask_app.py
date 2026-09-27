@@ -94,6 +94,18 @@ def init_db():
 # Вызовите это при старте, до bx_load()
 init_db()
 
+    # 6. Пользовательские сетапы (на модерации или опубликованные)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_setups (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER,
+            user_name TEXT,
+            sym TEXT, dir TEXT, entry REAL, sl REAL, tp REAL,
+            tv_link TEXT, status TEXT, created_at REAL,
+            admin_comment TEXT
+        )
+    ''')
+
 TOKEN = "8845319540:AAHsIvOXzVeaKEBNWYWDIHVRPY9QX4YLSmA"
 WEBHOOK_URL = "https://web-production-eadde.up.railway.app/tg_webhook"
 app = Flask(__name__)
