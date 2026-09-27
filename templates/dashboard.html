@@ -1350,6 +1350,72 @@ function openVideoModal(videoId, title) {
                 });
         }
 
+
+                function showUserCreateForm() {
+            document.getElementById('userCreateFormCard').classList.remove('hidden');
+            document.getElementById('statsCard').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function hideUserCreateForm() {
+            document.getElementById('userCreateFormCard').classList.add('hidden');
+            document.getElementById('statsCard').classList.remove('hidden');
+        }
+
+        function submitUserSetup() {
+            var sym = document.getElementById('userSym').value.trim().toUpperCase();
+            var dir = document.getElementById('userDir').value;
+            var entry = parseFloat(document.getElementById('userEntry').value);
+            var sl = parseFloat(document.getElementById('userSL').value);
+            var tp = parseFloat(document.getElementById('userTP').value);
+            var tv_link = document.getElementById('userTVLink').value.trim();
+            
+            var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : {id: 0, first_name: 'Аноним'};
+            
+            if (!sym || !entry || !sl || !tp) {
+                tg.showAlert('⚠️ Заполни все поля с ценами и монетой!');
+                return;
+            }
+            
+            tg.MainButton.setText('Отправка...');
+            tg.MainButton.show();
+            tg.MainButton.disable();
+            
+            fetch('/api/create_user_setup', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    user_id: user.id,
+                    user_name: user.first_name + (user.username ? ' @' + user.username : ''),
+                    sym: sym,
+                    dir: dir,
+                    entry: entry,
+                    sl: sl,
+                    tp: tp,
+                    tv_link: tv_link
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                tg.MainButton.hide();
+                if (res.ok) {
+                    tg.showAlert('✅ ' + (res.message || 'Сетап успешно отправлен на модерацию!'));
+                    hideUserCreateForm();
+                    // Очистка полей
+                    document.getElementById('userSym').value = '';
+                    document.getElementById('userEntry').value = '';
+                    document.getElementById('userSL').value = '';
+                    document.getElementById('userTP').value = '';
+                    document.getElementById('userTVLink').value = '';
+                } else {
+                    tg.showAlert('❌ Ошибка: ' + (res.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(function(err) {
+                tg.MainButton.hide();
+                tg.showAlert('❌ Ошибка сети: ' + err.message);
+            });
+        }
         refreshData();
         loadFearGreed();
         checkLatestVideo();
