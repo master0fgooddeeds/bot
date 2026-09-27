@@ -758,6 +758,32 @@ def get_users_report():
 import re
 from urllib.parse import urlparse
 
+
+def get_user_trust_level(user_id):
+    """Определяет уровень доверия пользователя на основе его истории в SQLite"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Считаем общие успешные сделки (TP)
+    cursor.execute("SELECT COUNT(*) FROM trade_history WHERE result = 'TP'")
+    wins = cursor.fetchone()[0]
+    
+    # Считаем общее количество сделок для винрейта
+    cursor.execute("SELECT COUNT(*) FROM trade_history WHERE result IN ('TP', 'SL', 'manual')")
+    total_trades = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    winrate = (wins / total_trades * 100) if total_trades > 0 else 0
+    
+    # Логика уровней (MVP)
+    if wins >= 10 and winrate >= 60:
+        return {"level": 2, "name": "Alpha", "badge": "🥇", "color": "#ffd700", "can_use_stars": True}
+    elif wins >= 3:
+        return {"level": 1, "name": "Трейдер", "badge": "🥈", "color": "#c0c0c0", "can_use_stars": False}
+    else:
+        return {"level": 0, "name": "Новичок", "badge": "🥉", "color": "#cd7f32", "can_use_stars": False}
+
 def validate_setup_links(text):
     """
     Жесткая проверка ссылок. 
