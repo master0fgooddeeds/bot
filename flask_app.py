@@ -106,6 +106,8 @@ def init_db():
     print("✅ База данных SQLite инициализирована.")
 
 
+TOKEN = "8845319540:AAHsIvOXzVeaKEBNWYWDIHVRPY9QX4YLSmA" 
+
 WEBHOOK_URL = "https://web-production-eadde.up.railway.app/tg_webhook"
 app = Flask(__name__)
 
