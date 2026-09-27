@@ -1010,37 +1010,68 @@ function openVideoModal(videoId, title) {
 
         function loadFeed() {
             var list = document.getElementById('feedList');
-            list.innerHTML = 'Загрузка...';
+            list.innerHTML = '<div style="text-align:center; padding:20px; color:#8e8e93;">Загрузка ленты...</div>';
+            
             fetch('/api/miniapp_feed')
                 .then(function(r) { return r.json(); })
                 .then(function(feed) {
                     if (!feed || feed.length === 0) {
-                        list.innerHTML = '<p style="opacity:0.6;">Пока нет активных сетапов</p>';
+                        list.innerHTML = '<p style="opacity:0.6; text-align:center; padding:20px;">Пока нет активных сетапов. Будь первым!</p>';
                         return;
                     }
+                    
                     list.innerHTML = feed.map(function(item) {
                         var color = item.dir === 'long' ? '#00e676' : '#ff003c';
                         var dirText = item.dir === 'long' ? 'LONG 🟢' : 'SHORT 🔴';
                         var chartHtml = item.chart ? '<img src="' + item.chart + '" style="width:100%; border-radius:8px; margin-top:10px; cursor:pointer;" onclick="openLightbox(\'' + item.chart + '\')">' : '';
-                        return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px;">' +
-                            '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-                                '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
+                        
+                        // Логика отображения для Премиум сетапов
+                        var isPremium = item.is_premium;
+                        var blurClass = isPremium ? 'filter: blur(4px); user-select: none;' : '';
+                        var premiumBadge = isPremium ? '<span style="background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 8px;">⭐ PREMIUM</span>' : '';
+                        
+                        var entryDisplay = isPremium ? 'Скрыто' : item.entry;
+                        var slDisplay = isPremium ? 'Скрыто' : item.sl;
+                        var tpDisplay = isPremium ? 'Скрыто' : item.tp;
+                        
+                        var unlockBtn = isPremium ? 
+                            '<button class="btn" style="margin-top:10px; width:100%; background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; font-weight: bold;" onclick="tg.showAlert(\'⭐ Функция покупки за Telegram Stars скоро будет доступна!\')">🔓 Открыть сетап за 50 ⭐</button>' : '';
+
+                        return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px; position: relative;">' +
+                            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+                                '<div style="display:flex; align-items:center;">' +
+                                    '<strong style="font-size:18px; color:' + color + ';">' + item.sym + 'USDT</strong>' +
+                                    premiumBadge +
+                                '</div>' +
                                 '<span style="background:' + color + '; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">' + dirText + '</span>' +
                             '</div>' +
-                            '<div style="margin-top:10px; font-size:14px; line-height:1.6;">' +
-                                '🎯 Вход: <b>' + item.entry + '</b><br>' +
-                                '🛡 SL: <b>' + item.sl + '</b><br>' +
-                                '💰 TP: <b>' + item.tp + '</b>' +
+                            
+                            // Блок автора
+                            '<div style="display:flex; align-items:center; margin-bottom:12px; padding:8px; background:rgba(255,255,255,0.03); border-radius:6px;">' +
+                                '<span style="font-size:16px; margin-right:6px;">' + item.author_badge + '</span>' +
+                                '<span style="font-size:13px; color:#8e8e93;">Автор: </span>' +
+                                '<span style="font-size:13px; font-weight:bold; color:' + item.author_color + '; margin-left:4px;">' + item.author + '</span>' +
                             '</div>' +
+
+                            '<div style="margin-top:10px; font-size:14px; line-height:1.8; ' + blurClass + '">' +
+                                '🎯 Вход: <b>' + entryDisplay + '</b><br>' +
+                                '🛡 SL: <b>' + slDisplay + '</b><br>' +
+                                '💰 TP: <b>' + tpDisplay + '</b>' +
+                            '</div>' +
+                            
                             chartHtml +
-                            '<div style="margin-top:10px;">' +
-                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none; margin-right:5px;">💬 Обсудить</a>' +
-                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="display:inline-block; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
-                            '</div>' +
+                            unlockBtn +
+                            
+                            (!isPremium ? '<div style="margin-top:10px; display:flex; gap:8px;">' +
+                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn" style="flex:1; padding:8px 12px; font-size:12px; text-decoration:none;">💬 Обсудить</a>' +
+                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="flex:1; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
+                            '</div>' : '') +
                             '</div>';
                     }).join('');
                 })
-                .catch(function(err) { list.innerHTML = '<p style="opacity:0.6;">Ошибка</p>'; });
+                .catch(function(err) { 
+                    list.innerHTML = '<p style="opacity:0.6; text-align:center; color:#ff3b30;">Ошибка загрузки ленты</p>'; 
+                });
         }
 
         function switchScreenshot(tfId) {
