@@ -931,40 +931,40 @@ _Индекс показывает настроение рынка_"""
         chat_type = msg.get("chat", {}).get("type")
         is_private = chat_type == "private"
         is_group_chat = chat_type in ("supergroup", "group") and is_admin(uid)
-        is_group_chat = chat_type in ("supergroup", "group") and is_admin(uid)
 
-        if txt.strip().startswith("/start"):
-            # 1. Проверяем наличие Deep Link аргумента
-            parts = txt.strip().split(" ")
-            deep_link_arg = parts[1] if len(parts) > 1 else None
-            
-            if deep_link_arg and deep_link_arg.startswith("setup_"):
-                setup_id = deep_link_arg.replace("setup_", "")
-                s = BX["active"].get(setup_id) or BX["pending"].get(setup_id)
+        if is_private or is_group_chat:
+            if txt.strip().startswith("/start"):
+                # 1. Проверяем наличие Deep Link аргумента
+                parts = txt.strip().split(" ")
+                deep_link_arg = parts[1] if len(parts) > 1 else None
                 
-                if s:
-                    emo = "🟢" if s["dir"] == "long" else "🔴"
-                    kb = {"inline_keyboard": [[
-                        {"text": "🚀 Открыть Дашборд и повторить", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}
-                    ]]}
-                    viral_text = f"""🔥 *Трейдер открыл сетап:*
+                if deep_link_arg and deep_link_arg.startswith("setup_"):
+                    setup_id = deep_link_arg.replace("setup_", "")
+                    s = BX["active"].get(setup_id) or BX["pending"].get(setup_id)
+                    
+                    if s:
+                        emo = "🟢" if s["dir"] == "long" else "🔴"
+                        kb = {"inline_keyboard": [[
+                            {"text": "🚀 Открыть Дашборд и повторить", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}
+                        ]]}
+                        viral_text = f"""🔥 *Трейдер открыл сетап:*
 {emo} **{s['sym']} USDT** · {s['dir'].upper()}
 Таймфрейм: {s['tf']}
 
 Хочешь получать такие сигналы первым и отслеживать рынок? 
 Жми кнопку ниже, чтобы начать! 👇"""
-                    tg("sendMessage", data={"chat_id": uid, "text": viral_text, "parse_mode": "Markdown", "reply_markup": kb})
-                    return
-            
-            # 2. Стандартный /start
-            kb = {"inline_keyboard": [
-                [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
-                [{"text": "📝 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
-                [{"text": "📊 Fear & Greed Index", "callback_data": "fear_greed"}]
-            ]}
-            
-            if is_admin(uid):
-                welcome_text = """*Привет, Админ!*
+                        tg("sendMessage", data={"chat_id": uid, "text": viral_text, "parse_mode": "Markdown", "reply_markup": kb})
+                        return
+                
+                # 2. Стандартный /start
+                kb = {"inline_keyboard": [
+                    [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
+                    [{"text": "📝 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
+                    [{"text": "📊 Fear & Greed Index", "callback_data": "fear_greed"}]
+                ]}
+                
+                if is_admin(uid):
+                    welcome_text = """*Привет, Админ!*
 
 Добро пожаловать в *MTC Trading Platform*!
 
@@ -979,8 +979,8 @@ _Индекс показывает настроение рынка_"""
 • "Fear & Greed Index" — индекс страха и жадности
 
 _Платформа в разработке. Следим за прогрессом!_"""
-            else:
-                welcome_text = """*Привет!*
+                else:
+                    welcome_text = """*Привет!*
 
 Добро пожаловать в *MTC Trading Platform*!
 
@@ -990,11 +990,9 @@ _Платформа в разработке. Следим за прогресс�
 • Аналитику рынка
 
 Жми кнопку ниже, чтобы открыть дашборд!"""
-            
-            tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
-            return
-
-        if txt.strip() == "/stats" and is_admin(uid):
+                
+                tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
+                return
 
             if txt.strip() == "/stats" and is_admin(uid):
                 stats = load_stats()
@@ -1138,7 +1136,7 @@ _Данные: CoinGecko, Alternative.me_"""
                         s["close_result"] = "admin_cancel"
                         save_stat(s, "expired", 0.0)
                         bx_save()
-                        cap = f" *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
+                        cap = f"🎛 *ОТМЕНЕНО АДМИНОМ* · {s['sym']}USDT · {s['tf']}\n_Закрыто вручную._"
                         if s.get("vip_msg"):
                             try:
                                 tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
@@ -1192,6 +1190,9 @@ _Данные: CoinGecko, Alternative.me_"""
                     s["id"] = sid
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
+
+def tg(method, **kw):
+
 def tg(method, **kw):
     for attempt in range(3):
         try:
