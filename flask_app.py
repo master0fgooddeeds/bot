@@ -1689,21 +1689,31 @@ def api_upscale_news():
 
 @app.route('/api/miniapp_feed', methods=['GET'])
 def api_miniapp_feed():
-    """Возвращает активные сетапы для ленты мини-аппа напрямую из памяти"""
+    """Возвращает ленту сетапов с информацией об авторе и статусом премиум"""
     setups = []
     active_setups = BX.get('active', {})
     
     for sid, s in active_setups.items():
-        # Показываем только те, что в работе или ожидают входа
         if s.get('status') in ['pending', 'active']:
+            # Определяем автора (пока заглушка 'MTC Admin', позже привяжем к user_id)
+            author_id = s.get('author_id', 0) 
+            trust = get_user_trust_level(author_id)
+            
+            # Флаг премиума (пока хардкод False, позже добавим галочку при создании)
+            is_premium = s.get('is_premium', False)
+            
             setups.append({
                 'id': sid,
                 'sym': s.get('sym', 'N/A'),
                 'dir': s.get('dir', 'long'),
-                'entry': s.get('entry_price', 'N/A'),
-                'sl': s.get('sl', 'N/A'),
-                'tp': s.get('tp', 'N/A'),
-                'chart': s.get('chart_image', s.get('chart', ''))
+                'entry': '***' if is_premium else s.get('entry_price', 'N/A'),
+                'sl': '***' if is_premium else s.get('sl', 'N/A'),
+                'tp': '***' if is_premium else s.get('tp', 'N/A'),
+                'chart': s.get('chart_image', ''),
+                'author': trust['name'],
+                'author_badge': trust['badge'],
+                'author_color': trust['color'],
+                'is_premium': is_premium
             })
     
     return jsonify(setups)
