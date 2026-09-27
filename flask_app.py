@@ -184,7 +184,7 @@ def load_analyses():
     except: return {}
 
 
-def save_stat(s, result, pnl_pct, s.get('author_id', 0))  # Передай user_id
+    save_stat(s, result, pnl_pct, s.get('author_id', 0))
     stats = load_stats()
     stats["total"] += 1
     status_text = {"tp": "TP", "sl": "SL", "skipped_tp": "Пропуск", "expired": "Истек", "admin_cancel": "Отмена", "manual": "Ручное"}.get(result, "Неизвестно")
