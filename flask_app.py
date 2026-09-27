@@ -87,6 +87,18 @@ def init_db():
     ''')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_activity ON user_activity(user_id, timestamp)')
     
+    # 6. Пользовательские сетапы (на модерации)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_setups (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER,
+            user_name TEXT,
+            sym TEXT, dir TEXT, entry REAL, sl REAL, tp REAL,
+            tv_link TEXT, status TEXT, created_at REAL,
+            admin_comment TEXT
+        )
+    ''')
+    
     conn.commit()
     conn.close()
     print("✅ База данных SQLite инициализирована.")
