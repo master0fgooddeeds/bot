@@ -932,16 +932,66 @@ _Индекс показывает настроение рынка_"""
         is_private = chat_type == "private"
         is_group_chat = chat_type in ("supergroup", "group") and is_admin(uid)
 
-        if is_private or is_group_chat:
-            if txt.strip() == "/start":
+            if txt.strip().startswith("/start"):
+                # 1. Проверяем наличие Deep Link аргумента
+                parts = txt.strip().split(" ")
+                deep_link_arg = parts[1] if len(parts) > 1 else None
+                
+                if deep_link_arg and deep_link_arg.startswith("setup_"):
+                    setup_id = deep_link_arg.replace("setup_", "")
+                    s = BX["active"].get(setup_id) or BX["pending"].get(setup_id)
+                    
+                    if s:
+                        emo = "🟢" if s["dir"] == "long" else "🔴"
+                        kb = {"inline_keyboard": [[
+                            {"text": "🚀 Открыть Дашборд и повторить", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}
+                        ]]}
+                        viral_text = f"""🔥 *Трейдер открыл сетап:*
+{emo} **{s['sym']} USDT** · {s['dir'].upper()}
+Таймфрейм: {s['tf']}
+
+Хочешь получать такие сигналы первым и отслеживать рынок? 
+Жми кнопку ниже, чтобы начать! 👇"""
+                        tg("sendMessage", data={"chat_id": uid, "text": viral_text, "parse_mode": "Markdown", "reply_markup": kb})
+                        return
+                
+                # 2. Стандартный /start
                 kb = {"inline_keyboard": [
                     [{"text": "🚀 Открыть Дашборд", "web_app": {"url": "https://web-production-eadde.up.railway.app/dashboard"}}],
                     [{"text": "📝 Сгенерировать пост для VIP", "callback_data": "gen_vip_post"}],
-                    [{"text": " Fear & Greed Index", "callback_data": "fear_greed"}]
+                    [{"text": "📊 Fear & Greed Index", "callback_data": "fear_greed"}]
                 ]}
                 
                 if is_admin(uid):
                     welcome_text = """*Привет, Админ!*
+
+Добро пожаловать в *MTC Trading Platform*!
+
+🎯 *Возможности платформы:*
+• Сигналы CHoCH + FVG в реальном времени
+• Автоматический анализ рынка
+• Статистика и аналитика сделок
+
+*Используй кнопки ниже:*
+• "Открыть Дашборд" — твой личный кабинет
+• "Сгенерировать пост для VIP" — создай красивый пост
+• "Fear & Greed Index" — индекс страха и жадности
+
+_Платформа в разработке. Следим за прогрессом!_"""
+                else:
+                    welcome_text = """*Привет!*
+
+Добро пожаловать в *MTC Trading Platform*!
+
+Здесь ты найдёшь:
+• Актуальную статистику сделок
+• Разборы сигналов
+• Аналитику рынка
+
+Жми кнопку ниже, чтобы открыть дашборд!"""
+                
+                tg("sendMessage", data={"chat_id": uid, "text": welcome_text, "parse_mode": "Markdown", "reply_markup": kb})
+                return
 
 Добро пожаловать в *MTC Trading Platform*!
 
