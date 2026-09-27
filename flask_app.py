@@ -1797,74 +1797,93 @@ def api_miniapp_feed():
 @app.route('/api/create_user_setup', methods=['POST'])
 def create_user_setup():
     try:
-        data = request.json
-        user_id = data.get('user_id')
-        user_name = data.get('user_name', 'Аноним')
-        sym = data.get('sym', '').upper()
-        direction = data.get('dir', '').lower()
-        entry = float(data.get('entry', 0))
-        sl = float(data.get('sl', 0))
-        tp = float(data.get('tp', 0))
-        tv_link = data.get('tv_link', '')
+        data = request.json or {}
+        print(f" Получены данные: {data}")
         
-        # --- ПРОВЕРКИ ---
+        user_id = data.get('user_id') or 0
+        user_name = str(data.get('user_name', 'Аноним'))
+        sym = str(data.get('sym', '')).upper().strip()
+        direction = str(data.get('dir', '')).lower()
+        
+        try:
+            entry = float(data.get('entry', 0))
+            sl = float(data.get('sl', 0))
+            tp = float(data.get('tp', 0))
+        except (TypeError, ValueError) as e:
+            print(f" Ошибка парсинга цен: {e}, data={data}")
+            return jsonify({"error": f"Неверные цены: {e}"}), 400
+        
+        tv_link = str(data.get('tv_link', '')).strip()
+        
+        print(f"📝 Сетап: {sym} {direction} entry={entry} sl={sl} tp={tp} user={user_id}")
+        
+        if not sym:
+            return jsonify({"error": "Укажи монету"}), 400
         if entry <= 0 or sl <= 0 or tp <= 0:
             return jsonify({"error": "Цены должны быть положительными"}), 400
         if direction == 'long' and sl >= entry:
-            return jsonify({"error": "Для LONG стоп-лосс должен быть ниже цены входа"}), 400
+            return jsonify({"error": "Для LONG SL должен быть ниже входа"}), 400
         if direction == 'short' and sl <= entry:
-            return jsonify({"error": "Для SHORT стоп-лосс должен быть выше цены входа"}), 400
+            return jsonify({"error": "Для SHORT SL должен быть выше входа"}), 400
             
         risk = abs(entry - sl)
         reward = abs(tp - entry)
         if risk == 0:
-            return jsonify({"error": "Расстояние до стоп-лосса не может быть нулевым"}), 400
+            return jsonify({"error": "SL не может равняться входу"}), 400
             
         rr = reward / risk
         if rr < 0.5 or rr > 10:
-            return jsonify({"error": "Соотношение Риск/Прибыль (R:R) должно быть от 1:0.5 до 1:10"}), 400
+            return jsonify({"error": f"R:R должен быть от 1:0.5 до 1:10 (сейчас 1:{rr:.2f})"}), 400
             
         is_valid, error_msg = validate_setup_links(tv_link)
         if not is_valid:
             return jsonify({"error": error_msg}), 400
             
-        # --- СОХРАНЕНИЕ В БД ---
         setup_id = f"usr_{int(_time.time())}_{user_id}"
+        print(f"💾 Сохраняем в БД: {setup_id}")
+        
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO user_setups (id, user_id, user_name, sym, dir, entry, sl, tp, tv_link, status, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_moderation', ?)
-        ''', (setup_id, user_id, user_name, sym, direction, entry, sl, tp, tv_link, _time.time()))
+        ''', (setup_id, int(user_id), user_name, sym, direction, entry, sl, tp, tv_link, _time.time()))
         conn.commit()
         conn.close()
+        print(f"✅ Сохранено в БД")
         
-        # --- УВЕДОМЛЕНИЕ АДМИНАМ ---
-        dir_emoji = "🟢 LONG" if direction == "long" else "🔴 SHORT"
-        admin_msg = f"""🆕 *НОВЫЙ СЕТАП НА МОДЕРАЦИИ*
+        # Уведомление админам (обернуто в try-except)
+        try:
+            dir_emoji = "🟢 LONG" if direction == "long" else "🔴 SHORT"
+            admin_msg = f"""🆕 *НОВЫЙ СЕТАП НА МОДЕРАЦИИ*
 
 👤 Автор: {user_name} (`{user_id}`)
 💎 Монета: *{sym}USDT* {dir_emoji}
 🎯 Вход: `{entry}`
 🛡 SL: `{sl}` | 💰 TP: `{tp}`
-📊 R:R: 1:{(reward/risk):.1f}
-🔗 TV: {tv_link or 'Нет'}
-
-_Это сетап от Новичка (Level 0). Требуется одобрение._"""
-        
-        kb = {"inline_keyboard": [
-            [{"text": "✅ Одобрить и в ленту", "callback_data": f"approve_setup:{setup_id}"}, 
-             {"text": "❌ Отклонить", "callback_data": f"reject_setup:{setup_id}"}]
-        ]}
-        
-        for aid in ADMIN_IDS:
-            tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": kb})
+ R:R: 1:{(reward/risk):.1f}
+🔗 TV: {tv_link or 'Нет'}"""
             
-        return jsonify({"ok": True, "setup_id": setup_id, "message": "Сетап отправлен на модерацию!"})
+            kb = {"inline_keyboard": [
+                [{"text": "✅ Одобрить", "callback_data": f"approve_setup:{setup_id}"}, 
+                 {"text": "❌ Отклонить", "callback_data": f"reject_setup:{setup_id}"}]
+            ]}
+            
+            print(f" Отправляем админам: {ADMIN_IDS}")
+            for aid in ADMIN_IDS:
+                tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": kb})
+            print(f"✅ Админам отправлено")
+        except Exception as e:
+            print(f"⚠️ Ошибка отправки админам: {e}")
+            # Не блокируем основной процесс
+            
+        return jsonify({"ok": True, "setup_id": setup_id, "message": "Отправлено на модерацию!"})
         
     except Exception as e:
-        print(f"Ошибка создания сетапа: {e}")
-        return jsonify({"error": "Ошибка сервера"}), 500
+        print(f"❌ КРИТИЧЕСКАЯ ОШИБКА create_user_setup: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/fear_greed')
 def api_fear_greed():
