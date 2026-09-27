@@ -228,7 +228,7 @@ def save_stat(setup, result, pnl, user_id=0):
     conn.commit()
     conn.close()
 
-def save_analysis(setup_id, data):
+
 
 def save_analysis(setup_id, data):
     analyses = load_analyses()
