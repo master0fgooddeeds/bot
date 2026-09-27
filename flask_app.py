@@ -1310,11 +1310,12 @@ def tg(method, **kw):
 def tg_webhook():
     try:
         update = request.get_json()
-        if update: handle_update(update)
-        return "ok"
+        if update:
+            handle_update(update)
+        return jsonify({"ok": True})
     except Exception as e:
         print(f"WEBHOOK ERR: {e}")
-        return "ok"
+        return jsonify({"ok": True})
 
 def normalize_chat(raw):
     s = str(raw)
