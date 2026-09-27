@@ -1187,6 +1187,35 @@ def make_chart(df, title="BTC/USD", level=None):
     buf.seek(0)
     return buf
 
+def make_pnl_card(sym, direction, result, pnl_pct, pnl_usd, winrate):
+    """Генерирует красивую карточку результата для репоста в соцсети"""
+    import matplotlib.pyplot as plt
+    import io
+    
+    fig, ax = plt.subplots(figsize=(8, 4.5), dpi=150)
+    fig.patch.set_facecolor('#0f172a')
+    ax.axis('off')
+    
+    is_win = result in ['tp', 'manual'] and pnl_pct > 0
+    color = '#22c55e' if is_win else '#ef4444'
+    result_text = "✅ TAKE PROFIT" if result == "tp" else "🛑 STOP LOSS" if result == "sl" else "⚠️ ЗАКРЫТО"
+    
+    ax.text(0.5, 0.85, "MTC TRADING CLUB", ha='center', va='center', fontsize=14, color='#94a3b8', fontweight='bold')
+    ax.text(0.5, 0.72, f"{sym.upper()} USDT · {direction.upper()}", ha='center', va='center', fontsize=26, color='white', fontweight='black')
+    ax.text(0.5, 0.52, result_text, ha='center', va='center', fontsize=22, color=color, fontweight='bold')
+    
+    pnl_usd_text = f"${pnl_usd:+,.2f}" if pnl_usd != 0 else ""
+    ax.text(0.5, 0.32, f"{pnl_pct:+.2f}%  {pnl_usd_text}", ha='center', va='center', fontsize=32, color='white', fontweight='bold')
+    ax.text(0.5, 0.12, f"Винрейт стратегии: {winrate:.1f}%  |  Не является фин. рекомендацией", ha='center', va='center', fontsize=10, color='#64748b')
+    
+    ax.add_patch(plt.Rectangle((0.05, 0.05), 0.9, 0.9, fill=False, edgecolor=color, linewidth=3, transform=fig.transFigure))
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#0f172a')
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+
 def make_fear_greed_gauge(value, label):
     import matplotlib.pyplot as plt
     from matplotlib.patches import Wedge
