@@ -186,7 +186,7 @@ def load_analyses():
     except: return {}
 
 
-    save_stat(s, result, pnl_pct, s.get('author_id', 0))
+def save_stat(setup, result, pnl, user_id=0):
     stats = load_stats()
     stats["total"] += 1
     status_text = {"tp": "TP", "sl": "SL", "skipped_tp": "Пропуск", "expired": "Истек", "admin_cancel": "Отмена", "manual": "Ручное"}.get(result, "Неизвестно")
@@ -195,19 +195,16 @@ def load_analyses():
     elif result == "skipped_tp": stats["skipped"] += 1
     elif result in ["expired", "admin_cancel"]: stats["expired"] += 1
     
-    # PnL в процентах
     stats["pnl"] = round(stats["pnl"] + pnl, 2)
-    
-    # PnL в долларах (от текущего баланса)
     pnl_usd = stats["balance"] * (pnl / 100)
     stats["pnl_usd"] = round(stats["pnl_usd"] + pnl_usd, 2)
     stats["balance"] = round(stats["balance"] + pnl_usd, 2)
     
     stats["history"].append({
         "date": datetime.now().strftime("%d.%m.%Y %H:%M"), 
-        "sym": setup["sym"], 
-        "tf": setup["tf"], 
-        "dir": setup["dir"], 
+        "sym": setup.get("sym", ""), 
+        "tf": setup.get("tf", ""), 
+        "dir": setup.get("dir", ""), 
         "result": status_text, 
         "pnl": round(pnl, 2),
         "pnl_usd": round(pnl_usd, 2)
@@ -219,7 +216,7 @@ def load_analyses():
     with open(STATS_FILE, "w") as f: 
         json.dump(stats, f, indent=2)
     
-    # ← ДОБАВИТЬ ЗАПИСЬ В БД С user_id
+    # Запись в SQLite с user_id
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
@@ -230,6 +227,8 @@ def load_analyses():
           result, round(pnl, 2), round(pnl_usd, 2)))
     conn.commit()
     conn.close()
+
+def save_analysis(setup_id, data):
 
 def save_analysis(setup_id, data):
     analyses = load_analyses()
