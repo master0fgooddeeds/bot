@@ -7,6 +7,92 @@ import mplfinance as mpf
 from datetime import datetime, timedelta
 from flask import Flask, request
 from flask import render_template, jsonify
+import sqlite3
+import os
+
+DATA_DIR = "/app/data"
+os.makedirs(DATA_DIR, exist_ok=True)
+DB_PATH = os.path.join(DATA_DIR, "mtc_platform.db")
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # 1. Сетапы (активные и история)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS setups (
+            id TEXT PRIMARY KEY,
+            sym TEXT, tf TEXT, dir TEXT, level REAL,
+            entry_price REAL, sl REAL, tp REAL, link TEXT,
+            status TEXT, created_at REAL, expires_entry REAL,
+            vip_chat TEXT, vip_msg TEXT, chart_image TEXT,
+            close_result TEXT, pnl_pct REAL, pnl_usd REAL
+        )
+    ''')
+    
+    # 2. Глобальная статистика (всегда 1 строка с id=1)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS global_stats (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            total INTEGER DEFAULT 0, wins INTEGER DEFAULT 0,
+            losses INTEGER DEFAULT 0, skipped INTEGER DEFAULT 0, expired INTEGER DEFAULT 0,
+            pnl REAL DEFAULT 0.0, pnl_usd REAL DEFAULT 0.0,
+            deposit REAL DEFAULT 10000.0, balance REAL DEFAULT 10000.0
+        )
+    ''')
+    cursor.execute('INSERT OR IGNORE INTO global_stats (id) VALUES (1)')
+    
+    # 3. История сделок (для графиков и последних 5)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS trade_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            setup_id TEXT, date TEXT, sym TEXT, tf TEXT, dir TEXT,
+            result TEXT, pnl REAL, pnl_usd REAL
+        )
+    ''')
+    
+    # 4. Аналитики
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS analyses (
+            setup_id TEXT PRIMARY KEY,
+            symbol TEXT, tf TEXT, direction TEXT, entry REAL, exit REAL,
+            result TEXT, pnl REAL, analysis_text TEXT, chart_image TEXT,
+            created_by INTEGER, created_at REAL, views INTEGER DEFAULT 0
+        )
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS coin_analyses (
+            id TEXT PRIMARY KEY,
+            symbol TEXT, tf1_link TEXT, tf2_link TEXT, tf3_link TEXT, tf4_link TEXT,
+            chart_image TEXT, tf1_screenshot TEXT, tf2_screenshot TEXT, 
+            tf3_screenshot TEXT, tf4_screenshot TEXT, tf1_comment TEXT, 
+            tf2_comment TEXT, tf3_comment TEXT, tf4_comment TEXT,
+            description TEXT, bingx_link TEXT, created_by INTEGER, 
+            created_at REAL, updated_at REAL
+        )
+    ''')
+    
+    # 5. Активность пользователей (замена users_stats.json)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_activity (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER, action TEXT, timestamp REAL
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_activity ON user_activity(user_id, timestamp)')
+    
+    conn.commit()
+    conn.close()
+    print("✅ База данных SQLite инициализирована.")
+
+# Вызовите это при старте, до bx_load()
+init_db()
 
 TOKEN = "8845319540:AAHsIvOXzVeaKEBNWYWDIHVRPY9QX4YLSmA"
 WEBHOOK_URL = "https://web-production-eadde.up.railway.app/tg_webhook"
