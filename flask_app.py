@@ -482,7 +482,7 @@ def close_setup(sid, result):
     for aid in ADMIN_IDS:
         tg("sendMessage", data={"chat_id": aid, "text": f"⚙️ Сетап {sid} закрыт: {head}\nРезультат: {pnl_sign}{pnl_pct:.2f}%"})
     
-    save_stat(s, result, pnl_pct)
+    save_stat(s, result, pnl_pct, s.get('author_id', 0))
     bx_save()
 
 def bx_watch_step():
