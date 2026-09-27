@@ -23,14 +23,15 @@ def init_db():
     conn = get_db()
     cursor = conn.cursor()
     
-    # 3. История сделок (для графиков и последних 5)
+    # 1. Сетапы (активные и история)
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS trade_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            setup_id TEXT, 
-            user_id INTEGER,  ← ДОБАВИТЬ ЭТО ПОЛЕ
-            date TEXT, sym TEXT, tf TEXT, dir TEXT,
-            result TEXT, pnl REAL, pnl_usd REAL
+        CREATE TABLE IF NOT EXISTS setups (
+            id TEXT PRIMARY KEY,
+            sym TEXT, tf TEXT, dir TEXT, level REAL,
+            entry_price REAL, sl REAL, tp REAL, link TEXT,
+            status TEXT, created_at REAL, expires_entry REAL,
+            vip_chat TEXT, vip_msg TEXT, chart_image TEXT,
+            close_result TEXT, pnl_pct REAL, pnl_usd REAL
         )
     ''')
     
@@ -46,11 +47,13 @@ def init_db():
     ''')
     cursor.execute('INSERT OR IGNORE INTO global_stats (id) VALUES (1)')
     
-    # 3. История сделок (для графиков и последних 5)
+    # 3. История сделок (с user_id для персональной статистики)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS trade_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            setup_id TEXT, date TEXT, sym TEXT, tf TEXT, dir TEXT,
+            setup_id TEXT, 
+            user_id INTEGER,
+            date TEXT, sym TEXT, tf TEXT, dir TEXT,
             result TEXT, pnl REAL, pnl_usd REAL
         )
     ''')
@@ -77,7 +80,7 @@ def init_db():
         )
     ''')
     
-    # 5. Активность пользователей (замена users_stats.json)
+    # 5. Активность пользователей
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_activity (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
