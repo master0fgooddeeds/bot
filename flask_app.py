@@ -1191,7 +1191,7 @@ _Данные: CoinGecko, Alternative.me_"""
                     post_setup_to_vip(s, m_url.group(0), sl, tp, entry_price)
                     tg("sendMessage", data={"chat_id": uid, "text": f"✅ Сетап {sid} в VIP!\nВход: {entry_price}\nSL: {sl}\nTP: {tp}"})
 
-def tg(method, **kw):
+
 
 def tg(method, **kw):
     for attempt in range(3):
