@@ -1819,7 +1819,7 @@ def api_miniapp_feed():
 def create_user_setup():
     try:
         data = request.json or {}
-        print(f" Получены данные: {data}")
+        print(f"📥 Получены данные: {data}")
         
         user_id = data.get('user_id') or 0
         user_name = str(data.get('user_name', 'Аноним'))
@@ -1831,13 +1831,14 @@ def create_user_setup():
             sl = float(data.get('sl', 0))
             tp = float(data.get('tp', 0))
         except (TypeError, ValueError) as e:
-            print(f" Ошибка парсинга цен: {e}, data={data}")
+            print(f"⚠️ Ошибка парсинга цен: {e}, data={data}")
             return jsonify({"error": f"Неверные цены: {e}"}), 400
         
         tv_link = str(data.get('tv_link', '')).strip()
         
         print(f"📝 Сетап: {sym} {direction} entry={entry} sl={sl} tp={tp} user={user_id}")
         
+        # 1. Базовые проверки
         if not sym:
             return jsonify({"error": "Укажи монету"}), 400
         if entry <= 0 or sl <= 0 or tp <= 0:
@@ -1856,10 +1857,21 @@ def create_user_setup():
         if rr < 0.5 or rr > 10:
             return jsonify({"error": f"R:R должен быть от 1:0.5 до 1:10 (сейчас 1:{rr:.2f})"}), 400
             
+        # 2. ПРОВЕРКА: ЕСТЬ ЛИ МОНЕТА НА BINANCE FUTURES
+        try:
+            r = requests.get(f"https://fapi.binance.com/fapi/v1/exchangeInfo?symbol={sym}USDT", timeout=3)
+            if r.status_code != 200 or not r.json().get('symbols'):
+                return jsonify({"error": f"Монета {sym}USDT не найдена на Binance Futures. Проверь тикер (например, BTC, ETH, SOL)!"}), 400
+        except Exception as e:
+            # Если Binance временно недоступен, мы не блокируем пользователя, но пишем в лог
+            print(f"⚠️ Не удалось проверить монету на Binance: {e}")
+            
+        # 3. Проверка ссылок
         is_valid, error_msg = validate_setup_links(tv_link)
         if not is_valid:
             return jsonify({"error": error_msg}), 400
             
+        # 4. Сохранение в БД
         setup_id = f"usr_{int(_time.time())}_{user_id}"
         print(f"💾 Сохраняем в БД: {setup_id}")
         
@@ -1873,7 +1885,7 @@ def create_user_setup():
         conn.close()
         print(f"✅ Сохранено в БД")
         
-        # Уведомление админам (обернуто в try-except)
+        # 5. Уведомление админам
         try:
             dir_emoji = "🟢 LONG" if direction == "long" else "🔴 SHORT"
             admin_msg = f"""🆕 *НОВЫЙ СЕТАП НА МОДЕРАЦИИ*
@@ -1882,7 +1894,7 @@ def create_user_setup():
 💎 Монета: *{sym}USDT* {dir_emoji}
 🎯 Вход: `{entry}`
 🛡 SL: `{sl}` | 💰 TP: `{tp}`
- R:R: 1:{(reward/risk):.1f}
+📊 R:R: 1:{(reward/risk):.1f}
 🔗 TV: {tv_link or 'Нет'}"""
             
             kb = {"inline_keyboard": [
@@ -1890,13 +1902,12 @@ def create_user_setup():
                  {"text": "❌ Отклонить", "callback_data": f"reject_setup:{setup_id}"}]
             ]}
             
-            print(f" Отправляем админам: {ADMIN_IDS}")
+            print(f"📤 Отправляем админам: {ADMIN_IDS}")
             for aid in ADMIN_IDS:
                 tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": kb})
             print(f"✅ Админам отправлено")
         except Exception as e:
             print(f"⚠️ Ошибка отправки админам: {e}")
-            # Не блокируем основной процесс
             
         return jsonify({"ok": True, "setup_id": setup_id, "message": "Отправлено на модерацию!"})
         
