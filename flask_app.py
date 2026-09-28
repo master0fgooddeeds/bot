@@ -480,124 +480,120 @@ def close_setup(sid, result):
     bx_save()
 
 
-def bx_watch_step():
-    now = _time.time()
-    
-    # 1. Проверка админских сетапов
-    for sid in list(BX["active"].keys()):
-        s = BX["active"][sid]
-        try:
-            klines = requests.get("https://api.binance.com/api/v3/klines", params={"symbol": f"{s['sym']}USDT", "interval": "1m", "limit": 3}, timeout=5).json()
-            if not isinstance(klines, list) or len(klines) < 1:
-                continue
-                
-            candles = [{'high': float(k[2]), 'low': float(k[3]), 'close': float(k[4]), 'time': k[0]} for k in klines]
-            last_candle = candles[-2] if len(candles) >= 2 else candles[-1]
-            price = last_candle['close']
-            buf_frac = 0.0005
-            
-            if s.get("status") == "pending":
-                entry = s["entry_price"]
-                reached = False
-                skipped_tp = False
-                
-                if s["dir"] == "long":
-                    if price >= entry * (1 - buf_frac): reached = True
-                    if not reached and price >= s["tp"] * (1 - buf_frac): skipped_tp = True
-                else:
-                    if price <= entry * (1 + buf_frac): reached = True
-                    if not reached and price <= s["tp"] * (1 + buf_frac): skipped_tp = True
-                
-                if skipped_tp:
-                    BX["active"].pop(sid, None)
-                    save_stat(s, "skipped_tp", 0.0)
-                    bx_save()
-                    continue
-                    
-                if now > s.get("expires_entry", 0):
-                    if not s.get("asked_extend"):
-                        s["asked_extend"] = True
-                        bx_save()
-                        kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": "❌ Закрыть", "callback_data": f"cncl:{sid}"}]]}
-                        for aid in ADMIN_IDS:
-                            tg("sendMessage", data={"chat_id": aid, "text": f"⏳ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`", "parse_mode": "Markdown", "reply_markup": kb})
-                    continue
-                    
-                if reached:
-                    s["status"] = "active"
-                    s["entry_time"] = now
-                    s["entry_price"] = price 
-                    bx_save()
-                    try: 
-                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"✅ *СЕТАП АКТИВИРОВАН* · {s['sym']}USDT\n🎯 Вход пройден! Цена: `{price:,.2f}`", "parse_mode": "Markdown", "reply_to_message_id": s.get("vip_msg")})
-                    except: pass
-                    
-            elif s.get("status") == "active":
-                result = None
-                if s["dir"] == "long":
-                    if price >= s["tp"] * (1 - buf_frac): result = "tp"
-                    elif price <= s["sl"] * (1 + buf_frac): result = "sl"
-                else:
-                    if price <= s["tp"] * (1 + buf_frac): result = "tp"
-                    elif price >= s["sl"] * (1 - buf_frac): result = "sl"
-                
-                if result:
-                    print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f}")
-                    close_setup(sid, result)
-        except Exception as e:
-            print(f"⚠️ Ошибка проверки {s.get('sym')}: {e}")
-            continue
-
     # 2. Проверка пользовательских сетапов (ОДОБРЕННЫХ)
     try:
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, sym, dir, entry, sl, tp, user_name FROM user_setups WHERE status = 'approved'")
+        # Берем только те, что ждут входа или уже активны
+        cursor.execute("SELECT id, user_id, user_name, sym, dir, entry, sl, tp, status, created_at FROM user_setups WHERE status IN ('approved', 'active')")
         user_setups = cursor.fetchall()
         conn.close()
-        
+
+        now = _time.time()
         for us in user_setups:
+            setup_id = us['id']
+            user_id = us['user_id']
+            user_name = us['user_name']
             sym = us['sym']
             direction = us['dir']
             entry = float(us['entry'])
             sl = float(us['sl'])
             tp = float(us['tp'])
-            setup_id = us['id']
-            author = us['user_name']
-            
+            status = us['status']
+            created_at = float(us['created_at'])
+
             try:
+                # Получаем актуальную цену закрытия 1-минутной свечи с Binance
                 klines = requests.get("https://api.binance.com/api/v3/klines", params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 2}, timeout=5).json()
-                if isinstance(klines, list) and len(klines) >= 1:
-                    price = float(klines[-1][4])
-                    result = None
+                if not isinstance(klines, list) or len(klines) < 1:
+                    continue
+                price = float(klines[-1][4]) 
+
+                # ПРАВИЛО 4: Напоминание через 24 часа, если сетап все еще 'approved' (не активирован)
+                if status == 'approved' and (now - created_at) > 86400:
+                    conn = get_db(); cursor = conn.cursor()
+                    cursor.execute("UPDATE user_setups SET status = 'expired' WHERE id = ?", (setup_id,))
+                    conn.commit(); conn.close()
                     
+                    msg = f"⏰ *Сетап истек!* · {sym} {direction.upper()}\n\nПрошли 24 часа, а цена так и не дошла до входа ({entry}).\nСетап автоматически закрыт.\n\nЕсли идея все еще актуальна, создайте новый сетап!"
+                    tg("sendMessage", data={"chat_id": user_id, "text": msg, "parse_mode": "Markdown"})
+                    continue
+
+                # ПРАВИЛО 5: Если цена достигла ТП до входа -> Автозакрытие (missed)
+                if status == 'approved':
+                    missed = False
+                    if direction == 'long' and price >= tp: missed = True
+                    elif direction == 'short' and price <= tp: missed = True
+
+                    if missed:
+                        conn = get_db(); cursor = conn.cursor()
+                        cursor.execute("UPDATE user_setups SET status = 'missed' WHERE id = ?", (setup_id,))
+                        conn.commit(); conn.close()
+                        
+                        msg = f"🚀 *Сетап упущен!* · {sym} {direction.upper()}\n\nЦена достигла TP ({tp}), так и не задев вход ({entry}).\nСетап автоматически закрыт."
+                        tg("sendMessage", data={"chat_id": user_id, "text": msg, "parse_mode": "Markdown"})
+                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": f"🚀 *УПУЩЕННЫЙ СЕТАП* · {sym} {direction.upper()}\n👤 Трейдер: {user_name}\nЦена ушла в ТП ({tp}) без входа ({entry}).", "parse_mode": "Markdown"})
+                        continue
+
+                    # ПРАВИЛО 1: Ждем точку входа СТРОГО (без буфера)
+                    entry_hit = False
+                    if direction == 'long' and price <= entry: 
+                        entry_hit = True
+                    elif direction == 'short' and price >= entry: 
+                        entry_hit = True
+
+                    if entry_hit:
+                        conn = get_db(); cursor = conn.cursor()
+                        cursor.execute("UPDATE user_setups SET status = 'active' WHERE id = ?", (setup_id,))
+                        conn.commit(); conn.close()
+                        
+                        msg = f"✅ *Сетап АКТИВИРОВАН!* · {sym} {direction.upper()}\n\nЦена вошла в позицию: {price}\n🛡 SL: {sl} | 💰 TP: {tp}\n\nБот продолжит слежку до результата."
+                        tg("sendMessage", data={"chat_id": user_id, "text": msg, "parse_mode": "Markdown"})
+                        continue
+
+                # ПРАВИЛО 2 и 3: Если уже 'active', следим за SL/TP СТРОГО и сообщаем везде
+                elif status == 'active':
+                    result = None
                     if direction == 'long':
                         if price >= tp: result = 'closed_tp'
                         elif price <= sl: result = 'closed_sl'
                     else:
                         if price <= tp: result = 'closed_tp'
                         elif price >= sl: result = 'closed_sl'
-                        
+
                     if result:
-                        print(f"🎯 Пользовательский сетап #{setup_id} ({sym}) от {author} закрыт: {result} @ {price}")
-                        
-                        conn = get_db()
-                        cursor = conn.cursor()
+                        # Обновляем БД
+                        conn = get_db(); cursor = conn.cursor()
                         cursor.execute("UPDATE user_setups SET status = ? WHERE id = ?", (result, setup_id))
-                        conn.commit()
-                        conn.close()
-                        
+                        conn.commit(); conn.close()
+
                         pnl_pct = ((tp - entry) / entry * 100) if direction == 'long' else ((entry - tp) / entry * 100)
                         sign = "+" if result == 'closed_tp' else ""
-                        cap = f"""🏆 *СЕТАП ТРЕЙДЕРА ЗАКРЫТ!* · {sym}USDT
-👤 Автор: {author}
-📊 Результат: {sign}{pnl_pct:.2f}% ({'TP' if result == 'closed_tp' else 'SL'})
-_Отличная работа!_"""
-                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": cap, "parse_mode": "Markdown"})
-            except Exception:
-                pass # Игнорируем ошибки по отдельным монетам, чтобы не ломать цикл
+                        res_text = "🎯 TAKE PROFIT" if result == 'closed_tp' else "🛑 STOP LOSS"
+                        exit_price = tp if result == 'closed_tp' else sl
+
+                        # Сообщение в публичную ленту (канал)
+                        public_msg = f"""{res_text} · {sym} {direction.upper()}
+👤 Трейдер: {user_name}
+📊 Результат: {sign}{pnl_pct:.2f}%
+🎯 Вход: {entry} | 🚪 Выход: {exit_price}"""
+                        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": public_msg, "parse_mode": "Markdown"})
+                        
+                        # Сообщение в личку автору
+                        private_msg = f"""{res_text} · {sym} {direction.upper()}
+
+📊 Ваш результат: {sign}{pnl_pct:.2f}%
+🎯 Вход: {entry}
+🚪 Выход: {exit_price}
+
+Спасибо, что делитесь сетапами в My Trading Club! 🐾"""
+                        tg("sendMessage", data={"chat_id": user_id, "text": private_msg, "parse_mode": "Markdown"})
+
+            except Exception as e:
+                print(f"⚠️ Ошибка проверки сетапа {setup_id} ({sym}): {e}")
+                continue
     except Exception as e:
-        print(f"⚠️ Ошибка проверки пользовательских сетапов: {e}")
+        print(f"⚠️ Ошибка цикла пользовательских сетапов: {e}")
 
 
 def bx_watch_loop():
