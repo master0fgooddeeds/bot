@@ -1431,58 +1431,97 @@ function openVideoModal(videoId, title) {
         checkLatestVideo();
 
 
-        async function showModeration() {
+async function showModeration() {
+    // Скрываем основные карточки
+    document.getElementById('statsCard').classList.add('hidden');
+    document.getElementById('feedCard').classList.add('hidden');
+    
+    // Показываем карточку модерации
+    const modCard = document.getElementById('moderationCard');
+    modCard.classList.remove('hidden');
+    document.getElementById('moderationList').innerHTML = '<p style="text-align:center; color:#8e8e93;">Загрузка...</p>';
+
     const userId = 726969248; // Твой user_id
-    const res = await fetch(`/api/pending_setups?admin_uid=${userId}`);
-    const setups = await res.json();
-    
-    if (setups.error) {
-        alert('Ошибка: ' + setups.error);
-        return;
+    try {
+        const res = await fetch(`/api/pending_setups?admin_uid=${userId}`);
+        const setups = await res.json();
+        
+        if (setups.error) {
+            document.getElementById('moderationList').innerHTML = `<p style="color:#ff3b30; text-align:center;">Ошибка: ${setups.error}</p>`;
+            return;
+        }
+        
+        if (setups.length === 0) {
+            document.getElementById('moderationList').innerHTML = '<p style="text-align:center; color:#8e8e93; padding: 20px;">Нет сетапов на модерации 🎉</p>';
+            return;
+        }
+        
+        let html = '';
+        setups.forEach(s => {
+            const dirEmoji = s.dir === 'long' ? '🟢' : '🔴';
+            const borderColor = s.dir === 'long' ? '#00e676' : '#ff3b30';
+            html += `
+                <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:10px; border-left: 4px solid ${borderColor};">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <strong style="font-size:16px;">${dirEmoji} ${s.sym} ${s.dir.toUpperCase()}</strong>
+                        <span style="font-size:12px; color:#8e8e93;">👤 ${s.user_name}</span>
+                    </div>
+                    <div style="font-size:14px; margin-bottom:12px; color:#ccc;">
+                        🎯 Вход: <b>${s.entry}</b> | 🛡 SL: <b>${s.sl}</b> | 💰 TP: <b>${s.tp}</b>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-success" style="flex:1; padding:8px; font-size:13px;" onclick="approveSetup('${s.id}')">✅ Одобрить</button>
+                        <button class="btn btn-danger" style="flex:1; padding:8px; font-size:13px;" onclick="rejectSetup('${s.id}')">❌ Отклонить</button>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('moderationList').innerHTML = html;
+    } catch (err) {
+        document.getElementById('moderationList').innerHTML = `<p style="color:#ff3b30; text-align:center;">Ошибка сети: ${err.message}</p>`;
     }
-    
-    if (setups.length === 0) {
-        alert('Нет сетапов на модерации');
-        return;
-    }
-    
-    let html = '<h3>📋 Сетапы на модерации</h3>';
-    setups.forEach(s => {
-        const dirEmoji = s.dir === 'long' ? '🟢' : '🔴';
-        html += `
-            <div class="setup-card">
-                <strong>${dirEmoji} ${s.sym} ${s.dir.toUpperCase()}</strong><br>
-                👤 ${s.user_name}<br>
-                🎯 Вход: ${s.entry} | SL: ${s.sl} | TP: ${s.tp}<br>
-                <button onclick="approveSetup('${s.id}')">✅ Одобрить</button>
-                <button onclick="rejectSetup('${s.id}')">❌ Отклонить</button>
-            </div>
-        `;
-    });
-    
-    document.getElementById('adminPanel').innerHTML = html;
+}
+
+function hideModeration() {
+    document.getElementById('moderationCard').classList.add('hidden');
+    document.getElementById('statsCard').classList.remove('hidden');
 }
 
 async function approveSetup(id) {
     const userId = 726969248;
-    await fetch(`/api/approve_setup/${id}`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({admin_uid: userId})
-    });
-    alert('Сетап одобрен!');
-    showModeration();
+    try {
+        const res = await fetch(`/api/approve_setup/${id}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({admin_uid: userId})
+        });
+        const data = await res.json();
+        if(data.ok) {
+            alert('✅ Сетап одобрен и отправлен в ленту!');
+            showModeration(); // Обновить список
+        } else {
+            alert('❌ Ошибка: ' + data.error);
+        }
+    } catch(e) { alert('❌ Ошибка сети'); }
 }
 
 async function rejectSetup(id) {
     const userId = 726969248;
-    await fetch(`/api/reject_setup/${id}`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({admin_uid: userId})
-    });
-    alert('Сетап отклонен');
-    showModeration();
+    try {
+        const res = await fetch(`/api/reject_setup/${id}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({admin_uid: userId})
+        });
+        const data = await res.json();
+        if(data.ok) {
+            alert('❌ Сетап отклонен');
+            showModeration(); // Обновить список
+        } else {
+            alert('❌ Ошибка: ' + data.error);
+        }
+    } catch(e) { alert(' Ошибка сети'); }
+}
 }
     </script>
 
