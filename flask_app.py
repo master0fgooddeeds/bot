@@ -1764,17 +1764,15 @@ def api_upscale_news():
 
 @app.route('/api/miniapp_feed', methods=['GET'])
 def api_miniapp_feed():
-    """Возвращает ленту сетапов с информацией об авторе и статусом премиум"""
+    """Возвращает ленту сетапов: активные админские + одобренные пользовательские"""
     setups = []
-    active_setups = BX.get('active', {})
     
+    # 1. Сначала добавляем активные сетапы админа (из памяти BX)
+    active_setups = BX.get('active', {})
     for sid, s in active_setups.items():
         if s.get('status') in ['pending', 'active']:
-            # Определяем автора (пока заглушка 'MTC Admin', позже привяжем к user_id)
             author_id = s.get('author_id', 0) 
             trust = get_user_trust_level(author_id)
-            
-            # Флаг премиума (пока хардкод False, позже добавим галочку при создании)
             is_premium = s.get('is_premium', False)
             
             setups.append({
@@ -1790,7 +1788,37 @@ def api_miniapp_feed():
                 'author_color': trust['color'],
                 'is_premium': is_premium
             })
-    
+
+    # 2. ДОБАВЛЯЕМ ОДОБРЕННЫЕ ПОЛЬЗОВАТЕЛЬСКИЕ СЕТАПЫ ИЗ БАЗЫ ДАННЫХ
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT id, user_name, sym, dir, entry, sl, tp, tv_link
+            FROM user_setups 
+            WHERE status = 'approved'
+            ORDER BY created_at DESC
+        ''')
+        rows = cursor.fetchall()
+        conn.close()
+        
+        for row in rows:
+            setups.append({
+                'id': f"user_{row['id']}", # Уникальный ID для фронтенда
+                'sym': row['sym'],
+                'dir': row['dir'],
+                'entry': row['entry'],
+                'sl': row['sl'],
+                'tp': row['tp'],
+                'chart': row['tv_link'] or '',
+                'author': row['user_name'] or 'Трейдер',
+                'author_badge': '🥉', # Пока даем базовый бейдж, позже привяжем к Trust Level
+                'author_color': '#c0c0c0',
+                'is_premium': False
+            })
+    except Exception as e:
+        print(f"⚠️ Ошибка загрузки одобренных сетапов из БД: {e}")
+
     return jsonify(setups)
 
 
