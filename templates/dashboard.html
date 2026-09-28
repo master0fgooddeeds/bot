@@ -1422,10 +1422,9 @@ function openVideoModal(videoId, title) {
         refreshData();
         loadFearGreed();
         checkLatestVideo();
-    </script>
 
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    async function showModeration() {
+
+        async function showModeration() {
     const userId = 726969248; // Твой user_id
     const res = await fetch(`/api/pending_setups?admin_uid=${userId}`);
     const setups = await res.json();
@@ -1478,6 +1477,10 @@ async function rejectSetup(id) {
     alert('Сетап отклонен');
     showModeration();
 }
+    </script>
+
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
     <script>
     function initTradingView() {
         try {
