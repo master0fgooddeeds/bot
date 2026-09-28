@@ -1885,6 +1885,87 @@ def create_user_setup():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/pending_setups', methods=['GET'])
+def api_pending_setups():
+    """Возвращает все сетапы на модерации (только для админов)"""
+    try:
+        admin_uid = request.args.get('admin_uid', type=int)
+        if not admin_uid or admin_uid not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT id, user_id, user_name, sym, dir, entry, sl, tp, tv_link, status, created_at
+            FROM user_setups 
+            WHERE status = 'pending_moderation'
+            ORDER BY created_at DESC
+        ''')
+        rows = cursor.fetchall()
+        conn.close()
+        
+        setups = []
+        for row in rows:
+            setups.append({
+                'id': row['id'],
+                'user_id': row['user_id'],
+                'user_name': row['user_name'],
+                'sym': row['sym'],
+                'dir': row['dir'],
+                'entry': row['entry'],
+                'sl': row['sl'],
+                'tp': row['tp'],
+                'tv_link': row['tv_link'],
+                'created_at': row['created_at']
+            })
+        
+        return jsonify(setups)
+    except Exception as e:
+        print(f"Ошибка получения pending сетапов: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/approve_setup/<setup_id>', methods=['POST'])
+def api_approve_setup(setup_id):
+    """Одобрить сетап (только для админов)"""
+    try:
+        data = request.json or {}
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE user_setups SET status = 'approved' WHERE id = ?", (setup_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"ok": True, "message": "Сетап одобрен"})
+    except Exception as e:
+        print(f"Ошибка одобрения сетапа: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/reject_setup/<setup_id>', methods=['POST'])
+def api_reject_setup(setup_id):
+    """Отклонить сетап (только для админов)"""
+    try:
+        data = request.json or {}
+        admin_uid = data.get('admin_uid')
+        if not admin_uid or int(admin_uid) not in ADMIN_IDS:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE user_setups SET status = 'rejected' WHERE id = ?", (setup_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"ok": True, "message": "Сетап отклонен"})
+    except Exception as e:
+        print(f"Ошибка отклонения сетапа: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/fear_greed')
 def api_fear_greed():
     """Получаем Индекс Страха и Жадности"""
