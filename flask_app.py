@@ -485,127 +485,70 @@ def close_setup(sid, result):
     save_stat(s, result, pnl_pct, s.get('author_id', 0))
     bx_save()
 
-def bx_watch_step():
-    now = _time.time()
-    for sid in list(BX["active"].keys()):
-        s = BX["active"][sid]
-        
+        # ==========================================
+        # 🕵️ ПРОВЕРКА ПОЛЬЗОВАТЕЛЬСКИХ СЕТАПОВ
+        # ==========================================
         try:
-            klines = requests.get(
-                "https://api.binance.com/api/v3/klines",
-                params={"symbol": f"{s['sym']}USDT", "interval": "1m", "limit": 3},
-                timeout=5
-            ).json()
+            conn = get_db()
+            cursor = conn.cursor()
+            # Берем только одобренные сетапы, которые еще не закрыты
+            cursor.execute("SELECT id, sym, dir, entry, sl, tp, user_name FROM user_setups WHERE status = 'approved'")
+            user_setups = cursor.fetchall()
+            conn.close()
             
-            if not isinstance(klines, list) or len(klines) < 1:
-                print(f"⚠️ Нет свечей для {s['sym']}")
-                continue
+            for us in user_setups:
+                sym = us['sym']
+                direction = us['dir']
+                entry = float(us['entry'])
+                sl = float(us['sl'])
+                tp = float(us['tp'])
+                setup_id = us['id']
+                author = us['user_name']
                 
-            candles = []
-            for k in klines:
-                candles.append({
-                    'high': float(k[2]),
-                    'low': float(k[3]),
-                    'close': float(k[4]),
-                    'time': k[0]
-                })
-            
-            # Берем цену закрытия последней сформированной свечи
-            last_candle = candles[-2] if len(candles) >= 2 else candles[-1]
-            price = last_candle['close']
-            
-            print(f"📊 #{sid} {s['sym']} {s['dir'].upper()}: цена={price:,.2f} | вход={s['entry_price']:,.2f} | TP={s['tp']:,.2f} | SL={s['sl']:,.2f}")
-            
-        except Exception as e:
-            print(f"⚠️ Ошибка получения свечей для {s['sym']}: {e}")
-            continue
-        
-        buf_frac = 0.0005  # Минимальный буфер
-        
-        if s.get("status") == "pending":
-            entry = s["entry_price"]
-            reached = False
-            skipped_tp = False
-            
-            # 1. Проверяем, дошла ли ТЕКУЩАЯ цена до входа (или уже прошла его в нужную сторону)
-            if s["dir"] == "long":
-                if price >= entry * (1 - buf_frac):
-                    reached = True
-            else: # short
-                if price <= entry * (1 + buf_frac):
-                    reached = True
+                try:
+                    # Берем последнюю цену с Binance
+                    klines = requests.get(
+                        "https://api.binance.com/api/v3/klines", 
+                        params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 2}, 
+                        timeout=5
+                    ).json()
                     
-            # 2. Проверяем, не улетела ли цена в ТП, так и не активировавшись
-            if not reached:
-                if s["dir"] == "long":
-                    if price >= s["tp"] * (1 - buf_frac):
-                        skipped_tp = True
-                else: # short
-                    if price <= s["tp"] * (1 + buf_frac):
-                        skipped_tp = True
-            
-            if skipped_tp:
-                cap = f"""⚠️ *СЕТАП АННУЛИРОВАН* · {s['sym']}USDT · {s['tf']}
-
- *Причина:* Цена достигла TP, не задев вход.
- *Ожидаемый вход:* `{entry:,.2f}`
-📍 *Текущая цена:* `{price:,.2f}`"""
-                if s.get("vip_msg"):
-                    try: tg("editMessageCaption", data={"chat_id": s["vip_chat"], "message_id": s["vip_msg"], "caption": cap, "parse_mode": "Markdown"})
-                    except: pass
-                BX["active"].pop(sid, None)
-                save_stat(s, "skipped_tp", 0.0)
-                bx_save()
-                print(f"⚠️ Сетап {sid} аннулирован: улетел на ТП")
-                continue
-                
-            if now > s.get("expires_entry", 0):
-                if not s.get("asked_extend"):
-                    s["asked_extend"] = True
-                    bx_save()
-                    kb = {"inline_keyboard": [[{"text": "✅ Продлить (24ч)", "callback_data": f"conf:{sid}"}, {"text": "❌ Закрыть", "callback_data": f"cncl:{sid}"}]]}
-                    admin_msg = f"⏳ *СЕТАП ТРЕБУЕТ РЕШЕНИЯ* · {s['sym']}USDT · {s['tf']}\n\n⏰ Время вышло.\n🎯 Вход: `{s['entry_price']:,.2f}`\n📍 Цена: `{price:,.2f}`\n\n_Что делаем?_"
-                    for aid in ADMIN_IDS:
-                        tg("sendMessage", data={"chat_id": aid, "text": admin_msg, "parse_mode": "Markdown", "reply_markup": kb})
-                    print(f"⏳ Сетап {sid} ждёт решения админа")
-                continue
-                
-            if reached:
-                s["status"] = "active"
-                s["entry_time"] = now
-                # Если цена уже прошла вход, фиксируем вход по текущей рыночной цене (безопаснее)
-                s["entry_price"] = price 
-                bx_save()
-                print(f"✅ Сетап {sid} АКТИВИРОВАН @ {price:,.2f}")
-                active_cap = f"""✅ *СЕТАП АКТИВИРОВАН* · {s['sym']}USDT · {s['tf']}
-
-🎯 Вход пройден! Цена: `{price:,.2f}`
-🛡 *STOP LOSS:* `{s['sl']:,.2f}`
-💰 *TAKE PROFIT:* `{s['tp']:,.2f}`
-
-🛡 Бот следит за SL и TP до победного конца!"""
-                try: 
-                    tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": active_cap, "parse_mode": "Markdown", "reply_to_message_id": s.get("vip_msg")})
-                except: pass
-                
-        elif s.get("status") == "active":
-            result = None
-            
-            # Проверяем по ТЕКУЩЕЙ цене (это надежнее, чем перебор свечей, исключает пропуски)
-            if s["dir"] == "long":
-                if price >= s["tp"] * (1 - buf_frac):
-                    result = "tp"
-                elif price <= s["sl"] * (1 + buf_frac):
-                    result = "sl"
-            else:
-                if price <= s["tp"] * (1 + buf_frac):
-                    result = "tp"
-                elif price >= s["sl"] * (1 - buf_frac):
-                    result = "sl"
-                
-            if result:
-                print(f"🎯 #{sid}: {result.upper()} @ {price:,.2f} (пробой зафиксирован!)")
-                close_setup(sid, result)
+                    if isinstance(klines, list) and len(klines) >= 1:
+                        price = float(klines[-1][4]) # Цена закрытия последней свечи
+                        
+                        result = None
+                        if direction == 'long':
+                            if price >= tp: result = 'closed_tp'
+                            elif price <= sl: result = 'closed_sl'
+                        else: # short
+                            if price <= tp: result = 'closed_tp'
+                            elif price >= sl: result = 'closed_sl'
+                            
+                        if result:
+                            print(f"🎯 Пользовательский сетап #{setup_id} ({sym}) от {author} закрыт: {result} @ {price}")
+                            
+                            # 1. Обновляем статус в БД
+                            conn = get_db()
+                            cursor = conn.cursor()
+                            cursor.execute("UPDATE user_setups SET status = ? WHERE id = ?", (result, setup_id))
+                            conn.commit()
+                            conn.close()
+                            
+                            # 2. (Опционально) Можно отправить красивый отчет в канал, как для админских
+                            # Но пока оставим просто в логах, чтобы не спамить, или раскомментируй строки ниже:
+                            """
+                            pnl_pct = ((tp - entry) / entry * 100) if direction == 'long' else ((entry - tp) / entry * 100)
+                            sign = "+" if result == 'closed_tp' else ""
+                            cap = f"""🏆 *СЕТАП ТРЕЙДЕРА ЗАКРЫТ!* · {sym}USDT
+👤 Автор: {author}
+📊 Результат: {sign}{pnl_pct:.2f}% ({'TP' if result == 'closed_tp' else 'SL'})
+_Отличная работа!_"""
+                            tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": cap, "parse_mode": "Markdown"})
+                            """
+                except Exception as e:
+                    pass # Игнорируем ошибки по отдельным монетам, чтобы не ломать цикл
+        except Exception as e:
+            print(f"⚠️ Ошибка проверки пользовательских сетапов: {e}")
 
 def bx_watch_loop():
     while True:
