@@ -1618,14 +1618,11 @@ function confirmCloseSetup() {
             loadFeed();
         } else {
             alert(' Ошибка: ' + (res.error || 'Неизвестная ошибка'));
-        
-        } else {
-            tg.showAlert('❌ Ошибка: ' + (res.error || 'Неизвестная ошибка'));
         }
     })
     .catch(function(err) {
         tg.MainButton.hide();
-        tg.showAlert('❌ Ошибка сети: ' + err.message);
+        alert(' Ошибка сети: ' + err.message);
     });
 }
         
