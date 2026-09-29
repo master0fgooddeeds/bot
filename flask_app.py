@@ -1995,6 +1995,111 @@ def api_reject_setup(setup_id):
         print(f"Ошибка отклонения сетапа: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/api/close_user_setup/<setup_id>', methods=['POST'])
+def api_close_user_setup(setup_id):
+    """Автор может закрыть свой активный сетап по текущей или заданной цене"""
+    try:
+        data = request.json or {}
+        user_id = data.get('user_id')
+        close_price = data.get('close_price')  # Может быть None (тогда берем текущую)
+        reason = data.get('reason', 'Ручное закрытие автором')
+        
+        if not user_id:
+            return jsonify({"error": "Не указан user_id"}), 400
+        
+        # Получаем сетап из БД
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM user_setups WHERE id = ?", (setup_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            conn.close()
+            return jsonify({"error": "Сетап не найден"}), 404
+        
+        # Проверка авторства
+        if int(row['user_id']) != int(user_id):
+            conn.close()
+            return jsonify({"error": "Это не ваш сетап"}), 403
+        
+        # Проверка статуса (только active можно закрыть вручную)
+        if row['status'] != 'active':
+            conn.close()
+            return jsonify({"error": f"Сетап нельзя закрыть (статус: {row['status']})"}), 400
+        
+        sym = row['sym']
+        direction = row['dir']
+        entry = float(row['entry'])
+        sl = float(row['sl'])
+        tp = float(row['tp'])
+        user_name = row['user_name']
+        
+        # Если цена не указана — берем текущую с Binance
+        if not close_price or close_price == 'current':
+            try:
+                klines = requests.get(
+                    "https://api.binance.com/api/v3/klines", 
+                    params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 2}, 
+                    timeout=5
+                ).json()
+                if isinstance(klines, list) and len(klines) >= 1:
+                    close_price = float(klines[-1][4])
+                else:
+                    conn.close()
+                    return jsonify({"error": "Не удалось получить текущую цену с Binance"}), 500
+            except Exception as e:
+                conn.close()
+                return jsonify({"error": f"Ошибка получения цены: {str(e)}"}), 500
+        else:
+            close_price = float(close_price)
+        
+        # Рассчитываем PnL
+        if direction == 'long':
+            pnl_pct = ((close_price - entry) / entry) * 100
+        else:
+            pnl_pct = ((entry - close_price) / entry) * 100
+        
+        sign = "+" if pnl_pct > 0 else ""
+        
+        # Обновляем статус в БД
+        cursor.execute("UPDATE user_setups SET status = 'closed_manual' WHERE id = ?", (setup_id,))
+        conn.commit()
+        conn.close()
+        
+        # Уведомление в канал
+        public_msg = f"""✋ *РУЧНОЕ ЗАКРЫТИЕ* · {sym} {direction.upper()}
+👤 Трейдер: {user_name}
+📊 Цена закрытия: {close_price}
+📈 Результат: {sign}{pnl_pct:.2f}%
+ Причина: {reason}"""
+        tg("sendMessage", data={"chat_id": CHAT, "message_thread_id": VIP_TOPIC, "text": public_msg, "parse_mode": "Markdown"})
+        
+        # Уведомление автору
+        private_msg = f"""✋ *Ваш сетап закрыт вручную*
+
+{sym} {direction.upper()}
+ Вход: {entry}
+🚪 Закрытие: {close_price}
+📊 Результат: {sign}{pnl_pct:.2f}%
+📝 Причина: {reason}
+
+Спасибо за активность в My Trading Club! 🐾"""
+        tg("sendMessage", data={"chat_id": user_id, "text": private_msg, "parse_mode": "Markdown"})
+        
+        return jsonify({
+            "ok": True, 
+            "message": f"Сетап закрыт по цене {close_price}",
+            "pnl_pct": round(pnl_pct, 2),
+            "close_price": close_price
+        })
+        
+    except Exception as e:
+        print(f"❌ Ошибка закрытия сетапа: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/fear_greed')
 def api_fear_greed():
     """Получаем Индекс Страха и Жадности"""
