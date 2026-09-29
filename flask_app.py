@@ -2083,7 +2083,8 @@ def api_close_user_setup(setup_id):
             return jsonify({"error": "Это не ваш сетап"}), 403
         
         # Проверка статуса (только active можно закрыть вручную)
-        if row['status'] != 'active':
+        # Проверка статуса (можно закрыть approved и active)
+        if row['status'] not in ['approved', 'active']:
             conn.close()
             return jsonify({"error": f"Сетап нельзя закрыть (статус: {row['status']})"}), 400
         
