@@ -2097,38 +2097,35 @@ def api_close_user_setup(setup_id):
         
         
         # Если цена не указана — берем текущую с Binance
+                # Если цена не указана — берем текущую с CoinGecko (Binance заблокирован для Railway)
         if not close_price or close_price == 'current':
             try:
-                # Пробуем получить цену с Binance Futures
-                klines = requests.get(
-                    "https://fapi.binance.com/fapi/v1/klines", 
-                    params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 1}, 
-                    timeout=10
-                ).json()
-        
-                if isinstance(klines, list) and len(klines) >= 1:
-                    close_price = float(klines[-1][4])  # Цена закрытия
-                    print(f"✅ Получена цена {close_price} для {sym}USDT")
-                else:
-                    # Пробуем спотовый рынок как запасной вариант
-                    print(f"⚠️ Futures не ответил, пробуем спот...")
-                    klines = requests.get(
-                        "https://api.binance.com/api/v3/klines", 
-                        params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 1}, 
-                        timeout=10
-                    ).json()
-            
-                    if isinstance(klines, list) and len(klines) >= 1:
-                        close_price = float(klines[-1][4])
-                    else:
-                        raise Exception(f"Binance вернул пустой ответ: {klines}")
+                # CoinGecko — работает везде, без гео-ограничений
+                cg_id = {
+                    'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana',
+                    'XRP': 'ripple', 'DOGE': 'dogecoin', 'BNB': 'binancecoin',
+                    'ADA': 'cardano', 'AVAX': 'avalanche-2', 'DOT': 'polkadot',
+                    'MATIC': 'matic-network', 'LINK': 'chainlink', 'LTC': 'litecoin',
+                    'UNI': 'uniswap', 'ATOM': 'cosmos', 'FIL': 'filecoin',
+                    'APT': 'aptos', 'ARB': 'arbitrum', 'OP': 'optimism'
+                }.get(sym, sym.lower())
                 
+                r = requests.get(
+                    f"https://api.coingecko.com/api/v3/simple/price?ids={cg_id}&vs_currencies=usd",
+                    timeout=10
+                )
+                data = r.json()
+                if cg_id in data and 'usd' in data[cg_id]:
+                    close_price = float(data[cg_id]['usd'])
+                    print(f"✅ Цена {sym}USDT с CoinGecko: {close_price}")
+                else:
+                    raise Exception(f"CoinGecko не вернул цену для {cg_id}")
+                    
             except Exception as e:
-                print(f"❌ Ошибка получения цены для {sym}: {e}")
-                print(f"Ответ Binance: {klines if 'klines' in locals() else 'N/A'}")
+                print(f"❌ Ошибка получения цены {sym}: {e}")
                 conn.close()
                 return jsonify({
-                    "error": f"Не удалось получить цену с Binance. Попробуйте указать цену вручную или проверьте тикер ({sym}USDT). Детали: {str(e)}"
+                    "error": f"Не удалось получить цену с CoinGecko. Укажите цену вручную. ({str(e)[:100]})"
                 }), 500
         else:
             try:
