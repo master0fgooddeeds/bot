@@ -1775,8 +1775,8 @@ def api_miniapp_feed():
                 'author': trust['name'],
                 'author_badge': trust['badge'],
                 'author_color': trust['color'],
-                'is_premium': is_premium
-                'user_id': row['user_id']
+                'is_premium': is_premium,      # <-- ЗАПЯТАЯ ЗДЕСЬ ОБЯЗАТЕЛЬНА
+                'user_id': author_id           # <-- ПРАВИЛЬНАЯ ПЕРЕМЕННАЯ (не row!)
             })
 
     # 2. ДОБАВЛЯЕМ ОДОБРЕННЫЕ ПОЛЬЗОВАТЕЛЬСКИЕ СЕТАПЫ ИЗ БАЗЫ ДАННЫХ
@@ -1784,7 +1784,7 @@ def api_miniapp_feed():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT id, user_name, sym, dir, entry, sl, tp, tv_link
+            SELECT id, user_id, user_name, sym, dir, entry, sl, tp, tv_link
             FROM user_setups 
             WHERE status = 'approved'
             ORDER BY created_at DESC
@@ -1794,7 +1794,7 @@ def api_miniapp_feed():
         
         for row in rows:
             setups.append({
-                'id': f"user_{row['id']}", # Уникальный ID для фронтенда
+                'id': f"user_{row['id']}", 
                 'sym': row['sym'],
                 'dir': row['dir'],
                 'entry': row['entry'],
@@ -1802,9 +1802,10 @@ def api_miniapp_feed():
                 'tp': row['tp'],
                 'chart': row['tv_link'] or '',
                 'author': row['user_name'] or 'Трейдер',
-                'author_badge': '🥉', # Пока даем базовый бейдж, позже привяжем к Trust Level
+                'author_badge': '🥉', 
                 'author_color': '#c0c0c0',
-                'is_premium': False
+                'is_premium': False,
+                'user_id': row['user_id']      # <-- А вот здесь row['user_id'] уместен!
             })
     except Exception as e:
         print(f"⚠️ Ошибка загрузки одобренных сетапов из БД: {e}")
