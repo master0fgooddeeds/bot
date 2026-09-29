@@ -1776,6 +1776,7 @@ def api_miniapp_feed():
                 'author_badge': trust['badge'],
                 'author_color': trust['color'],
                 'is_premium': is_premium
+                'user_id': row['user_id']
             })
 
     # 2. ДОБАВЛЯЕМ ОДОБРЕННЫЕ ПОЛЬЗОВАТЕЛЬСКИЕ СЕТАПЫ ИЗ БАЗЫ ДАННЫХ
