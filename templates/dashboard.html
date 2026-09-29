@@ -1090,6 +1090,16 @@ function openVideoModal(videoId, title) {
                         var unlockBtn = isPremium ? 
                             '<button class="btn" style="margin-top:10px; width:100%; background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; font-weight: bold;" onclick="tg.showAlert(\'⭐ Функция покупки за Telegram Stars скоро будет доступна!\')">🔓 Открыть сетап за 50 ⭐</button>' : '';
 
+                                                // Проверяем, является ли текущий пользователь автором
+                        var isAuthor = (item.user_id && tg.initDataUnsafe && tg.initDataUnsafe.user && item.user_id === tg.initDataUnsafe.user.id);
+                        var isApproved = item.id.startsWith('user_');
+                        
+                        // Кнопка закрытия (только для автора активного сетапа)
+                        var closeBtn = '';
+                        if (isAuthor && isApproved) {
+                            closeBtn = '<button class="btn btn-danger" style="margin-top:10px; width:100%; padding:10px; font-size:13px;" onclick="openCloseModal(\'' + item.id.replace('user_', '') + '\', \'' + item.sym + '\', \'' + item.dir + '\')">✋ Закрыть сетап вручную</button>';
+                        }
+
                         return '<div style="padding:15px; margin:10px 0; background:rgba(0,0,0,0.3); border-left:4px solid ' + color + '; border-radius:8px; position: relative;">' +
                             '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
                                 '<div style="display:flex; align-items:center;">' +
@@ -1099,11 +1109,10 @@ function openVideoModal(videoId, title) {
                                 '<span style="background:' + color + '; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">' + dirText + '</span>' +
                             '</div>' +
                             
-                            // Блок автора
                             '<div style="display:flex; align-items:center; margin-bottom:12px; padding:8px; background:rgba(255,255,255,0.03); border-radius:6px;">' +
                                 '<span style="font-size:16px; margin-right:6px;">' + item.author_badge + '</span>' +
                                 '<span style="font-size:13px; color:#8e8e93;">Автор: </span>' +
-                                '<span style="font-size:13px; font-weight:bold; color:' + item.author_color + '; margin-left:4px;">' + item.author + '</span>' +
+                                '<span style="font-size:13px; font-weight:bold; color:' + item.author_color + '; margin-left:4px;">' + item.author + (isAuthor ? ' (Вы)' : '') + '</span>' +
                             '</div>' +
 
                             '<div style="margin-top:10px; font-size:14px; line-height:1.8; ' + blurClass + '">' +
@@ -1114,10 +1123,11 @@ function openVideoModal(videoId, title) {
                             
                             chartHtml +
                             unlockBtn +
+                            closeBtn +
                             
                             (!isPremium ? '<div style="margin-top:10px; display:flex; gap:8px;">' +
                                 '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn" style="flex:1; padding:8px 12px; font-size:12px; text-decoration:none;">💬 Обсудить</a>' +
-                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="flex:1; padding:8px 12px; font-size:12px; text-decoration:none;">📝 Моё мнение</a>' +
+                                '<a href="https://t.me/c/2026400906/1039" target="_blank" class="btn btn-secondary" style="flex:1; padding:8px 12px; font-size:12px; text-decoration:none;"> Моё мнение</a>' +
                             '</div>' : '') +
                             '</div>';
                     }).join('');
