@@ -1578,5 +1578,50 @@ async function rejectSetup(id) {
     }
     window.addEventListener('load', function() { setTimeout(initTradingView, 1000); });
     </script>  
+    <!-- Модальное окно закрытия сетапа -->
+    <div id="closeModal" class="modal-overlay hidden" onclick="closeCloseModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 450px;">
+            <h3 style="margin-top:0; color:#ff3b30;">✋ Закрыть сетап вручную</h3>
+            <p style="color:#8e8e93; font-size:14px; margin-bottom:20px;">
+                Сетап: <strong id="closeModalSym"></strong> <span id="closeModalDir"></span><br>
+                Вход: <strong id="closeModalEntry"></strong>
+            </p>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:8px; color:#8e8e93; font-size:13px;">Способ закрытия:</label>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" onclick="selectCloseType('current')" id="btnCloseCurrent" class="btn" style="flex:1; padding:12px; font-size:14px; background:linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);">
+                        📊 По текущей цене
+                    </button>
+                    <button type="button" onclick="selectCloseType('custom')" id="btnCloseCustom" class="btn btn-secondary" style="flex:1; padding:12px; font-size:14px;">
+                        ✏️ Ввести свою
+                    </button>
+                </div>
+            </div>
+            
+            <div id="customPriceField" class="hidden" style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">Цена закрытия:</label>
+                <input type="number" id="customClosePrice" placeholder="Например: 84500" step="any" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ff3b30; background:rgba(10,10,20,0.8); color:#fff; font-size:16px; box-sizing:border-box;">
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:5px; color:#8e8e93; font-size:13px;">Причина (необязательно):</label>
+                <textarea id="closeReason" rows="2" placeholder="Например: рынок развернулся, передумал..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #00d4ff; background:rgba(10,10,20,0.8); color:#fff; font-size:14px; box-sizing:border-box;"></textarea>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-danger" onclick="confirmCloseSetup()" style="flex:1; padding:14px; font-size:15px;">
+                    ✋ Подтвердить закрытие
+                </button>
+                <button class="btn btn-secondary" onclick="closeCloseModal()" style="flex:1; padding:14px; font-size:15px;">
+                    Отмена
+                </button>
+            </div>
+            
+            <p style="font-size:11px; color:#8e8e93; margin-top:15px; text-align:center;">
+                ️ Это действие нельзя отменить. Сетап будет закрыт и удален из ленты.
+            </p>
+        </div>
+    </div>
 </body>
 </html>
