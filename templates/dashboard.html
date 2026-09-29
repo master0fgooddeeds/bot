@@ -1533,6 +1533,99 @@ async function rejectSetup(id) {
     } catch(e) { alert(' Ошибка сети'); }
 }
 
+// Переменные для хранения данных закрываемого сетапа
+var currentCloseSetupId = null;
+var currentCloseType = 'current';
+
+function openCloseModal(setupId, sym, dir) {
+    currentCloseSetupId = setupId;
+    currentCloseType = 'current';
+    
+    document.getElementById('closeModalSym').innerText = sym + 'USDT';
+    document.getElementById('closeModalDir').innerText = dir.toUpperCase();
+    document.getElementById('closeModalEntry').innerText = '...';
+    
+    document.getElementById('customPriceField').classList.add('hidden');
+    document.getElementById('customClosePrice').value = '';
+    document.getElementById('closeReason').value = '';
+    document.getElementById('btnCloseCurrent').style.background = 'linear-gradient(135deg, #00d4ff 0%, #0099cc 100%)';
+    document.getElementById('btnCloseCustom').style.background = 'rgba(30, 30, 50, 0.8)';
+    
+    document.getElementById('closeModal').classList.remove('hidden');
+}
+
+function closeCloseModal(e) {
+    if (!e || e.target.id === 'closeModal') {
+        document.getElementById('closeModal').classList.add('hidden');
+        currentCloseSetupId = null;
+    }
+}
+
+function selectCloseType(type) {
+    currentCloseType = type;
+    
+    if (type === 'current') {
+        document.getElementById('customPriceField').classList.add('hidden');
+        document.getElementById('btnCloseCurrent').style.background = 'linear-gradient(135deg, #00d4ff 0%, #0099cc 100%)';
+        document.getElementById('btnCloseCustom').style.background = 'rgba(30, 30, 50, 0.8)';
+    } else {
+        document.getElementById('customPriceField').classList.remove('hidden');
+        document.getElementById('btnCloseCustom').style.background = 'linear-gradient(135deg, #00d4ff 0%, #0099cc 100%)';
+        document.getElementById('btnCloseCurrent').style.background = 'rgba(30, 30, 50, 0.8)';
+    }
+}
+
+function confirmCloseSetup() {
+    if (!currentCloseSetupId) {
+        alert('Ошибка: сетап не выбран');
+        return;
+    }
+    
+    var user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : {id: 0};
+    var reason = document.getElementById('closeReason').value.trim() || 'Ручное закрытие автором';
+    var closePrice = null;
+    
+    if (currentCloseType === 'custom') {
+        closePrice = document.getElementById('customClosePrice').value;
+        if (!closePrice || parseFloat(closePrice) <= 0) {
+            alert('⚠️ Введите корректную цену закрытия!');
+            return;
+        }
+        closePrice = parseFloat(closePrice);
+    } else {
+        closePrice = 'current';
+    }
+    
+    tg.MainButton.setText('Закрытие сетапа...');
+    tg.MainButton.show();
+    tg.MainButton.disable();
+    
+    fetch('/api/close_user_setup/' + currentCloseSetupId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            user_id: user.id,
+            close_price: closePrice,
+            reason: reason
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+        tg.MainButton.hide();
+        if (res.ok) {
+            closeCloseModal();
+            tg.showAlert('✅ Сетап закрыт!\nРезультат: ' + (res.pnl_pct >= 0 ? '+' : '') + res.pnl_pct.toFixed(2) + '%\nЦена закрытия: ' + res.close_price);
+            loadFeed();
+        } else {
+            tg.showAlert('❌ Ошибка: ' + (res.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(function(err) {
+        tg.MainButton.hide();
+        tg.showAlert('❌ Ошибка сети: ' + err.message);
+    });
+}
+        
     </script>
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
