@@ -1614,8 +1614,11 @@ function confirmCloseSetup() {
         tg.MainButton.hide();
         if (res.ok) {
             closeCloseModal();
-            tg.showAlert('✅ Сетап закрыт!\nРезультат: ' + (res.pnl_pct >= 0 ? '+' : '') + res.pnl_pct.toFixed(2) + '%\nЦена закрытия: ' + res.close_price);
+            alert('✅ Сетап закрыт! Результат: ' + (res.pnl_pct >= 0 ? '+' : '') + res.pnl_pct.toFixed(2) + '% | Цена: ' + res.close_price);
             loadFeed();
+        } else {
+            alert(' Ошибка: ' + (res.error || 'Неизвестная ошибка'));
+        
         } else {
             tg.showAlert('❌ Ошибка: ' + (res.error || 'Неизвестная ошибка'));
         }
