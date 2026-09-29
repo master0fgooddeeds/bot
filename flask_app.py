@@ -2095,24 +2095,47 @@ def api_close_user_setup(setup_id):
         tp = float(row['tp'])
         user_name = row['user_name']
         
+        
         # Если цена не указана — берем текущую с Binance
         if not close_price or close_price == 'current':
             try:
+                # Пробуем получить цену с Binance Futures
                 klines = requests.get(
-                    "https://api.binance.com/api/v3/klines", 
-                    params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 2}, 
-                    timeout=5
+                    "https://fapi.binance.com/fapi/v1/klines", 
+                    params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 1}, 
+                    timeout=10
                 ).json()
+        
                 if isinstance(klines, list) and len(klines) >= 1:
-                    close_price = float(klines[-1][4])
+                    close_price = float(klines[-1][4])  # Цена закрытия
+                    print(f"✅ Получена цена {close_price} для {sym}USDT")
                 else:
-                    conn.close()
-                    return jsonify({"error": "Не удалось получить текущую цену с Binance"}), 500
+                    # Пробуем спотовый рынок как запасной вариант
+                    print(f"⚠️ Futures не ответил, пробуем спот...")
+                    klines = requests.get(
+                        "https://api.binance.com/api/v3/klines", 
+                        params={"symbol": f"{sym}USDT", "interval": "1m", "limit": 1}, 
+                        timeout=10
+                    ).json()
+            
+                    if isinstance(klines, list) and len(klines) >= 1:
+                        close_price = float(klines[-1][4])
+                    else:
+                        raise Exception(f"Binance вернул пустой ответ: {klines}")
+                
             except Exception as e:
+                print(f"❌ Ошибка получения цены для {sym}: {e}")
+                print(f"Ответ Binance: {klines if 'klines' in locals() else 'N/A'}")
                 conn.close()
-                return jsonify({"error": f"Ошибка получения цены: {str(e)}"}), 500
+                return jsonify({
+                    "error": f"Не удалось получить цену с Binance. Попробуйте указать цену вручную или проверьте тикер ({sym}USDT). Детали: {str(e)}"
+                }), 500
         else:
-            close_price = float(close_price)
+            try:
+                close_price = float(close_price)
+            except ValueError:
+                conn.close()
+                return jsonify({"error": "Некорректный формат цены"}), 400
         
         # Рассчитываем PnL
         if direction == 'long':
